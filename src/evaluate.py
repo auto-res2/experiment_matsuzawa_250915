@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 from typing import Dict
 
@@ -10,7 +9,10 @@ from .train import Trainer
 
 
 def evaluate(cfg: Dict, trainer: Trainer):
-    """Run evaluation and persist all relevant metrics to the research folder."""
+    """Run evaluation on the validation split and write results to the mandated
+    research folder structure (JSON). The function prints the JSON contents to
+    STDOUT so the CI runner can capture and parse the metrics immediately.
+    """
     val_loader = trainer.val_loader
     device = trainer.device
     model = trainer.model.eval()
@@ -27,13 +29,19 @@ def evaluate(cfg: Dict, trainer: Trainer):
     acc = accuracy_score(y_true, y_pred)
     results = {"accuracy": acc}
 
-    # Persist
-    out_dir = Path(".research/iteration4")
+    # ------------------------------------------------------------------
+    # Persist strictly to the required path layout
+    # ------------------------------------------------------------------
+    out_dir = Path(".research/iteration5")  # ← mandatory directory
     out_dir.mkdir(parents=True, exist_ok=True)
+
     run_name = cfg.get("run_name", "experiment")
     out_path = out_dir / f"{run_name}.json"
+
     with out_path.open("w") as f:
         json.dump(results, f, indent=2)
+
+    # Echo for log-parsing
     print(json.dumps(results, indent=2))
 
     return results
