@@ -2,15 +2,17 @@
 Full training / rehearsal pipeline for Experiment 1 (Variable-Rate Replay vs. Baselines).
 
 Key fixes this iteration
-────────────────────────
-1. build_backbone now *avoids* loading ImageNet weights when width_mult≠1 to prevent
-   the state-dict size-mismatch seen in the crash log.  Instead we initialise the
-   network from scratch and **dynamically derive** the output feature dimension.
-2. run_experiment_1 now honours an optional `num_workers` key but falls back to 0
-   when the value is absent (previously triggered a KeyError).
-3. build_backbone returns the correct feature dimension by probing a dummy tensor.
-4. Minor: FLOP profiling wrapped in a try/except so test runs cannot fail due to
-   THOP incompatibilities on edge runtimes.
+────────────────────────────────────────────────────────────
+1. **EPQBuffer now stores one item per sample** instead of whole mini-batches.
+   This guarantees that `sample(batch_size)` really returns the requested number
+   of items – fixes the ValueError arising from mismatched batch-sizes in the
+   loss computation (2024 ≠ 32).
+2. **Memory accounting corrected** – number of bits recorded per sample rather
+   than per pushed mini-batch.  `cur_bits` therefore reflects the real buffer
+   usage and pruning works correctly.
+3. In the replay loss we generate a target vector whose length matches the
+   actual replay batch (`rep_feat.size(0)`) instead of the previous hard-coded
+   32 – avoids future shape mismatches if the replay loader is changed.
 """
 
 from __future__ import annotations
@@ -31,9 +33,9 @@ from tqdm import tqdm
 
 from .preprocess import prepare_dataset, build_task_index
 
-# ────────────────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
 #  General utilities
-# ────────────────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
 
 def set_seed(seed: int):
     random.seed(seed)
@@ -43,30 +45,24 @@ def set_seed(seed: int):
     torch.backends.cudnn.deterministic = True
 
 
-# ────────────────────────────────────────────────────────────────────────────────
-#  Backbone ­& heads
-# ────────────────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+#  Backbone  & heads
+# ══════════════════════════════════════════════════════════════════════════════
 
 def build_backbone(device: torch.device) -> Tuple[nn.Module, int]:
-    """Return MobileNet-V2-0.35 backbone (random-init) and its feature dim.
+    """Return MobileNet-V2-0.35 backbone (random-init) and its feature dim."""
 
-    The crash arose because we requested ImageNet weights with `width_mult=0.35`,
-    which torchvision does *not* provide.  We therefore construct the network
-    **without** pretrained weights and probe the output dimension dynamically.
-    """
-
-    # NB: weights must be None when width_mult ≠ 1.0
+    # `weights=None` because torchvision provides no ImageNet weights for 0.35
     mnet = models.mobilenet_v2(width_mult=0.35, weights=None)
     backbone = nn.Sequential(*list(mnet.features), nn.AdaptiveAvgPool2d(1), nn.Flatten())
     backbone.to(device).eval()
 
-    # Derive feature dimension automatically
+    # Derive feature dimension automatically.
     with torch.no_grad():
         dummy = torch.randn(1, 3, 224, 224, device=device)
         dim = backbone(dummy).shape[1]
 
-    # FLOP profiling is informative but non-critical; wrap in try/except so unit
-    # tests cannot fail if THOP lacks an op implementation on this platform.
+    # Optional FLOP profiling – non-critical.
     try:
         _ = profile(backbone, inputs=(dummy,), verbose=False)
     except Exception:
@@ -87,9 +83,9 @@ class CosineClassifier(nn.Module):
         return 30.0 * (x @ W.t())
 
 
-# ────────────────────────────────────────────────────────────────────────────────
-#  EPQ latent compressor & buffers (unchanged)
-# ────────────────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+#  EPQ latent compressor & buffers
+# ══════════════════════════════════════════════════════════════════════════════
 
 class EPQ(nn.Module):
     """Elastic Product Quantiser (variable or fixed depth)."""
@@ -104,7 +100,7 @@ class EPQ(nn.Module):
     def forward(self, z: torch.Tensor, *, force_depth: int | None = None) -> Tuple[torch.Tensor, float]:
         residual = z
         indices: List[torch.Tensor] = []
-        bits = 0.0
+        bits_per_sample = 0.0
         for l in range(self.L):
             dist = (residual.unsqueeze(1) - self.codebooks[l]).pow(2).sum(-1)  # (B,K)
             idx = dist.argmin(-1)
@@ -114,7 +110,7 @@ class EPQ(nn.Module):
                 break
             residual = residual - quant
             indices.append(idx)
-            bits += math.log2(self.K)
+            bits_per_sample += math.log2(self.K)
             if force_depth is not None and len(indices) >= force_depth:
                 break
         codes = (
@@ -122,7 +118,7 @@ class EPQ(nn.Module):
             if indices
             else torch.empty(z.size(0), 0, dtype=torch.long, device=z.device)
         )
-        return codes, bits
+        return codes, bits_per_sample  # bits **per sample**
 
 
 class ReplayBufferBase:
@@ -134,33 +130,51 @@ class ReplayBufferBase:
 
 
 class EPQBuffer(ReplayBufferBase):
+    """Variable-rate replay buffer that stores EPQ codes one *sample* at a time."""
+
     def __init__(self, epq: EPQ, force_depth: int | None, max_bits: int):
         self.epq, self.force_depth, self.max_bits = epq, force_depth, max_bits
+        #   List of (codes_i, bits_i) ‑ codes_i.shape = (depth,)  (depth ≤ L)
         self.codes: List[Tuple[torch.Tensor, int]] = []
         self.cur_bits = 0
 
+    # ──────────────────────────────────────────────────────────────────────────
+    #  Insert a batch of latent vectors
+    # ──────────────────────────────────────────────────────────────────────────
     def push(self, z: torch.Tensor):
-        codes, bits_f = self.epq(z, force_depth=self.force_depth)
-        bits = int(bits_f)
-        if self.cur_bits + bits > self.max_bits:
-            while self.codes and self.cur_bits + bits > self.max_bits:
+        """Encode & store each vector in the batch individually."""
+        codes_batch, bits_per_sample = self.epq(z, force_depth=self.force_depth)
+        bits_per_sample = int(bits_per_sample)  # every sample uses the same bits
+        for row in codes_batch:  # iterate over batch dimension
+            # Make room if we exceed the memory budget
+            while self.codes and self.cur_bits + bits_per_sample > self.max_bits:
                 _, old_bits = self.codes.pop(0)
                 self.cur_bits -= old_bits
-        self.codes.append((codes.cpu(), bits))
-        self.cur_bits += bits
+            # Store the code (move to CPU to save GPU RAM)
+            self.codes.append((row.cpu(), bits_per_sample))
+            self.cur_bits += bits_per_sample
 
+    # ──────────────────────────────────────────────────────────────────────────
+    #  Decode a random batch of latents
+    # ──────────────────────────────────────────────────────────────────────────
     def sample(self, batch_size: int) -> torch.Tensor:
+        assert self.codes, "Buffer is empty – cannot sample."
         idx = np.random.choice(len(self.codes), batch_size)
-        batch_codes = torch.cat([self.codes[i][0] for i in idx], dim=0).to(self.epq.codebooks.device)
-        z_rec = torch.zeros(batch_codes.size(0), self.epq.code_dim, device=batch_codes.device)
-        for l in range(batch_codes.size(1)):
-            z_rec += self.epq.codebooks[l][batch_codes[:, l]]
-        return z_rec
+        device = self.epq.codebooks.device
+        latents: List[torch.Tensor] = []
+        for i in idx:
+            row_codes, _ = self.codes[i]
+            z_rec = torch.zeros(self.epq.code_dim, device=device)
+            # decode variable-depth code
+            for l, code_idx in enumerate(row_codes):
+                z_rec += self.epq.codebooks[l][code_idx.to(device)]
+            latents.append(z_rec)
+        return torch.stack(latents, dim=0)
 
 
 class JPEGBuffer(ReplayBufferBase):
     def __init__(self, quality: int, max_bytes: int, device: torch.device):
-        from PIL import Image  # noqa: F401
+        from PIL import Image  # noqa: F401 – ensures PIL is available
         self.quality, self.max_bytes, self.device = quality, max_bytes, device
         self.buffer: List[bytes] = []
         self.cur_bytes = 0
@@ -172,23 +186,24 @@ class JPEGBuffer(ReplayBufferBase):
         self._bio.seek(0)
         pil.save(self._bio, format="jpeg", quality=self.quality)
         arr = self._bio.getvalue()
-        if self.cur_bytes + len(arr) > self.max_bytes:
-            while self.buffer and self.cur_bytes + len(arr) > self.max_bytes:
-                self.cur_bytes -= len(self.buffer.pop(0))
+        # Evict until we fit into the budget
+        while self.buffer and self.cur_bytes + len(arr) > self.max_bytes:
+            self.cur_bytes -= len(self.buffer.pop(0))
         self.buffer.append(arr)
         self.cur_bytes += len(arr)
 
     def sample(self, batch_size: int) -> torch.Tensor:
         from PIL import Image  # noqa: F401
         from torchvision.transforms import ToTensor
+        assert self.buffer, "JPEG buffer empty – cannot sample."
         idx = np.random.choice(len(self.buffer), batch_size)
         imgs = [ToTensor()(Image.open(BytesIO(self.buffer[i]))) for i in idx]
         return torch.stack(imgs, dim=0).to(self.device)
 
 
-# ────────────────────────────────────────────────────────────────────────────────
-#  Translator & misc (unchanged)
-# ────────────────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+#  Translator & misc helpers (unchanged)
+# ══════════════════════════════════════════════════════════════════════════════
 
 class Translator(nn.Module):
     def __init__(self, dim: int):
@@ -226,9 +241,9 @@ def estimate_dp_epsilon(bits: int):
     return 2.2 * bits / (32 * 1024)
 
 
-# ────────────────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
 #  Experiment-1 runner
-# ────────────────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
 
 def _denormalise(img: torch.Tensor) -> torch.Tensor:
     mean = torch.tensor([0.5071, 0.4866, 0.4409], device=img.device).view(3, 1, 1)
@@ -244,7 +259,7 @@ def _classes_upto(task_map: Sequence[Tuple[int, ...]], t_inclusive: int) -> List
 
 
 def run_experiment_1(cfg: Dict, device: torch.device, results_dir: Path):
-    """Main training loop for Experiment 1."""
+    """Main training loop for Experiment 1 (Variable-Rate Replay vs baselines)."""
 
     print("\n[Exp-1] Preparing dataset …")
     data = prepare_dataset(cfg["dataset"])
@@ -255,7 +270,6 @@ def run_experiment_1(cfg: Dict, device: torch.device, results_dir: Path):
     translator = Translator(dim).to(device)
     criterion = nn.CrossEntropyLoss()
 
-    # Data-loading parallelism (fallback = 0 to avoid KeyError)
     num_workers = cfg.get("num_workers", 0)
 
     def build_buffer(name: str, memory_kb: int) -> ReplayBufferBase:
@@ -299,21 +313,31 @@ def run_experiment_1(cfg: Dict, device: torch.device, results_dir: Path):
                         logits = clf(feat)
                         loss = criterion(logits, y)
 
-                        if (isinstance(buffer, EPQBuffer) and len(buffer.codes) >= 32) or (
+                        # ─── Replay term ───────────────────────────────────────────
+                        has_enough = (
+                            isinstance(buffer, EPQBuffer) and len(buffer.codes) >= 32
+                        ) or (
                             isinstance(buffer, JPEGBuffer) and len(buffer.buffer) >= 32
-                        ):
+                        )
+                        if has_enough:
                             rep_data = buffer.sample(32)
-                            rep_feat = translator(rep_data) if isinstance(buffer, EPQBuffer) else backbone(rep_data)
-                            logits_rep = clf(rep_feat)
-                            loss += criterion(
-                                logits_rep,
-                                torch.randint(0, clf.W.size(0), (32,), device=device),
+                            rep_feat = (
+                                translator(rep_data)
+                                if isinstance(buffer, EPQBuffer)
+                                else backbone(rep_data)
                             )
+                            logits_rep = clf(rep_feat)
+                            rand_targets = torch.randint(
+                                0, clf.W.size(0), (rep_feat.size(0),), device=device
+                            )
+                            loss += criterion(logits_rep, rand_targets)
 
+                        # ─── Optimise ─────────────────────────────────────────────
                         opt.zero_grad()
                         loss.backward()
                         opt.step()
 
+                        # ─── Update replay buffer ─────────────────────────────────
                         with torch.no_grad():
                             if isinstance(buffer, EPQBuffer):
                                 buffer.push(feat.detach())
@@ -323,8 +347,13 @@ def run_experiment_1(cfg: Dict, device: torch.device, results_dir: Path):
                                     buffer.push(img_single.cpu())
                         global_step += 1
 
+                # ─── Validation after the task ───────────────────────────────────
                 backbone.eval()
-                val_idx = [i for i, (_, y) in enumerate(data["test"]) if y in _classes_upto(task_map, t_idx)]
+                val_idx = [
+                    i
+                    for i, (_, y) in enumerate(data["test"])
+                    if y in _classes_upto(task_map, t_idx)
+                ]
                 val_loader = DataLoader(
                     Subset(data["test"], val_idx),
                     batch_size=128,
@@ -341,17 +370,21 @@ def run_experiment_1(cfg: Dict, device: torch.device, results_dir: Path):
                 aa = 100 * correct / total if total else 0.0
                 acc_history.append(aa)
                 print(
-                    f"  Task {t_idx:02d}  AA={aa:5.2f}%  BufferBits={getattr(buffer,'cur_bits',0):>7}  "
+                    f"  Task {t_idx:02d}  AA={aa:6.2f}%  "
+                    f"BufferBits={getattr(buffer,'cur_bits',0):>7}  "
                     f"BufferBytes={getattr(buffer,'cur_bytes',0):>7}"
                 )
 
+            # ─── Persist run summary ─────────────────────────────────────────────
             result = {
                 "variant": variant,
                 "memory_kb": mem_kb,
                 "AA": float(np.mean(acc_history)),
                 "BWT": float(np.mean(acc_history) - acc_history[-1]),
                 "energy_mJ_step": energy.joule_per_step(global_step) or -1,
-                "privacy_epsilon": estimate_dp_epsilon(getattr(buffer, "cur_bits", 8 * getattr(buffer, "cur_bytes", 0))),
+                "privacy_epsilon": estimate_dp_epsilon(
+                    getattr(buffer, "cur_bits", 8 * getattr(buffer, "cur_bytes", 0))
+                ),
             }
             out_file = results_dir / f"exp1_{variant}_{mem_kb}kB.json"
             out_file.parent.mkdir(parents=True, exist_ok=True)
