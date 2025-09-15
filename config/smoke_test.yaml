@@ -1,6 +1,0 @@
-# Configuration used for quick CI validation
-use_synthetic_data: true
-random_seed: 42  # deterministic metrics
-train_epochs: 1
-batch_size: 32
-learning_rate: 0.001
