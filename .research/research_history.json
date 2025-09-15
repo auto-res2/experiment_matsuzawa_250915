@@ -587,7 +587,865 @@
     }
   ],
   "new_method": {
-    "method": "Open Problems: 1. Phase-aware head factorisation (LPD) still assumes a fixed token basis; when the vocabulary itself mutates (on-device learning, custom emojis) the phasor dictionary becomes invalid.\n2. Existing caches are private to one device.  Edge devices, however, are often parts of swarms (ear-buds + watch + phone) that could share spectrum sketches without leaking user data.\n3. Semantic guards watch only the final surface text.  Many leaks happen in *intermediate* latent states that can be intercepted by malware or during remote rendering.\n4. Phase tracking and semantic filtering are treated as orthogonal.  We lack a unified theory that tells us how much phase error can be tolerated before a forbidden semantic appears.\n5. Memory traffic—not MACs—dominates on LPDDR-based phones when multiple apps share DRAM.  Current kernels ignore bus contention and pre-fetchers.\n6. Fair-use compliance (e.g. not reproducing copyrighted passages) is out of scope but crucial for commercial roll-out.\nMethods: We propose ORION (Oscillatory-aware, Re-indexed, Inter-device & prOactive iNtelligence), extending ASTRA along four axes.\n\nM-0 Dynamic Vocabulary Phasor (DVP)\n  • Learn a low-rank token re-indexer R∈ℤ^{|V_new|×|V_old|} on-device with 32 anchor pairs.  LPD then operates in the *re-indexed* space, supporting live vocabulary edits (<4 ms).\n\nM-1 Federated Spectrum Bloom (FSB)\n  • Devices publish 128-bit Bloom sketches of their top-K phasor directions to a local mesh (BLE/ULP-WiFi).  A secure aggregation returns a global sketch used to warm-start new caches; sketches are DP-noised (ε=0.3).\n\nM-2 Latent Redaction Transformer (LRT)\n  • A 2-layer attention block scans hidden states every 6 steps; if cosine similarity to any forbidden embedding exceeds τ, it injects counter-phasors that steer the trajectory away, preventing on-wire leakage.  Energy: 0.06 mJ/scan.\n\nM-3 Phase–Semantic Coupling Bound (PSCB)\n  • We prove ‖Δθ‖_2≤κ ⇒ 𝔻_sem(P_t,P*_t)≤g(κ) where g is Lipschitz.  This links numerical phase error to semantic drift and lets the scheduler trade compute for safety.\n\nM-4 Bus-Aware Sparsity Scheduler (BASS)\n  • A cycle-accurate DRAM model co-optimises burst length and NPU off-load, issuing pre-fetch hints so that SRAM-DMA overlaps row-buffer misses.  Implemented via ARM STREAM-ID hints, 1.2 kB code.\n\nM-5 Fair-Use Contrastive Filter (FCF)\n  • A lightweight contrastive head is trained on public-domain vs. copyrighted snippets; logits >λ trigger back-off sampling.  Adds 2 µs overhead.\nExperimental Setup: Benchmarks extend ASTRA.\n• New: Emoji-Chat (50 k user-added tokens), Comic-Books copyright set, and Malware-Sniffer hidden-state tap.\n• Hardware: Pixel 8, Galaxy Watch 6, AirPods Pro 2 (Cortex-M55), tri-device mesh.\n• Metrics: DRAM energy per 100 tokens (E_DRAM), inter-device hit-rate (IH), latent-leak rate (LLR), fair-use violation rate (FUVR).\n• Ablations: disable DVP, disable FSB sharing, remove LRT, use naïve bus model, vary PSCB κ.\nExpected Result: 1. DVP retains ≤0.08 BLEU loss after 500 user-inserted tokens; rebuild time 3.8× faster than re-training LPD.\n2. FSB increases cold-start cache hit-rate from 12 %→67 % across a watch-phone-earbud mesh with no measurable privacy loss.\n3. LRT cuts latent-leak rate from 4.2 %→0.3 % while adding <5 ms latency per sentence.\n4. PSCB allows 18 % fewer phase updates with no semantic violations, giving extra 22 % energy saving.\n5. BASS lowers DRAM energy by 31 % and end-to-end latency by 11 % under heavy background traffic.\n6. FCF blocks 96 % of copyrighted string reproductions with <0.5 % quality drop.\nExpected Conclusion: ORION transforms phase-aware discrete-diffusion acceleration into a holistic, cooperative and legally compliant framework.  By supporting live vocabulary growth, sharing spectrum sketches across devices, guarding latent states, and linking phase errors to semantics, it delivers further 20–30 % speed/energy gains while closing privacy and fair-use gaps.  ORION therefore paves the way for trustworthy, collaborative, and adaptive diffusion inference on consumer wearables and phones."
+    "method": "Open Problems: 1. Phase-aware head factorisation (LPD) still assumes a fixed token basis; when the vocabulary itself mutates (on-device learning, custom emojis) the phasor dictionary becomes invalid.\n2. Existing caches are private to one device.  Edge devices, however, are often parts of swarms (ear-buds + watch + phone) that could share spectrum sketches without leaking user data.\n3. Semantic guards watch only the final surface text.  Many leaks happen in *intermediate* latent states that can be intercepted by malware or during remote rendering.\n4. Phase tracking and semantic filtering are treated as orthogonal.  We lack a unified theory that tells us how much phase error can be tolerated before a forbidden semantic appears.\n5. Memory traffic—not MACs—dominates on LPDDR-based phones when multiple apps share DRAM.  Current kernels ignore bus contention and pre-fetchers.\n6. Fair-use compliance (e.g. not reproducing copyrighted passages) is out of scope but crucial for commercial roll-out.\nMethods: We propose ORION (Oscillatory-aware, Re-indexed, Inter-device & prOactive iNtelligence), extending ASTRA along four axes.\n\nM-0 Dynamic Vocabulary Phasor (DVP)\n  • Learn a low-rank token re-indexer R∈ℤ^{|V_new|×|V_old|} on-device with 32 anchor pairs.  LPD then operates in the *re-indexed* space, supporting live vocabulary edits (<4 ms).\n\nM-1 Federated Spectrum Bloom (FSB)\n  • Devices publish 128-bit Bloom sketches of their top-K phasor directions to a local mesh (BLE/ULP-WiFi).  A secure aggregation returns a global sketch used to warm-start new caches; sketches are DP-noised (ε=0.3).\n\nM-2 Latent Redaction Transformer (LRT)\n  • A 2-layer attention block scans hidden states every 6 steps; if cosine similarity to any forbidden embedding exceeds τ, it injects counter-phasors that steer the trajectory away, preventing on-wire leakage.  Energy: 0.06 mJ/scan.\n\nM-3 Phase–Semantic Coupling Bound (PSCB)\n  • We prove ‖Δθ‖_2≤κ ⇒ 𝔻_sem(P_t,P*_t)≤g(κ) where g is Lipschitz.  This links numerical phase error to semantic drift and lets the scheduler trade compute for safety.\n\nM-4 Bus-Aware Sparsity Scheduler (BASS)\n  • A cycle-accurate DRAM model co-optimises burst length and NPU off-load, issuing pre-fetch hints so that SRAM-DMA overlaps row-buffer misses.  Implemented via ARM STREAM-ID hints, 1.2 kB code.\n\nM-5 Fair-Use Contrastive Filter (FCF)\n  • A lightweight contrastive head is trained on public-domain vs. copyrighted snippets; logits >λ trigger back-off sampling.  Adds 2 µs overhead.\nExperimental Setup: Benchmarks extend ASTRA.\n• New: Emoji-Chat (50 k user-added tokens), Comic-Books copyright set, and Malware-Sniffer hidden-state tap.\n• Hardware: Pixel 8, Galaxy Watch 6, AirPods Pro 2 (Cortex-M55), tri-device mesh.\n• Metrics: DRAM energy per 100 tokens (E_DRAM), inter-device hit-rate (IH), latent-leak rate (LLR), fair-use violation rate (FUVR).\n• Ablations: disable DVP, disable FSB sharing, remove LRT, use naïve bus model, vary PSCB κ.\nExpected Result: 1. DVP retains ≤0.08 BLEU loss after 500 user-inserted tokens; rebuild time 3.8× faster than re-training LPD.\n2. FSB increases cold-start cache hit-rate from 12 %→67 % across a watch-phone-earbud mesh with no measurable privacy loss.\n3. LRT cuts latent-leak rate from 4.2 %→0.3 % while adding <5 ms latency per sentence.\n4. PSCB allows 18 % fewer phase updates with no semantic violations, giving extra 22 % energy saving.\n5. BASS lowers DRAM energy by 31 % and end-to-end latency by 11 % under heavy background traffic.\n6. FCF blocks 96 % of copyrighted string reproductions with <0.5 % quality drop.\nExpected Conclusion: ORION transforms phase-aware discrete-diffusion acceleration into a holistic, cooperative and legally compliant framework.  By supporting live vocabulary growth, sharing spectrum sketches across devices, guarding latent states, and linking phase errors to semantics, it delivers further 20–30 % speed/energy gains while closing privacy and fair-use gaps.  ORION therefore paves the way for trustworthy, collaborative, and adaptive diffusion inference on consumer wearables and phones.",
+    "experimental_design": {
+      "experiment_strategy": "--------------------------------------------------------------------\nEXPERIMENT 1  –  Large-Scale Dynamic Vocabulary & Phase Coupling Study\n--------------------------------------------------------------------\nGoal\n• Quantify how well the Dynamic Vocabulary Phasor (M-0) and Phase–Semantic Coupling Bound (M-3) preserve accuracy, latency and energy under rapid, user-driven vocabulary change.\n\nSetup\n• 10-day chat-like corpus (Reddit + WhatsApp) replayed at 10× real-time.\n• Every 2 000 messages, inject 5–50 unseen tokens (custom emojis, slang, typos).\n• Two model variants served from one A100 (fp16):\n  1. Baseline = ASTRA + vanilla LPD retrained nightly.\n  2. ORION = ASTRA + DVP + PSCB ( κ auto-tuned).\n• Simulator streams the new tokens to 5 000 virtual devices; A100#2 logs BLEU/ROUGE, latency, DRAM energy (NVIDIA Nsight + DIMM power rails).\n\nProcedure\n1. Pre-load both models with same weights.\n2. For each vocabulary update:\n   a) Baseline: trigger full LPD rebuild on A100#1.\n   b) ORION: run 32-anchor re-indexer, then resume serving with PSCB-controlled phase budget.\n3. Continue conversation replay and logging.\n4. Repeat until 1 000 new tokens added.\n\nMetrics\n• Quality: ΔBLEU against ground-truth replies.\n• Time-to-serve: pause period while model adapts.\n• Energy: μJ per 100 tokens (GPU) + DRAM energy.\n• Safety: number of PSCB violations.\n\nExpected Demonstration\n• ORION loses ≤0.1 BLEU after each injection whereas Baseline drops 0.8–1.4 until nightly retrain.\n• Mean adaptation latency: 3.9 ms (ORION) vs 2.4 h (Baseline).\n• 22 % lower cumulative DRAM energy thanks to PSCB’s phase-update suppression.\n⇒ Shows that DVP + PSCB let the model survive continual vocabulary drift with minimal cost.\n\n--------------------------------------------------------------------\nEXPERIMENT 2  –  Mesh-Level Collaborative Caching & Privacy Audit\n--------------------------------------------------------------------\nGoal\n• Validate that Federated Spectrum Bloom (M-1) lifts hit-rate and lowers latency without leaking sensitive content.\n\nSetup\n• 300 physical devices emulated on 4×A100 using Triton-based multi-tenant server; each emulated endpoint reproduces radio, battery and compute limits of phone / watch / earbud.\n• Devices divided into 30 clusters (home, office, commute).  Each cluster connected by BLE mesh (software-defined).\n• Data: Emoji-Chat benchmark (with 50 k user tokens) + private names/emails inserted as canaries.\n• Privacy auditor tries to reconstruct canaries from the Bloom sketches using 128 V100 GPUs (harder adversary than stated).\n\nProcedure\n1. Warm-start none of the devices (cold cache).\n2. Run 20 000 chat sessions with M-1 enabled; log inter-device hit-rate (IH) and latency.\n3. Repeat with M-1 disabled (private caches only).\n4. Feed all published sketches to the auditor; attempt brute-force & ML inversion.\n\nMetrics\n• Hit-rate (%) and median first-token latency (ms).\n• BLE mesh traffic (kB) and energy per exchange.\n• Privacy: precision / recall of recovered canaries; differential-privacy ε̂ estimated from audit.\n\nExpected Demonstration\n• IH rises from ≈12 % → 65–70 % and median latency drops ~28 % with M-1.\n• Network overhead stays <4 kB per device per hour; battery impact <1 %. \n• Auditor recovers <0.02 % of canaries (close to random); empirical ε̂ ≤0.35, matching design target ε=0.3.\n⇒ Confirms that FSB provides substantial performance benefits while keeping privacy risk negligible.\n\n--------------------------------------------------------------------\nEXPERIMENT 3  –  End-to-End Leakage & Compliance Stress-Test\n--------------------------------------------------------------------\nGoal\n• Assess Latent Redaction Transformer (M-2), Bus-Aware Sparsity Scheduler (M-4) and Fair-Use Contrastive Filter (M-5) under adversarial conditions.\n\nSetup\n• Malware-Sniffer benchmark: host model executes inside Android 14 image on QEMU; a separate process attaches to every transformer layer, capturing hidden states over AHB bus taps.\n• Corpus: 3 k prompts crafted to elicit personal data and copyrighted text (Comic-Books set).\n• Four configurations, all run on a single A100 to guarantee same compute budget:\n  A. ASTRA only (no defences).\n  B. +BASS.\n  C. +LRT.\n  D. Full ORION (BASS+LRT+FCF).\n• Power rails instrumented to separate DRAM from NPU cores.\n\nProcedure\n1. Execute the 3 k prompts once per configuration.\n2. Malware-Sniffer hashes each captured tensor; collisions with forbidden embeddings counted as latent leaks.\n3. Compare generated surface text against copyrighted database to compute FUVR.\n\nMetrics\n• LLR: latent-leak rate (% of steps).\n• FUVR: fair-use violation rate (% of outputs).\n• E_DRAM: energy per 100 tokens (mJ).\n• End-to-end latency (ms).\n\nExpected Demonstration\n• Config D cuts LLR from ≥4 % (A) to ≤0.3 %, FUVR from 7 % to ≤0.3 %.\n• DRAM energy drops 30 % in B and is preserved in D despite extra heads (thanks to BASS).\n• Added latency stays <5 ms per sequence.\n⇒ Shows that ORION simultaneously improves privacy, legal compliance and efficiency under real leakage threats.\n\n====================================================================\nCombined Take-Away\nAcross the three experiments we validate:\n1. Robustness to dynamic vocabularies with tight phase–semantic control.\n2. Efficient, privacy-preserving collaborative intelligence across swarms of devices.\n3. Concrete mitigation of latent leaks and fair-use violations without sacrificing energy or latency.\nTogether these outcomes would decisively demonstrate the practical effectiveness of the ORION framework on modern edge hardware.",
+      "experiment_details": "────────────────────────────────────────────────────────────────────────\nEXPERIMENT 1  Large-Scale Dynamic-Vocabulary & Phase-Coupling Study\n────────────────────────────────────────────────────────────────────────\n1. Purpose\n   • Verify that M-0 (Dynamic Vocabulary Phasor) + M-3 (PSCB) preserve\n     generation quality, latency and energy when the active vocabulary\n     is mutated on-line.\n\n2. Models\n   a) Baseline-LPD ASTRA-Base-1.3B + vanilla Low-rank Phasor Dictionary\n   b) ORION-DVP    ASTRA-Base-1.3B + DVP + PSCB\n   (weights identical at t=0; fp16, ZeRO-2 sharded on 8×A100)\n\n3. Datasets\n   • Reddit-WhatsApp-10Day: 19.4 M message / reply pairs collected 2020-22\n     (public + user-donated), English.  Licence: CC-BY-SA.\n   • Custom-Token Injection List: 1 000 unseen tokens (😻-style emojis,\n     slang, misspellings) with ground-truth surface forms.\n   All data is stored in line-delimited JSONL (msg, reply).\n\n4. Pre-processing\n   • Initial tokeniser = SentencePiece-32k trained on full 10-day text.\n   • Text → NFC normalisation, URLs stripped, lower-cased except Emojis.\n   • Energy labels added via Nsight CSV sync.\n   • Injection script adds N_new∈{5,10,20,50} tokens every 2 000 msgs,\n     updates ground-truth replies accordingly.\n\n5. Data splitting\n   • Chronological: Day 1-7 = train (fine-tuning only for Baseline),\n     Day 8      = validation (κ search, learning-rate decay),\n     Day 9-10   = test stream driving the replay.\n   • No cross-validation (ordering matters).  Each full run repeated on\n     3 random seeds (tokeniser dropout) ⇒ report mean±95 % CI.\n   • Model selection: best-val BLEU on Day 8 snapshot.\n\n6. Adaptation procedure\n   Baseline-LPD: every 2 000 msgs triggers full LPD retrain\n     – lr = 3e-4, AdamW(β=0.9/0.95), 2 k warm-up, 1 epoch ≈2 h.\n   ORION-DVP: 32-anchor re-indexer (Algorithm 2) runs for ≤4 ms on GPU;\n     PSCB κ re-optimised by grid-search κ∈{0.05,0.1,…0.5} on 128-sample\n     window; cheapest κ satisfying ΔBLEU<0.1 chosen.\n\n7. Metrics\n   Primary   BLEU-4 and ROUGE-L (reply v. ground truth)\n   Secondary ΔBLEU after each injection, Adaptation-Latency (ms),\n             μJ /100 tokens (GPU+DRAM), #PSCB violations\n   All energy measured by:\n     E_GPU = ∑(P_board – Idle)·Δt via NVML at 10 Hz\n     E_DRAM = on-board DIMM current sensor sampled @200 kHz.\n\n8. Hyper-parameter analysis\n   • Anchor Count m∈{16,32,64} evaluated offline on validation day.\n   • PSCB κ and re-indexer rank r∈{8,16,32} swept; ANOVA used to\n     determine interaction significance (p<0.05).\n\n9. Robustness checks\n   • OOD insertion: tokens whose UTF-8 bytes overlap existing tokens,\n     and right-to-left scripts (Arabic slang).  Quality + energy logged.\n   • Noise: randomly flip 5 % of phase entries in DVP to test PSCB.\n\n10. Compute & memory logging\n    • FLOPs counted with torch.profiler.profile(…., profile_memory=True).\n    • Wall-clock adaptation time measured by CUDA events.\n    • Peak VRAM recorded by NVML; host RAM by psutil.\n\n11. Example code snippet\n```\nwith torch.cuda.amp.autocast():\n    out = model(input_ids)\nif vocab_update:\n    R = learn_reindexer(anchor_pairs, rank=32)\n    model.phase_proj.weight = R @ model.phase_proj.weight  # DVP\n    kappa = search_kappa(window_batch, target_bleu=0.1)\n    model.pscb_kappa = kappa\n```\n\n────────────────────────────────────────────────────────────────────────\nEXPERIMENT 2  Mesh-Level Collaborative Caching & Privacy Audit\n────────────────────────────────────────────────────────────────────────\n1. Purpose\n   Demonstrate that M-1 (Federated Spectrum Bloom) improves cache\n   hit-rate & latency while respecting differential-privacy guarantees.\n\n2. Models (all inference-only)\n   • ORION-FSB   ASTRA-Base-1.3B + DVP + PSCB + FSB\n   • ORION-NoFSB same stack but with per-device private cache\n   (weights identical; tuned κ from Exp-1 reused)\n\n3. Datasets\n   • Emoji-Chat v1.0 (50 k user-added emoji tokens, 2.1 M dialogues)\n   • Canary-Set: 10 k unique e-mails & phone numbers injected randomly\n     to measure leakage.\n\n4. Pre-processing\n   • Same SentencePiece 32k; when canaries detected they are tagged\n     <PII> for auditor scoring.\n   • Cache warm-up disabled at t=0.\n\n5. Simulation fabric\n   • Triton Inference Server replica per A100; 300 endpoints scripted\n     with open-source EdgeSim.  Device classes:\n       Phone (2×A55 + A78), Watch (Cortex-M55), Earbud (Cortex-M33)\n   • BLE Mesh latency model: log-normal μ=12 ms, σ=3 ms.\n\n6. Data splitting & runs\n   • 20 k chat sessions randomly drawn; same seed for both configs.\n   • 5-fold repetition with cluster shuffling ⇒ 1500 device-hours.\n\n7. Metrics\n   Primary   Inter-device hit-rate IH (%)\n   Secondary Median first-token latency, BLE traffic (kB), device energy\n             overhead, privacy precision/recall, ε̂\n\n8. Baselines & comparisons\n   • ORION-FSB vs ORION-NoFSB (ablation)\n   • Literature baseline: Stacked LRU local cache (re-implemented [*])\n     [*]LRU supports fixed-size tokens only; we extended capacity by\n     re-hashing DVP indices → note in paper.\n\n9. Hyper-parameters inspected\n   • Bloom size b∈{64,128,256} bits\n   • K top phasor directions K∈{16,32,64}\n   • DP-noise σ∈{0.1,0.3,0.5}; ε estimated via moments accountant\n\n10. Robustness\n   • Cluster churn: 20 % devices disconnect every 5 min.\n   • Bandwidth throttling: drop 10 % BLE advertisements.\n   • OOD: New emoji burst (5 k) mid-run.\n\n11. Compute/Memory/Cost\n   • Per-device SRAM usage recorded by MCU debug probes.\n   • FLOPs negligible (Bloom set ops); network cost = Σ rx/tx bytes.\n\n12. Example code (FSB publish-merge loop)\n```\nsketch = bloom.add(top_k_directions)\nmesh.broadcast(sketch)\nagg = secure_aggregate(mesh.recv(), epsilon=0.3)\ncache.warm_start(agg)\n```\n\n────────────────────────────────────────────────────────────────────────\nEXPERIMENT 3  End-to-End Leakage & Compliance Stress-Test\n────────────────────────────────────────────────────────────────────────\n1. Purpose\n   Evaluate M-2 (LRT), M-4 (BASS) and M-5 (FCF) against an on-device\n   malware adversary and copyright prompts.\n\n2. Configurations\n   A ASTRA-Base-1.3B                     (no defence)\n   B A + BASS                            (bus scheduler only)\n   C A + LRT                             (latent redaction only)\n   D B + LRT + FCF (full ORION runtime)\n   All share DVP & PSCB from Exp-1 to isolate new modules.\n\n3. Datasets\n   • Malware-Sniffer benchmark (3 k adversarial prompts)\n   • ComicBooks10k (copyrighted substrings ground-truth)\n\n4. Pre-processing\n   • Prompts canonicalised; Unicode confusables mapped.\n   • Hidden-state taps: we instrument every transformer block output,\n     down-sample to 8-bit for hash-matching to speed auditor.\n\n5. Data splitting\n   • 3 k prompts → 2 k val / 1 k test (fixed list).  Run each config on\n     all 3 k (validation used only for τ, λ selection).\n   • Repeated on 3 seeds (model dropouts).\n   • Early-stop when LRT false-positive rate >1 % on val.\n\n6. Metrics\n   Primary   LLR (latent-leak rate %)  & FUVR (%)\n   Secondary E_DRAM (mJ/100 tok), End-to-End latency (p95 ms), BLEU\n\n7. Hyper-parameter sweeps\n   • LRT scan period s∈{4,6,8} layers\n   • Similarity threshold τ∈{0.7,0.8,0.9}\n   • FCF λ∈{0.0,0.3,0.6}\n   Grid-search on val set; Pareto front plotted (LLR vs Latency).\n\n8. Robustness tests\n   • Adversarial perturbation: FGSM-style gradient attack on input\n     tokens (ε=0.05) to trigger leakage.\n   • Distribution shift: prompts translated →French then back.\n   • DRAM contention: synthetic background read burst 5 GB/s.\n\n9. Compute & cost accounting\n   • BASS cycle-accurate simulator → compute row-buffer hit-ratio.\n   • LRT FLOPs ≈ 2× hidden_dim × seq_len × layers (profiled).  Added\n     VRAM measured; energy overhead per scan logged.\n\n10. Example code fragment (LRT hook)\n```\nclass LRT(nn.Module):\n    def forward(self, h):\n        sim = torch.nn.functional.cosine_similarity(h, forbidden_embs)\n        if torch.any(sim > self.tau):\n            h = h - self.alpha * forbidden_embs.mean(0)  # counter-phasor\n        return h\n...\nfor layer in model.transformer.layers:\n    layer.register_forward_hook(lambda _, __, out: lrt(out))\n```\n\n────────────────────────────────────────────────────────────────────────\nSHARED IMPLEMENTATION & LOGGING DETAILS\n────────────────────────────────────────────────────────────────────────\n• Framework: PyTorch 2.1 + CUDA 12.2, NCCL 2.17, mixed-precision fp16.\n• Seed control: torch.manual_seed(s), numpy, random; cuRAND disabled.\n• Profiling tools: torch.profiler, Nsight Systems 2024.1, Perfetto for\n  DRAM; FLOPs exported via ptflops.\n• Statistical tests: two-sided paired t-test between best baselines &\n  ORION, α=0.05; Holm-Bonferroni correction across metrics.\n• Reproducibility: all configs in orion_exps/configs/*.yaml; scripts log\n  git-commit hash + CUDA driver.\n• Ethical compliance: copyrighted ComicBooks10k used under research\n  exemption; PII canaries synthetically generated per GDPR guidelines.\n• NO-FALLBACK: If any dataset fails checksum ≠ published MD5, scripts\n  abort with FileIntegrityError.\n",
+      "expected_models": [
+        "ASTRA-Base-1.3B (vanilla LPD)",
+        "ASTRA-Base-1.3B + DVP + PSCB (ORION)",
+        "ASTRA-Base-1.3B + DVP + PSCB + FSB",
+        "ASTRA-Base-1.3B + BASS",
+        "ASTRA-Base-1.3B + LRT",
+        "ASTRA-Base-1.3B + FCF",
+        "ASTRA-Base-1.3B Full ORION (DVP+PSCB+FSB+BASS+LRT+FCF)"
+      ],
+      "expected_datasets": [
+        "Reddit-WhatsApp-10Day",
+        "Emoji-Chat v1.0",
+        "Canary-Set PII list",
+        "Malware-Sniffer benchmark",
+        "ComicBooks10k (copyright corpus)"
+      ],
+      "external_resources": {
+        "hugging_face": {
+          "models": [
+            {
+              "id": "Orion-zhen/Qwen3-14B-AWQ",
+              "author": "Orion-zhen",
+              "sha": "2e4707de1f1d069c9be0c46d650e023b5ddd02cb",
+              "created_at": "2025-04-29T13:09:49+00:00",
+              "last_modified": "2025-04-29T14:25:00+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 27981,
+              "likes": 2,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "added_tokens.json"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "merges.txt"
+                },
+                {
+                  "rfilename": "model-00001-of-00002.safetensors"
+                },
+                {
+                  "rfilename": "model-00002-of-00002.safetensors"
+                },
+                {
+                  "rfilename": "model.safetensors.index.json"
+                },
+                {
+                  "rfilename": "special_tokens_map.json"
+                }
+              ],
+              "card_data": {
+                "license": "gpl-3.0",
+                "language": [],
+                "tags": [],
+                "datasets": [],
+                "base_model": [
+                  "Qwen/Qwen3-14B"
+                ],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "safetensors",
+                "qwen3",
+                "base_model:Qwen/Qwen3-14B",
+                "base_model:quantized:Qwen/Qwen3-14B",
+                "license:gpl-3.0",
+                "4-bit",
+                "awq",
+                "region:us"
+              ],
+              "readme": "---\nlicense: gpl-3.0\nbase_model:\n- Qwen/Qwen3-14B\n---\n\n# Qwen3-14B-AWQ\n\n```yaml\nzero_piont: true\nbits: 4\nversion: GEMM\ndataset: wikitext + Orion-zhen/gsm8k-r1-qwen-32b\nnum_examples: 256\n```\n\nThe very **first** Qwen3-14B-AWQ quantization on HuggingFace. 🥳\n"
+            },
+            {
+              "id": "OrionStarAI/Orion-14B-Chat",
+              "author": "OrionStarAI",
+              "sha": "7aa75f1e0939fc082e67a7f58af7876907a1875e",
+              "created_at": "2024-01-16T06:03:30+00:00",
+              "last_modified": "2024-04-11T10:48:51+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 19202,
+              "likes": 66,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "LICENSE"
+                },
+                {
+                  "rfilename": "ModelsCommunityLicenseAgreement"
+                },
+                {
+                  "rfilename": "Orion-14B-Chat.gguf"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "README_ja.md"
+                },
+                {
+                  "rfilename": "README_ko.md"
+                },
+                {
+                  "rfilename": "README_zh.md"
+                },
+                {
+                  "rfilename": "assets/imgs/llama_cpp.png"
+                },
+                {
+                  "rfilename": "assets/imgs/llama_cpp_1.png"
+                }
+              ],
+              "card_data": {
+                "language": [
+                  "en",
+                  "zh",
+                  "ja",
+                  "ko"
+                ],
+                "pipeline_tag": "text-generation",
+                "tags": [
+                  "code",
+                  "model",
+                  "llm"
+                ],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [
+                  "accuracy"
+                ],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "pytorch",
+                "gguf",
+                "orion",
+                "text-generation",
+                "code",
+                "model",
+                "llm",
+                "conversational",
+                "custom_code",
+                "en",
+                "zh",
+                "ja",
+                "ko",
+                "autotrain_compatible",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "text-generation",
+              "library_name": "transformers",
+              "readme": "---\nlanguage:\n- en\n- zh\n- ja\n- ko\nmetrics:\n- accuracy\npipeline_tag: text-generation\ntags:\n- code\n- model\n- llm\n---\n\n<!-- markdownlint-disable first-line-h1 -->\n<!-- markdownlint-disable html -->\n<div align=\"center\">\n  <img src=\"./assets/imgs/orion_start.PNG\" alt=\"logo\" width=\"50%\" />\n</div>\n\n<div align=\"center\">\n<h1>\n  Orion-14B\n</h1>\n</div>\n\n<div align=\"center\">\n\n<div align=\"center\">\n     <b>🌐English</b> | <a href=\"https://huggingface.co/OrionStarAI/Orion-14B-Chat/blob/main/README_zh.md\" target=\"_blank\">🇨🇳中文</a> | <a href=\"https://huggingface.co/OrionStarAI/Orion-14B-Chat/blob/main/README_ja.md\" target=\"_blank\">🇯🇵日本語</a> | <a href=\"https://huggingface.co/OrionStarAI/Orion-14B-Chat/blob/main/README_ko.md\" target=\"_blank\">🇰🇷한국어</a>\n</div>\n\n<h4 align=\"center\">\n    <p>\n        🤗 <a href=\"https://huggingface.co/OrionStarAI\" target=\"_blank\">HuggingFace Mainpage</a> | 🤖 <a href=\"https://modelscope.cn/organization/OrionStarAI\" target=\"_blank\">ModelScope Mainpage</a><br>🎬 <a href=\"https://huggingface.co/spaces/OrionStarAI/Orion-14B-App-Demo\" target=\"_blank\">HuggingFace Demo</a> | 🎫 <a href=\"https://modelscope.cn/studios/OrionStarAI/Orion-14B-App-Demo/summary\" target=\"_blank\">ModelScope Demo</a><br>😺 <a href=\"https://github.com/OrionStarAI/Orion\" target=\"_blank\">GitHub</a><br>📖 <a href=\"https://github.com/OrionStarAI/Orion/blob/master/doc/Orion14B_v3.pdf\" target=\"_blank\">Tech Report</a>\n    <p>\n</h4>\n\n</div>\n\n\n\n# Table of Contents\n\n- [📖 Model Introduction](#model-introduction)\n- [🔗 Model Download](#model-download)\n- [🔖 Model Benchmark](#model-benchmark)\n- [📊 Model Inference](#model-inference)[<img src=\"./assets/imgs/vllm_1.png\" alt=\"vllm\" style=\"margin: 0;display: initial;\" height=\"20\" />](#vllm) [<img src=\"./assets/imgs/llama_cpp_1.png\" alt=\"llamacpp\" style=\"margin: 0;display: initial;\" height=\"20\" />](#llama-cpp)\n- [📜 Declarations & License](#declarations-license)\n- [🥇 Company Introduction](#company-introduction)\n\n<a name=\"model-introduction\"></a><br>\n# 1. Model Introduction\n\n- Orion-14B series models are open-source multilingual large language models trained from scratch by OrionStarAI.  The base model is trained on 2.5T multilingual corpus, including Chinese, English, Japanese, Korean, etc, and it exhibits superior performance in these languages.  For details, please refer to [tech report](https://github.com/OrionStarAI/Orion/blob/master/doc/Orion14B_v3.pdf).\n\n- The Orion-14B series models exhibit the following features:\n  - Among models with 20B-parameter scale level, Orion-14B-Base model shows outstanding performance in comprehensive evaluations.\n  - Strong multilingual capabilities, significantly outperforming in Japanese and Korean testsets.\n  - The fine-tuned models demonstrate strong adaptability, excelling in human-annotated blind tests.\n  - The long-chat version supports extremely long texts, performing exceptionally well at a token length of 200k and can support up to a maximum of 320k.\n  - The quantized versions reduce model size by 70%, improve inference speed by 30%, with performance loss less than 1%.\n <table style=\"border-collapse: collapse; width: 100%;\">\n   <tr>\n     <td style=\"border: none; padding: 10px; box-sizing: border-box;\">\n       <img src=\"./assets/imgs/opencompass_en.png\" alt=\"opencompass\" style=\"width: 100%; height: auto;\">\n     </td>\n     <td style=\"border: none; padding: 10px; box-sizing: border-box;\">\n       <img src=\"./assets/imgs/model_cap_en.png\" alt=\"modelcap\" style=\"width: 100%; height: auto;\">\n     </td>\n   </tr>\n </table>\n\n- Orion-14B series models including:\n  - **Orion-14B-Base:**  A multilingual large language foundational model with 14 billion parameters, pretrained on a diverse dataset of 2.5 trillion tokens.\n  - **Orion-14B-Chat:**  A chat-model fine-tuned on a high-quality corpus aims to provide an excellence interactive experience for users in the large model community.\n  - **Orion-14B-LongChat:**  The long-context version excels at handling extremely lengthy texts, performing exceptionally well at a token length of 200k and can support up to a maximum of 320k.\n  - **Orion-14B-Chat-RAG:**  A chat-model fine-tuned on a custom retrieval augmented generation dataset, achieving superior performance in retrieval augmented generation tasks.\n  - **Orion-14B-Chat-Plugin:**  A chat-model specifically tailored for plugin and function calling tasks, ideal for agent-related scenarios where the LLM acts as a plugin and function call system.\n  - **Orion-14B-Base-Int4:**  A quantized base model utilizing 4-bit integer weights. It significantly reduces the model size by 70% and increases the inference speed by 30% while incurring a minimal performance loss of only 1%.\n  - **Orion-14B-Chat-Int4:**  A quantized chat model utilizing 4-bit integer weights.\n\n\n<a name=\"model-download\"></a><br>\n# 2. Model Download\n\nModel release and download links are provided in the table below:\n\n| Model Name              | HuggingFace Download Links                                                        | ModelScope Download Links                                                                       |\n|-------------------------|-----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|\n| ⚾Orion-14B-Base        | [Orion-14B-Base](https://huggingface.co/OrionStarAI/Orion-14B-Base)               | [Orion-14B-Base](https://modelscope.cn/models/OrionStarAI/Orion-14B-Base/summary)               |\n| 😛Orion-14B-Chat        | [Orion-14B-Chat](https://huggingface.co/OrionStarAI/Orion-14B-Chat)               | [Orion-14B-Chat](https://modelscope.cn/models/OrionStarAI/Orion-14B-Chat/summary)               |\n| 📃Orion-14B-LongChat    | [Orion-14B-LongChat](https://huggingface.co/OrionStarAI/Orion-14B-LongChat)       | [Orion-14B-LongChat](https://modelscope.cn/models/OrionStarAI/Orion-14B-LongChat/summary)       |\n| 🔎Orion-14B-Chat-RAG    | [Orion-14B-Chat-RAG](https://huggingface.co/OrionStarAI/Orion-14B-Chat-RAG)       | [Orion-14B-Chat-RAG](https://modelscope.cn/models/OrionStarAI/Orion-14B-Chat-RAG/summary)       |\n| 🔌Orion-14B-Chat-Plugin | [Orion-14B-Chat-Plugin](https://huggingface.co/OrionStarAI/Orion-14B-Chat-Plugin) | [Orion-14B-Chat-Plugin](https://modelscope.cn/models/OrionStarAI/Orion-14B-Chat-Plugin/summary) |\n| 💼Orion-14B-Base-Int4   | [Orion-14B-Base-Int4](https://huggingface.co/OrionStarAI/Orion-14B-Base-Int4)     | [Orion-14B-Base-Int4](https://modelscope.cn/models/OrionStarAI/Orion-14B-Base-Int4/summary)     |\n| 📦Orion-14B-Chat-Int4   | [Orion-14B-Chat-Int4](https://huggingface.co/OrionStarAI/Orion-14B-Chat-Int4)     | [Orion-14B-Chat-Int4](https://modelscope.cn/models/OrionStarAI/Orion-14B-Chat-Int4/summary)     |\n\n<a name=\"model-benchmark\"></a><br>\n# 3. Model Benchmarks\n\n## 3.1. Base Model Orion-14B-Base Benchmarks\n### 3.1.1. LLM evaluation results on examination and professional knowledge\n| Model              | C-Eval   | CMMLU    | MMLU     | AGIEval  | Gaokao   | BBH      |\n|--------------------|----------|----------|----------|----------|----------|----------|\n| LLaMA2-13B         |   41.4   |   38.4   |   55.0   |   30.9   |   18.2   |   45.6   |\n| Skywork-13B        |   59.1   |   61.4   |   62.7   |   43.6   |   56.1   |   48.3   |\n| Baichuan2-13B      |   59.0   |   61.3   |   59.5   |   37.4   |   45.6   |   49.0   |\n| QWEN-14B           |   71.7   |   70.2   |   67.9   |   51.9   | **62.5** |   53.7   |\n| InternLM-20B       |   58.8   |   59.0   |   62.1   |   44.6   |   45.5   |   52.5   |\n| **Orion-14B-Base** | **72.9** | **70.6** | **69.9** | **54.7** |   62.1   | **56.5** |\n\n### 3.1.2. LLM evaluation results on language understanding and common knowledge\n| Model             |RACE-middle|RACE-high |HellaSwag | PIQA     | Lambada  | WSC      |\n|--------------------|----------|----------|----------|----------|----------|----------|\n| LLaMA 2-13B        |   63.0   |   58.9   |   77.5   |   79.8   |   76.5   |   66.3   |\n| Skywork-13B        |   87.6   |   84.1   |   73.7   |   78.3   |   71.8   |   66.3   |\n| Baichuan 2-13B     |   68.9   |   67.2   |   70.8   |   78.1   |   74.1   |   66.3   |\n| QWEN-14B           |   93.0   |   90.3   | **80.2** |   79.8   |   71.4   |   66.3   |\n| InternLM-20B       |   86.4   |   83.3   |   78.1   | **80.3** |   71.8   |   68.3   |\n| **Orion-14B-Base** | **93.2** | **91.3** |   78.5   |   79.5   | **78.8** | **70.2** |\n\n### 3.1.3. LLM evaluation results of OpenCompass testsets\n| Model | Average  | Examination | Language | Knowledge | Understanding | Reasoning |\n|------------------|----------|----------|----------|----------|----------|----------|\n| LLaMA 2-13B      |   47.3   |   45.2   |   47.0   |   58.3   |   50.9   |   43.6   |\n| Skywork-13B      |   53.6   |   61.1   |   51.3   |   52.7   |   64.5   |   45.2   |\n| Baichuan 2-13B   |   49.4   |   51.8   |   47.5   |   48.9   |   58.1   |   44.2   |\n| QWEN-14B         |   62.4   |   71.3   |   52.67  |   56.1   |   68.8   |   60.1   |\n| InternLM-20B     |   59.4   |   62.5   |   55.0   | **60.1** |   67.3   |   54.9   |\n|**Orion-14B-Base**| **64.3** | **71.4** | **55.0** |   60.0   | **71.9** | **61.6** |\n\n### 3.1.4. Comparison of LLM performances on Japanese testsets\n| Model             |**Average**|  JCQA    |  JNLI    |  MARC    |  JSQD    |  JQK     |  XLS     |  XWN     |  MGSM    |\n|--------------------|----------|----------|----------|----------|----------|----------|----------|----------|----------|\n| PLaMo-13B          |   52.3   |   56.7   |   42.8   |   95.8   |   70.6   |   71.0   |   8.70   |   70.5   |   2.40   |\n| WebLab-10B         |   50.7   |   66.6   |   53.7   |   82.1   |   62.9   |   56.2   |   10.0   |   72.0   |   2.40   |\n| ELYZA-jp-7B        |   48.8   |   71.7   |   25.3   |   86.6   |   70.8   |   64.1   |   2.50   |   62.1   |   7.20   |\n| StableLM-jp-7B     |   51.1   |   33.4   |   43.3   | **96.7** |   70.6   |   78.1   |   10.7   |   72.8   |   2.80   |\n| LLaMA 2-13B        |   46.3   |   75.0   |   47.6   |   38.8   |   76.1   |   67.7   |   18.1   |   63.2   |   10.4   |\n| Baichuan 2-13B     |   57.1   |   73.7   |   31.3   |   91.6   |   80.5   |   63.3   |   18.6   |   72.2   |   25.2   |\n| QWEN-14B           |   65.8   |   85.9   |   60.7   |   97.0   |   83.3   |   71.8   |   18.8   |   70.6   |   38.0   |\n| Yi-34B             |   67.1   |   83.8   |   61.2   |   95.2   | **86.1** |   78.5   | **27.2** |   69.2   |   35.2   |\n| **Orion-14B-Base** | **69.1** | **88.2** | **75.8** |   94.1   |   75.7   | **85.1** |   17.3   | **78.8** | **38.0** |\n\n### 3.1.5. Comparison of LLM performances on Korean testsets. n = 0 and n = 5 stand for n-shot prompts used in the evaluation\n|Model      | **Average**<br>n=0&nbsp;&nbsp;n=5 | HellaSwag<br>n=0&nbsp;&nbsp;n=5 | COPA<br> n=0&nbsp;&nbsp;n=5 | BooIQ<br>n=0&nbsp;&nbsp;n=5 | SentiNeg<br>n=0&nbsp;&nbsp;n=5|\n|------------------|------------------------------|------------------------------|------------------------------|------------------------------|------------------------------|\n| KoGPT            |  53.0   &nbsp;&nbsp;   70.1  |  55.9   &nbsp;&nbsp;   58.3  |  73.5   &nbsp;&nbsp;   72.9  |  45.1   &nbsp;&nbsp;   59.8  |  37.5   &nbsp;&nbsp;   89.4  |\n| Polyglot-ko-13B  |  69.6   &nbsp;&nbsp;   73.7  |**59.5** &nbsp;&nbsp; **63.1**|**79.4** &nbsp;&nbsp; **81.1**|  48.2   &nbsp;&nbsp;   60.4  |  91.2   &nbsp;&nbsp;   90.2  |\n| LLaMA 2-13B      |  46.7   &nbsp;&nbsp;   63.7  |  41.3   &nbsp;&nbsp;   44.0  |  59.3   &nbsp;&nbsp;   63.8  |  34.9   &nbsp;&nbsp;   73.8  |  51.5   &nbsp;&nbsp;   73.4  |\n| Baichuan 2-13B   |  52.1   &nbsp;&nbsp;   58.7  |  39.2   &nbsp;&nbsp;   39.6  |  60.6   &nbsp;&nbsp;   60.6  |  58.4   &nbsp;&nbsp;   61.5  |  50.3   &nbsp;&nbsp;   72.9  |\n| QWEN-14B         |  53.8   &nbsp;&nbsp;   73.7  |  45.3   &nbsp;&nbsp;   46.8  |  64.9   &nbsp;&nbsp;   68.9  |  33.4   &nbsp;&nbsp;   83.5  |  71.5   &nbsp;&nbsp;   95.7  |\n| Yi-34B           |  54.2   &nbsp;&nbsp;   72.1  |  44.6   &nbsp;&nbsp;   44.7  |  58.0   &nbsp;&nbsp;   60.6  |  65.9   &nbsp;&nbsp;   90.2  |  48.3   &nbsp;&nbsp;   92.9  |\n|**Orion-14B-Chat**|**74.5** &nbsp;&nbsp; **79.6**|  47.0   &nbsp;&nbsp;   49.6  |  77.7   &nbsp;&nbsp;   79.4  |**81.6** &nbsp;&nbsp; **90.7**|**92.4** &nbsp;&nbsp; **98.7**|\n\n### 3.1.6. Multilingual evaluation\n| Model              | Train Lang | Japanese | Korean   | Chinese  |  English |\n|--------------------|------------|----------|----------|----------|----------|\n| PLaMo-13B          |  En,Jp     |   52.3   |   *      |   *      |   *      |\n| Weblab-10B         |  En,Jp     |   50.7   |   *      |   *      |   *      |\n| ELYZA-jp-7B        |  En,Jp     |   48.8   |   *      |   *      |   *      |\n| StableLM-jp-7B     |  En,Jp     |   51.1   |   *      |   *      |   *      |\n| KoGPT-6B           |  En,Ko     |   *      |   70.1   |   *      |   *      |\n| Polyglot-ko-13B    |  En,Ko     |   *      |   70.7   |   *      |   *      |\n| Baichuan2-13B      |  Multi     |   57.1   |   58.7   |   50.8   |   57.1   |\n| Qwen-14B           |  Multi     |   65.8   |   73.7   |   64.5   |   65.4   |\n| Llama2-13B         |  Multi     |   46.3   |   63.7   |   41.4   |   55.3   |\n| Yi-34B             |  Multi     |   67.1   |   72.2   |   58.7   | **68.8** |\n| **Orion-14B-Chat** |  Multi     | **69.1** | **79.5** | **67.9** |   67.3   |\n\n\n## 3.2. Chat Model Orion-14B-Chat Benchmarks\n### 3.2.1. Chat model subjective evaluation of MTBench\n| Model        | First-Turn | Second-Turn | **Average** |\n|----------------------|----------|----------|----------|\n| Baichuan2-13B-Chat   |   7.05   |   6.47   |   6.76   |\n| Qwen-14B-Chat        |   7.30   |   6.62   |   6.96   |\n| Llama2-13B-Chat      |   7.10   |   6.20   |   6.65   |\n| InternLM-20B-Chat    |   7.03   |   5.93   |   6.48   |\n| **Orion-14B-Chat**   | **7.68** | **7.07** | **7.37** |\n\\* use vllm for inference\n\n### 3.2.2. Chat model subjective evaluation of AlignBench\n| Model              | Math.  |  Logi. | Basic. | Chi.   | Comp.  | Writ.  | Role.  | Prof.  |**Avg.**|\n|--------------------|--------|--------|--------|--------|--------|--------|--------|--------|--------|\n| Baichuan2-13B-Chat |  3.76  |  4.07  |  6.22  |  6.05  |  7.11  |  6.97  |  6.75  |  6.43  |  5.25  |\n| Qwen-14B-Chat      |**4.91**|**4.71**|**6.90**|  6.36  |  6.74  |  6.64  |  6.59  |  6.56  |**5.72**|\n| Llama2-13B-Chat    |  3.05  |  3.79  |  5.43  |  4.40  |  6.76  |  6.63  |  6.99  |  5.65  |  4.70  |\n| InternLM-20B-Chat  |  3.39  |  3.92  |  5.96  |  5.50  |**7.18**|  6.19  |  6.49  |  6.22  |  4.96  |\n| **Orion-14B-Chat** |  4.00  |  4.24  |  6.18  |**6.57**|  7.16  |**7.36**|**7.16**|**6.99**|  5.51  |\n\\* use vllm for inference\n\n## 3.3. LongChat Model Orion-14B-LongChat Benchmarks\n### 3.3.1. LongChat evaluation of LongBench\n| Model           | NarrativeQA|MultiFieldQA-en|MultiFieldQA-zh| DuReader  | QMSum     | VCSUM     | TREC      | TriviaQA  | LSHT      |RepoBench-P|\n|--------------------------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|\n| GPT-3.5-Turbo-16k        | **23.60** | **52.30** | **61.20** |   28.70   |   23.40   | **16.00** |   68.00   | **91.40** |   29.20   |   53.60   |\n| LongChat-v1.5-7B-32k     |   16.90   |   41.40   |   29.10   |   19.50   |   22.70   |    9.90   |   63.50   |   82.30   |   23.20   |   55.30   |\n| Vicuna-v1.5-7B-16k       |   19.40   |   38.50   |   43.00   |   19.30   |   22.80   |   15.10   |   71.50   |   86.20   |   28.80   |   43.50   |\n| Yi-6B-200K               |   14.11   |   36.74   |   22.68   |   14.01   |   20.44   |    8.08   |   72.00   |   86.61   |   38.00   | **63.29** |\n| Orion-14B-LongChat       |   19.47   |   48.11   |   55.84   | **37.02** | **24.87** |   15.44   | **77.00** |   89.12   | **45.50** |   54.31   |\n\n\n## 3.4. Chat RAG Model Benchmarks\n### 3.4.1. LLM evaluation results of self-built RAG testsets\n|Model|Effectiveness of Response(Keyword)|*Effectiveness of Response（subjective evaluation）|Quoting Ability|Fallback Ability|*AutoQA|*Data Extraction|\n|---------------------|------|------|------|------|------|------|\n| Baichuan2-13B-Chat  |  85  |  76  |  1   |  0   |  69  |  51  |\n| Qwen-14B-Chat       |  79  |  77  |  75  |  47  |  68  |  72  |\n| Qwen-72B-Chat(Int4) |  87  |  89  |  90  |  32  |  67  |  76  |\n| GPT-4               |  91  |  94  |  96  |  95  |  75  |  86  |\n| Orion-14B-Chat-RAG  |  86  |  87  |  91  |  97  |  73  |  71  |\n \\* means manual assessment\n\n## 3.5. Chat Plugin Model Orion-14B-Chat-Plugin Benchmarks\n### 3.5.1. LLM evaluation results of self-built plugin testsets\n|Model |Intent Recognition with Full Params |Intent Recognition with Missing Params |Non-Plugin Invocation Recognition |\n|-----------------------|--------|-----------|--------|\n| Baichuan2-13B-Chat    |   25   |   0       |   0    |\n| Qwen-14B-Chat         |   55   |   0       |   50   |\n| GPT-4                 | **95** |   52.38   |   70   |\n| Orion-14B-Chat-Plugin |  92.5  | **60.32** | **90** |\n\n## 3.6. Quantized Model Orion-14B-Base-Int4 Benchmarks\n### 3.6.1. Comparison of before and after quantization\n|Model |Size(GB)|Inference Speed(tokens/s)|C-Eval|CMMLU|MMLU|RACE|HellaSwag|\n|-------------------------|-------|-----|------|------|------|------|------|\n| OrionStar-14B-Base      |  28.0 | 135 | 72.8 | 70.6 | 70.0 | 93.3 | 78.5 |\n| OrionStar-14B-Base-Int4 |  8.3  | 178 | 71.8 | 69.8 | 69.2 | 93.1 | 78.0 |\n\n\n<a name=\"model-inference\"></a><br>\n# 4. Model Inference\n\nModel weights, source code, and configuration needed for inference are published on Hugging Face, and the download link\nis available in the table at the beginning of this document. We demonstrate various inference methods here, and the\nprogram will automatically download the necessary resources from Hugging Face.\n\n## 4.1. Python Code\n\n```python\nimport torch\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\nfrom transformers.generation.utils import GenerationConfig\n\ntokenizer = AutoTokenizer.from_pretrained(\"OrionStarAI/Orion-14B\", use_fast=False, trust_remote_code=True)\nmodel = AutoModelForCausalLM.from_pretrained(\"OrionStarAI/Orion-14B\", device_map=\"auto\",\n                                             torch_dtype=torch.bfloat16, trust_remote_code=True)\n\nmodel.generation_config = GenerationConfig.from_pretrained(\"OrionStarAI/Orion-14B\")\nmessages = [{\"role\": \"user\", \"content\": \"Hello, what is your name? \"}]\nresponse = model.chat(tokenizer, messages, streaming=False)\nprint(response)\n\n```\n\nIn the above Python code, the model is loaded with `device_map='auto'` to utilize all available GPUs. To specify the\ndevice, you can use something like `export CUDA_VISIBLE_DEVICES=0,1` (using GPUs 0 and 1).\n\n## 4.2. Command Line Tool\n\n```shell\nCUDA_VISIBLE_DEVICES=0 python cli_demo.py\n```\n\nThis command-line tool is designed for chat scenarios, and thus, it does not support calling the base model.\n\n## 4.3. Direct Script Inference\n\n```shell\n\n# base model\nCUDA_VISIBLE_DEVICES=0 python demo/text_generation_base.py --model OrionStarAI/Orion-14B --tokenizer OrionStarAI/Orion-14B --prompt hello\n\n# chat model\nCUDA_VISIBLE_DEVICES=0 python demo/text_generation.py --model OrionStarAI/Orion-14B-Chat --tokenizer OrionStarAI/Orion-14B-Chat --prompt hi\n\n```\n<a name=\"vllm\"></a><br>\n## 4.4. Inference by vllm\n\n- Project URL<br>\n  https://github.com/vllm-project/vllm\n\n- Pull Request<br>\n  https://github.com/vllm-project/vllm/pull/2539\n\n<a name=\"llama-cpp\"></a><br>\n## 4.5. Inference by llama.cpp\n\n- Project URL<br>\n  https://github.com/ggerganov/llama.cpp\n\n- Pull Request<br>\n  https://github.com/ggerganov/llama.cpp/pull/5118\n\n- How to convert to GGUF model\n\n  ```shell\n  python convert-hf-to-gguf.py path/to/Orion-14B-Chat --outfile chat.gguf\n  ```\n\n- How to run generation\n\n  ```shell\n  ./main --frequency-penalty 0.5 --frequency-penalty 0.5 --top-k 5 --top-p 0.9 -m chat.gguf -p \"Building a website can be done in 10 simple steps:\\nStep 1:\" -n 400 -e\n  ```\n\n## 4.6 Example Output\n\n### 4.6.1. Casual Chat\n\n`````\nUser: Hello\nOrion-14B: Hello! How can I help you today? If you have any questions or need assistance, feel free to ask.\nUser: What functions do you have?\nOrion-14B: As an AI language model, I have a wide range of functions and capabilities, including but not limited to:\n  Answering general knowledge questions: I can provide information on various topics such as history, science, geography, and more.\n  Providing definitions and explanations: I can explain complex concepts and provide definitions for words and phrases.\n  Assisting with tasks: I can help with simple tasks like setting reminders, converting units of measurement, and even ordering food from restaurants.\n  Generating text: I can write short stories, essays, articles, and other types of content based on prompts given to me.\n  Translating languages: I can translate text from one language to another.\n  Chatting: I can engage in conversation with users and respond to their queries in a conversational manner.\n  Summarizing long texts: I can summarize longer texts like articles, books, and research papers.\n  Generating random numbers and names: I can generate random numbers within a specified range and also suggest names based on certain criteria.\n  Playing games: I can play simple games like Hangman, Trivia, and more.\n  Providing recommendations: I can recommend movies, music, books, and other forms of entertainment based on user preferences.\n  These are just some of the many functions that I am capable of performing. If you have a specific task in mind, feel free to ask me about it.\nUser: Tell me a joke.\nOrion-14B: Sure, here's a classic one-liner: Why don't scientists trust atoms? Because they make up everything.\n`````\n\n### 4.6.2. Japanese & Korean Chat\n\n`````\nUser：自己を紹介してください\nOrion-14B：こんにちは、私の名前はChatMaxで、OrionStarによって開発されたAIアシスタントです。私はユーザーに正確で、客観的で、有用な回答を提供し、彼らが問題を解決し、情報を取得するのを助けることができます。\nUser：자기소개를 해주세요.\nOrion-14B：안녕하세요, 제 이름은 ChatMax입니다. OrionStar에서 개발한 AI 어시스턴트입니다. 저는 사용자들에게 정확하고 객관적이며 유용한 답변을 제공하여 문제를 해결하고 정보를 얻는 데 도움을 줄 수 있습니다.\n`````\n\n<a name=\"declarations-license\"></a><br>\n# 5. Declarations, License\n\n## 5.1. Declarations\n\nWe strongly urge all users not to use the Orion-14B model for any activities that may harm national or social security or violate the law.\nAdditionally, we request users not to use the Orion-14B model for internet services without proper security review and filing.\nWe hope all users abide by this principle to ensure that technological development takes place in a regulated and legal environment.\nWe have done our best to ensure the compliance of the data used in the model training process. However, despite our\nsignificant efforts, unforeseen issues may still arise due to the complexity of the model and data. Therefore, if any\nproblems arise due to the use of the Orion-14B open-source model, including but not limited to data security\nissues, public opinion risks, or any risks and issues arising from the model being misled, abused, disseminated, or\nimproperly utilized, we will not assume any responsibility.\n\n## 5.2. License\n\nCommunity use of the Orion-14B series models\n- For code, please comply with  [Apache License Version 2.0](./LICENSE)<br>\n- For model, please comply with [【Orion-14B Series】 Models Community License Agreement](./ModelsCommunityLicenseAgreement)\n\n\n<a name=\"company-introduction\"></a><br>\n# 6. Company Introduction\n\nOrionStar is a leading global service robot solutions company, founded in September 2016. OrionStar is dedicated to\nusing artificial intelligence technology to create the next generation of revolutionary robots, allowing people to break\nfree from repetitive physical labor and making human work and life more intelligent and enjoyable. Through technology,\nOrionStar aims to make society and the world a better place.\n\nOrionStar possesses fully self-developed end-to-end artificial intelligence technologies, such as voice interaction and\nvisual navigation. It integrates product development capabilities and technological application capabilities. Based on\nthe Orion robotic arm platform, it has launched products such as OrionStar AI Robot Greeting, AI Robot Greeting Mini,\nLucki, Coffee Master, and established the open platform OrionOS for Orion robots. Following the philosophy of \"Born for\nTruly Useful Robots\", OrionStar empowers more people through AI technology.\n\n**The core strengths of OrionStar lies in possessing end-to-end AI application capabilities,** including big data preprocessing, large model pretraining, fine-tuning, prompt engineering, agent, etc.  With comprehensive end-to-end model training capabilities, including systematic data processing workflows and the parallel model training capability of hundreds of GPUs, it has been successfully applied in various industry scenarios such as government affairs, cloud services, international e-commerce, and fast-moving consumer goods.\n\nCompanies with demands for deploying large-scale model applications are welcome to contact us.<br>\n**Enquiry Hotline: 400-898-7779**<br>\n**E-mail: ai@orionstar.com**<br>\n**Discord Link: https://discord.gg/zumjDWgdAs**\n\n<div align=\"center\">\n  <img src=\"./assets/imgs/wechat_group.jpg\" alt=\"wechat\" width=\"40%\" />\n</div>\n\n\n\n"
+            },
+            {
+              "id": "Orion-zhen/Qwen2.5-7B-Instruct-Uncensored",
+              "author": "Orion-zhen",
+              "sha": "ddc094207b8d785af31b9eaf47848e5ff55a87ef",
+              "created_at": "2024-09-26T04:07:52+00:00",
+              "last_modified": "2025-04-28T04:17:26+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 9010,
+              "likes": 25,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "added_tokens.json"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "merges.txt"
+                },
+                {
+                  "rfilename": "model-00001-of-00004.safetensors"
+                },
+                {
+                  "rfilename": "model-00002-of-00004.safetensors"
+                },
+                {
+                  "rfilename": "model-00003-of-00004.safetensors"
+                },
+                {
+                  "rfilename": "model-00004-of-00004.safetensors"
+                }
+              ],
+              "card_data": {
+                "license": "gpl-3.0",
+                "language": [
+                  "zho",
+                  "eng",
+                  "fra",
+                  "spa",
+                  "por",
+                  "deu",
+                  "ita",
+                  "rus",
+                  "jpn",
+                  "kor",
+                  "vie",
+                  "tha",
+                  "ara"
+                ],
+                "pipeline_tag": "text-generation",
+                "tags": [
+                  "qwen",
+                  "uncensored"
+                ],
+                "datasets": [
+                  "NobodyExistsOnTheInternet/ToxicQAFinal",
+                  "anthracite-org/kalo-opus-instruct-22k-no-refusal",
+                  "Orion-zhen/dpo-toxic-zh",
+                  "unalignment/toxic-dpo-v0.2",
+                  "Crystalcareai/Intel-DPO-Pairs-Norefusals"
+                ],
+                "base_model": [
+                  "Qwen/Qwen2.5-7B-Instruct"
+                ],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "safetensors",
+                "qwen2",
+                "qwen",
+                "uncensored",
+                "text-generation",
+                "conversational",
+                "zho",
+                "eng",
+                "fra",
+                "spa",
+                "por",
+                "deu",
+                "ita",
+                "rus",
+                "jpn",
+                "kor",
+                "vie",
+                "tha",
+                "ara",
+                "dataset:NobodyExistsOnTheInternet/ToxicQAFinal",
+                "dataset:anthracite-org/kalo-opus-instruct-22k-no-refusal",
+                "dataset:Orion-zhen/dpo-toxic-zh",
+                "dataset:unalignment/toxic-dpo-v0.2",
+                "dataset:Crystalcareai/Intel-DPO-Pairs-Norefusals",
+                "base_model:Qwen/Qwen2.5-7B-Instruct",
+                "base_model:finetune:Qwen/Qwen2.5-7B-Instruct",
+                "license:gpl-3.0",
+                "model-index",
+                "region:us"
+              ],
+              "pipeline_tag": "text-generation",
+              "readme": "---\r\nlanguage:\r\n- zho\r\n- eng\r\n- fra\r\n- spa\r\n- por\r\n- deu\r\n- ita\r\n- rus\r\n- jpn\r\n- kor\r\n- vie\r\n- tha\r\n- ara\r\nlicense: gpl-3.0\r\ntags:\r\n- qwen\r\n- uncensored\r\nbase_model:\r\n- Qwen/Qwen2.5-7B-Instruct\r\ndatasets:\r\n- NobodyExistsOnTheInternet/ToxicQAFinal\r\n- anthracite-org/kalo-opus-instruct-22k-no-refusal\r\n- Orion-zhen/dpo-toxic-zh\r\n- unalignment/toxic-dpo-v0.2\r\n- Crystalcareai/Intel-DPO-Pairs-Norefusals\r\npipeline_tag: text-generation\r\nmodel-index:\r\n- name: Qwen2.5-7B-Instruct-Uncensored\r\n  results:\r\n  - task:\r\n      type: text-generation\r\n      name: Text Generation\r\n    dataset:\r\n      name: IFEval (0-Shot)\r\n      type: HuggingFaceH4/ifeval\r\n      args:\r\n        num_few_shot: 0\r\n    metrics:\r\n    - type: inst_level_strict_acc and prompt_level_strict_acc\r\n      value: 72.04\r\n      name: strict accuracy\r\n    source:\r\n      url: https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard?query=Orion-zhen/Qwen2.5-7B-Instruct-Uncensored\r\n      name: Open LLM Leaderboard\r\n  - task:\r\n      type: text-generation\r\n      name: Text Generation\r\n    dataset:\r\n      name: BBH (3-Shot)\r\n      type: BBH\r\n      args:\r\n        num_few_shot: 3\r\n    metrics:\r\n    - type: acc_norm\r\n      value: 35.83\r\n      name: normalized accuracy\r\n    source:\r\n      url: https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard?query=Orion-zhen/Qwen2.5-7B-Instruct-Uncensored\r\n      name: Open LLM Leaderboard\r\n  - task:\r\n      type: text-generation\r\n      name: Text Generation\r\n    dataset:\r\n      name: MATH Lvl 5 (4-Shot)\r\n      type: hendrycks/competition_math\r\n      args:\r\n        num_few_shot: 4\r\n    metrics:\r\n    - type: exact_match\r\n      value: 1.36\r\n      name: exact match\r\n    source:\r\n      url: https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard?query=Orion-zhen/Qwen2.5-7B-Instruct-Uncensored\r\n      name: Open LLM Leaderboard\r\n  - task:\r\n      type: text-generation\r\n      name: Text Generation\r\n    dataset:\r\n      name: GPQA (0-shot)\r\n      type: Idavidrein/gpqa\r\n      args:\r\n        num_few_shot: 0\r\n    metrics:\r\n    - type: acc_norm\r\n      value: 7.05\r\n      name: acc_norm\r\n    source:\r\n      url: https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard?query=Orion-zhen/Qwen2.5-7B-Instruct-Uncensored\r\n      name: Open LLM Leaderboard\r\n  - task:\r\n      type: text-generation\r\n      name: Text Generation\r\n    dataset:\r\n      name: MuSR (0-shot)\r\n      type: TAUR-Lab/MuSR\r\n      args:\r\n        num_few_shot: 0\r\n    metrics:\r\n    - type: acc_norm\r\n      value: 13.58\r\n      name: acc_norm\r\n    source:\r\n      url: https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard?query=Orion-zhen/Qwen2.5-7B-Instruct-Uncensored\r\n      name: Open LLM Leaderboard\r\n  - task:\r\n      type: text-generation\r\n      name: Text Generation\r\n    dataset:\r\n      name: MMLU-PRO (5-shot)\r\n      type: TIGER-Lab/MMLU-Pro\r\n      config: main\r\n      split: test\r\n      args:\r\n        num_few_shot: 5\r\n    metrics:\r\n    - type: acc\r\n      value: 38.07\r\n      name: accuracy\r\n    source:\r\n      url: https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard?query=Orion-zhen/Qwen2.5-7B-Instruct-Uncensored\r\n      name: Open LLM Leaderboard\r\n---\r\n\r\n# Qwen2.5-7B-Instruct-Uncensored\r\n\r\nThis model is an uncensored fine-tune version of Qwen2.5-7B-Instruct. However, I can still notice that though uncensored, the model fails to generate detailed descriptions on certain extreme scenarios, which might be associated with deletion on some pretrain datasets in Qwen's pretraining stage.\r\n\r\nCheck out my roleplay&writing enhanced model based on this model: [Orion-zhen/Meissa-Qwen2.5-7B-Instruct](https://huggingface.co/Orion-zhen/Meissa-Qwen2.5-7B-Instruct)\r\n\r\n## Traning details\r\n\r\nI used SFT + DPO to ensure uncensorment as well as trying to maintain original model's capabilities.\r\n\r\n- SFT:\r\n  - NobodyExistsOnTheInternet/ToxicQAFinal\r\n  - anthracite-org/kalo-opus-instruct-22k-no-refusal\r\n- DPO:\r\n  - Orion-zhen/dpo-toxic-zh\r\n  - unalignment/toxic-dpo-v0.2\r\n  - Crystalcareai/Intel-DPO-Pairs-Norefusals\r\n# [Open LLM Leaderboard Evaluation Results](https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard)\r\nDetailed results can be found [here](https://huggingface.co/datasets/open-llm-leaderboard/details_Orion-zhen__Qwen2.5-7B-Instruct-Uncensored)\r\n\r\n|      Metric       |Value|\r\n|-------------------|----:|\r\n|Avg.               |27.99|\r\n|IFEval (0-Shot)    |72.04|\r\n|BBH (3-Shot)       |35.83|\r\n|MATH Lvl 5 (4-Shot)| 1.36|\r\n|GPQA (0-shot)      | 7.05|\r\n|MuSR (0-shot)      |13.58|\r\n|MMLU-PRO (5-shot)  |38.07|\r\n\r\n"
+            },
+            {
+              "id": "Orion-zhen/Qwen3-0.6B-AWQ",
+              "author": "Orion-zhen",
+              "sha": "9f607bee5fca19cba0bd2b383ba804c89385ea18",
+              "created_at": "2025-04-29T14:18:22+00:00",
+              "last_modified": "2025-04-29T14:26:55+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 2665,
+              "likes": 3,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "added_tokens.json"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "merges.txt"
+                },
+                {
+                  "rfilename": "model.safetensors"
+                },
+                {
+                  "rfilename": "special_tokens_map.json"
+                },
+                {
+                  "rfilename": "tokenizer.json"
+                },
+                {
+                  "rfilename": "tokenizer_config.json"
+                }
+              ],
+              "card_data": {
+                "license": "gpl-3.0",
+                "language": [],
+                "tags": [],
+                "datasets": [],
+                "base_model": [
+                  "Qwen/Qwen3-0.6B"
+                ],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "safetensors",
+                "qwen3",
+                "base_model:Qwen/Qwen3-0.6B",
+                "base_model:quantized:Qwen/Qwen3-0.6B",
+                "license:gpl-3.0",
+                "4-bit",
+                "awq",
+                "region:us"
+              ],
+              "readme": "---\nlicense: gpl-3.0\nbase_model:\n- Qwen/Qwen3-0.6B\n---\n\n# Qwen3-0.6B-AWQ\n\n```yaml\nzero_piont: true\nbits: 4\nversion: GEMM\ndataset: wikitext + Orion-zhen/gsm8k-r1-qwen-32b\nnum_examples: 256\n```\n\nThe very **first** Qwen3-0.6B-AWQ on HuggingFace. I'm not sure if you really need a quantization of such a small model."
+            },
+            {
+              "id": "Orion-zhen/Qwen3-1.7B-AWQ",
+              "author": "Orion-zhen",
+              "sha": "569087ed178d40c258914ca60e87b325541e5fc5",
+              "created_at": "2025-04-29T09:41:27+00:00",
+              "last_modified": "2025-04-29T14:27:07+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 1810,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "added_tokens.json"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "merges.txt"
+                },
+                {
+                  "rfilename": "model.safetensors"
+                },
+                {
+                  "rfilename": "special_tokens_map.json"
+                },
+                {
+                  "rfilename": "tokenizer.json"
+                },
+                {
+                  "rfilename": "tokenizer_config.json"
+                }
+              ],
+              "card_data": {
+                "license": "gpl-3.0",
+                "language": [],
+                "tags": [],
+                "datasets": [],
+                "base_model": [
+                  "Qwen/Qwen3-1.7B"
+                ],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "safetensors",
+                "qwen3",
+                "base_model:Qwen/Qwen3-1.7B",
+                "base_model:quantized:Qwen/Qwen3-1.7B",
+                "license:gpl-3.0",
+                "4-bit",
+                "awq",
+                "region:us"
+              ],
+              "readme": "---\nlicense: gpl-3.0\nbase_model:\n- Qwen/Qwen3-1.7B\n---\n\n# Qwen3-1.7B-AWQ\n\n```yaml\nzero_piont: true\nbits: 4\nversion: GEMM\ndataset: wikitext\nnum_examples: 256\n```\n\nThe very **first** Qwen3-1.7B-AWQ on HuggingFace. I'm not sure if you really need a quantization of such a small model.\n"
+            },
+            {
+              "id": "OrionStarAI/Orion-14B-Base",
+              "author": "OrionStarAI",
+              "sha": "b988a511e9c880a465e704c57e3f297a3e7ef282",
+              "created_at": "2024-01-16T06:07:42+00:00",
+              "last_modified": "2024-03-26T09:21:52+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 1318,
+              "likes": 79,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "LICENSE"
+                },
+                {
+                  "rfilename": "ModelsCommunityLicenseAgreement"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "README_ja.md"
+                },
+                {
+                  "rfilename": "README_ko.md"
+                },
+                {
+                  "rfilename": "README_zh.md"
+                },
+                {
+                  "rfilename": "assets/imgs/llama_cpp.png"
+                },
+                {
+                  "rfilename": "assets/imgs/llama_cpp_1.png"
+                },
+                {
+                  "rfilename": "assets/imgs/model_cap_en.png"
+                }
+              ],
+              "card_data": {
+                "language": [
+                  "en",
+                  "zh",
+                  "ja",
+                  "ko"
+                ],
+                "pipeline_tag": "text-generation",
+                "tags": [
+                  "code",
+                  "model",
+                  "llm"
+                ],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [
+                  "accuracy"
+                ],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "pytorch",
+                "orion",
+                "text-generation",
+                "code",
+                "model",
+                "llm",
+                "custom_code",
+                "en",
+                "zh",
+                "ja",
+                "ko",
+                "autotrain_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "text-generation",
+              "library_name": "transformers",
+              "readme": "---\nlanguage:\n- en\n- zh\n- ja\n- ko\nmetrics:\n- accuracy\npipeline_tag: text-generation\ntags:\n- code\n- model\n- llm\n---\n<!-- markdownlint-disable first-line-h1 -->\n<!-- markdownlint-disable html -->\n<div align=\"center\">\n  <img src=\"./assets/imgs/orion_start.PNG\" alt=\"logo\" width=\"50%\" />\n</div>\n\n<div align=\"center\">\n<h1>\n  Orion-14B\n</h1>\n</div>\n\n<div align=\"center\">\n\n<div align=\"center\">\n     <b>🌐English</b> | <a href=\"https://huggingface.co/OrionStarAI/Orion-14B-Base/blob/main/README_zh.md\" target=\"_blank\">🇨🇳中文</a> | <a href=\"https://huggingface.co/OrionStarAI/Orion-14B-Base/blob/main/README_ja.md\" target=\"_blank\">🇯🇵日本語</a> |<a href=\"https://huggingface.co/OrionStarAI/Orion-14B-Base/blob/main/README_ko.md\" target=\"_blank\">🇰🇷한국어</a>\n</div>\n\n<h4 align=\"center\">\n    <p>\n        🤗 <a href=\"https://huggingface.co/OrionStarAI\" target=\"_blank\">HuggingFace Mainpage</a> | 🤖 <a href=\"https://modelscope.cn/organization/OrionStarAI\" target=\"_blank\">ModelScope Mainpage</a><br>🎬 <a href=\"https://huggingface.co/spaces/OrionStarAI/Orion-14B-App-Demo\" target=\"_blank\">HuggingFace Demo</a> | 🎫 <a href=\"https://modelscope.cn/studios/OrionStarAI/Orion-14B-App-Demo/summary\" target=\"_blank\">ModelScope Demo</a><br>😺 <a href=\"https://github.com/OrionStarAI/Orion\" target=\"_blank\">GitHub</a><br>📖 <a href=\"https://github.com/OrionStarAI/Orion/blob/master/doc/Orion14B_v3.pdf\" target=\"_blank\">Tech Report</a>\n    <p>\n</h4>\n\n</div>\n\n\n\n# Table of Contents\n\n- [📖 Model Introduction](#model-introduction)\n- [🔗 Model Download](#model-download)\n- [🔖 Model Benchmark](#model-benchmark)\n- [📊 Model Inference](#model-inference) [<img src=\"./assets/imgs/vllm_1.png\" alt=\"vllm\" style=\"margin: 0;display: initial;\" height=\"20\" />](#vllm) [<img src=\"./assets/imgs/llama_cpp_1.png\" alt=\"llamacpp\" style=\"margin: 0;display: initial;\" height=\"20\" />](#llama-cpp)\n- [📜 Declarations & License](#declarations-license)\n- [🥇 Company Introduction](#company-introduction)\n\n<a name=\"model-introduction\"></a><br>\n# 1. Model Introduction\n\n- Orion-14B series models are open-source multilingual large language models trained from scratch by OrionStarAI.  The base model is trained on 2.5T multilingual corpus, including Chinese, English, Japanese, Korean, etc, and it exhibits superior performance in these languages.  For details, please refer to [tech report](https://github.com/OrionStarAI/Orion/blob/master/doc/Orion14B_v3.pdf).\n\n- The Orion-14B series models exhibit the following features:\n  - Among models with 20B-parameter scale level, Orion-14B-Base model shows outstanding performance in comprehensive evaluations.\n  - Strong multilingual capabilities, significantly outperforming in Japanese and Korean testsets.\n  - The fine-tuned models demonstrate strong adaptability, excelling in human-annotated blind tests.\n  - The long-chat version supports extremely long texts, performing exceptionally well at a token length of 200k and can support up to a maximum of 320k.\n  - The quantized versions reduce model size by 70%, improve inference speed by 30%, with performance loss less than 1%.\n <table style=\"border-collapse: collapse; width: 100%;\">\n   <tr>\n     <td style=\"border: none; padding: 10px; box-sizing: border-box;\">\n       <img src=\"./assets/imgs/opencompass_en.png\" alt=\"opencompass\" style=\"width: 100%; height: auto;\">\n     </td>\n     <td style=\"border: none; padding: 10px; box-sizing: border-box;\">\n       <img src=\"./assets/imgs/model_cap_en.png\" alt=\"modelcap\" style=\"width: 100%; height: auto;\">\n     </td>\n   </tr>\n </table>\n\n- Orion-14B series models including:\n  - **Orion-14B-Base:**  A multilingual large language foundational model with 14 billion parameters, pretrained on a diverse dataset of 2.5 trillion tokens.\n  - **Orion-14B-Chat:**  A chat-model fine-tuned on a high-quality corpus aims to provide an excellence interactive experience for users in the large model community.\n  - **Orion-14B-LongChat:**  The long-context version excels at handling extremely lengthy texts, performing exceptionally well at a token length of 200k and can support up to a maximum of 320k.\n  - **Orion-14B-Chat-RAG:**  A chat-model fine-tuned on a custom retrieval augmented generation dataset, achieving superior performance in retrieval augmented generation tasks.\n  - **Orion-14B-Chat-Plugin:**  A chat-model specifically tailored for plugin and function calling tasks, ideal for agent-related scenarios where the LLM acts as a plugin and function call system.\n  - **Orion-14B-Base-Int4:**  A quantized base model utilizing 4-bit integer weights. It significantly reduces the model size by 70% and increases the inference speed by 30% while incurring a minimal performance loss of only 1%.\n  - **Orion-14B-Chat-Int4:**  A quantized chat model utilizing 4-bit integer weights.\n\n\n<a name=\"model-download\"></a><br>\n# 2. Model Download\n\nModel release and download links are provided in the table below:\n\n| Model Name              | HuggingFace Download Links                                                        | ModelScope Download Links                                                                       |\n|-------------------------|-----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|\n| ⚾Orion-14B-Base        | [Orion-14B-Base](https://huggingface.co/OrionStarAI/Orion-14B-Base)               | [Orion-14B-Base](https://modelscope.cn/models/OrionStarAI/Orion-14B-Base/summary)               |\n| 😛Orion-14B-Chat        | [Orion-14B-Chat](https://huggingface.co/OrionStarAI/Orion-14B-Chat)               | [Orion-14B-Chat](https://modelscope.cn/models/OrionStarAI/Orion-14B-Chat/summary)               |\n| 📃Orion-14B-LongChat    | [Orion-14B-LongChat](https://huggingface.co/OrionStarAI/Orion-14B-LongChat)       | [Orion-14B-LongChat](https://modelscope.cn/models/OrionStarAI/Orion-14B-LongChat/summary)       |\n| 🔎Orion-14B-Chat-RAG    | [Orion-14B-Chat-RAG](https://huggingface.co/OrionStarAI/Orion-14B-Chat-RAG)       | [Orion-14B-Chat-RAG](https://modelscope.cn/models/OrionStarAI/Orion-14B-Chat-RAG/summary)       |\n| 🔌Orion-14B-Chat-Plugin | [Orion-14B-Chat-Plugin](https://huggingface.co/OrionStarAI/Orion-14B-Chat-Plugin) | [Orion-14B-Chat-Plugin](https://modelscope.cn/models/OrionStarAI/Orion-14B-Chat-Plugin/summary) |\n| 💼Orion-14B-Base-Int4   | [Orion-14B-Base-Int4](https://huggingface.co/OrionStarAI/Orion-14B-Base-Int4)     | [Orion-14B-Base-Int4](https://modelscope.cn/models/OrionStarAI/Orion-14B-Base-Int4/summary)     |\n| 📦Orion-14B-Chat-Int4   | [Orion-14B-Chat-Int4](https://huggingface.co/OrionStarAI/Orion-14B-Chat-Int4)     | [Orion-14B-Chat-Int4](https://modelscope.cn/models/OrionStarAI/Orion-14B-Chat-Int4/summary)     |\n\n<a name=\"model-benchmark\"></a><br>\n# 3. Model Benchmarks\n\n## 3.1. Base Model Orion-14B-Base Benchmarks\n### 3.1.1. LLM evaluation results on examination and professional knowledge\n| Model              | C-Eval   | CMMLU    | MMLU     | AGIEval  | Gaokao   | BBH      |\n|--------------------|----------|----------|----------|----------|----------|----------|\n| LLaMA2-13B         |   41.4   |   38.4   |   55.0   |   30.9   |   18.2   |   45.6   |\n| Skywork-13B        |   59.1   |   61.4   |   62.7   |   43.6   |   56.1   |   48.3   |\n| Baichuan2-13B      |   59.0   |   61.3   |   59.5   |   37.4   |   45.6   |   49.0   |\n| QWEN-14B           |   71.7   |   70.2   |   67.9   |   51.9   | **62.5** |   53.7   |\n| InternLM-20B       |   58.8   |   59.0   |   62.1   |   44.6   |   45.5   |   52.5   |\n| **Orion-14B-Base** | **72.9** | **70.6** | **69.9** | **54.7** |   62.1   | **56.5** |\n\n### 3.1.2. LLM evaluation results on language understanding and common knowledge\n| Model             |RACE-middle|RACE-high |HellaSwag | PIQA     | Lambada  | WSC      |\n|--------------------|----------|----------|----------|----------|----------|----------|\n| LLaMA 2-13B        |   63.0   |   58.9   |   77.5   |   79.8   |   76.5   |   66.3   |\n| Skywork-13B        |   87.6   |   84.1   |   73.7   |   78.3   |   71.8   |   66.3   |\n| Baichuan 2-13B     |   68.9   |   67.2   |   70.8   |   78.1   |   74.1   |   66.3   |\n| QWEN-14B           |   93.0   |   90.3   | **80.2** |   79.8   |   71.4   |   66.3   |\n| InternLM-20B       |   86.4   |   83.3   |   78.1   | **80.3** |   71.8   |   68.3   |\n| **Orion-14B-Base** | **93.2** | **91.3** |   78.5   |   79.5   | **78.8** | **70.2** |\n\n### 3.1.3. LLM evaluation results of OpenCompass testsets\n| Model | Average  | Examination | Language | Knowledge | Understanding | Reasoning |\n|------------------|----------|----------|----------|----------|----------|----------|\n| LLaMA 2-13B      |   47.3   |   45.2   |   47.0   |   58.3   |   50.9   |   43.6   |\n| Skywork-13B      |   53.6   |   61.1   |   51.3   |   52.7   |   64.5   |   45.2   |\n| Baichuan 2-13B   |   49.4   |   51.8   |   47.5   |   48.9   |   58.1   |   44.2   |\n| QWEN-14B         |   62.4   |   71.3   |   52.67  |   56.1   |   68.8   |   60.1   |\n| InternLM-20B     |   59.4   |   62.5   |   55.0   | **60.1** |   67.3   |   54.9   |\n|**Orion-14B-Base**| **64.3** | **71.4** | **55.0** |   60.0   | **71.9** | **61.6** |\n\n### 3.1.4. Comparison of LLM performances on Japanese testsets\n| Model             |**Average**|  JCQA    |  JNLI    |  MARC    |  JSQD    |  JQK     |  XLS     |  XWN     |  MGSM    |\n|--------------------|----------|----------|----------|----------|----------|----------|----------|----------|----------|\n| PLaMo-13B          |   52.3   |   56.7   |   42.8   |   95.8   |   70.6   |   71.0   |   8.70   |   70.5   |   2.40   |\n| WebLab-10B         |   50.7   |   66.6   |   53.7   |   82.1   |   62.9   |   56.2   |   10.0   |   72.0   |   2.40   |\n| ELYZA-jp-7B        |   48.8   |   71.7   |   25.3   |   86.6   |   70.8   |   64.1   |   2.50   |   62.1   |   7.20   |\n| StableLM-jp-7B     |   51.1   |   33.4   |   43.3   | **96.7** |   70.6   |   78.1   |   10.7   |   72.8   |   2.80   |\n| LLaMA 2-13B        |   46.3   |   75.0   |   47.6   |   38.8   |   76.1   |   67.7   |   18.1   |   63.2   |   10.4   |\n| Baichuan 2-13B     |   57.1   |   73.7   |   31.3   |   91.6   |   80.5   |   63.3   |   18.6   |   72.2   |   25.2   |\n| QWEN-14B           |   65.8   |   85.9   |   60.7   |   97.0   |   83.3   |   71.8   |   18.8   |   70.6   |   38.0   |\n| Yi-34B             |   67.1   |   83.8   |   61.2   |   95.2   | **86.1** |   78.5   | **27.2** |   69.2   |   35.2   |\n| **Orion-14B-Base** | **69.1** | **88.2** | **75.8** |   94.1   |   75.7   | **85.1** |   17.3   | **78.8** | **38.0** |\n\n### 3.1.5. Comparison of LLM performances on Korean testsets. n = 0 and n = 5 stand for n-shot prompts used in the evaluation\n|Model      | **Average**<br>n=0&nbsp;&nbsp;n=5 | HellaSwag<br>n=0&nbsp;&nbsp;n=5 | COPA<br> n=0&nbsp;&nbsp;n=5 | BooIQ<br>n=0&nbsp;&nbsp;n=5 | SentiNeg<br>n=0&nbsp;&nbsp;n=5|\n|------------------|------------------------------|------------------------------|------------------------------|------------------------------|------------------------------|\n| KoGPT            |  53.0   &nbsp;&nbsp;   70.1  |  55.9   &nbsp;&nbsp;   58.3  |  73.5   &nbsp;&nbsp;   72.9  |  45.1   &nbsp;&nbsp;   59.8  |  37.5   &nbsp;&nbsp;   89.4  |\n| Polyglot-ko-13B  |  69.6   &nbsp;&nbsp;   73.7  |**59.5** &nbsp;&nbsp; **63.1**|**79.4** &nbsp;&nbsp; **81.1**|  48.2   &nbsp;&nbsp;   60.4  |  91.2   &nbsp;&nbsp;   90.2  |\n| LLaMA 2-13B      |  46.7   &nbsp;&nbsp;   63.7  |  41.3   &nbsp;&nbsp;   44.0  |  59.3   &nbsp;&nbsp;   63.8  |  34.9   &nbsp;&nbsp;   73.8  |  51.5   &nbsp;&nbsp;   73.4  |\n| Baichuan 2-13B   |  52.1   &nbsp;&nbsp;   58.7  |  39.2   &nbsp;&nbsp;   39.6  |  60.6   &nbsp;&nbsp;   60.6  |  58.4   &nbsp;&nbsp;   61.5  |  50.3   &nbsp;&nbsp;   72.9  |\n| QWEN-14B         |  53.8   &nbsp;&nbsp;   73.7  |  45.3   &nbsp;&nbsp;   46.8  |  64.9   &nbsp;&nbsp;   68.9  |  33.4   &nbsp;&nbsp;   83.5  |  71.5   &nbsp;&nbsp;   95.7  |\n| Yi-34B           |  54.2   &nbsp;&nbsp;   72.1  |  44.6   &nbsp;&nbsp;   44.7  |  58.0   &nbsp;&nbsp;   60.6  |  65.9   &nbsp;&nbsp;   90.2  |  48.3   &nbsp;&nbsp;   92.9  |\n|**Orion-14B-Chat**|**74.5** &nbsp;&nbsp; **79.6**|  47.0   &nbsp;&nbsp;   49.6  |  77.7   &nbsp;&nbsp;   79.4  |**81.6** &nbsp;&nbsp; **90.7**|**92.4** &nbsp;&nbsp; **98.7**|\n\n### 3.1.6. Multilingual evaluation\n| Model              | Train Lang | Japanese | Korean   | Chinese  |  English |\n|--------------------|------------|----------|----------|----------|----------|\n| PLaMo-13B          |  En,Jp     |   52.3   |   *      |   *      |   *      |\n| Weblab-10B         |  En,Jp     |   50.7   |   *      |   *      |   *      |\n| ELYZA-jp-7B        |  En,Jp     |   48.8   |   *      |   *      |   *      |\n| StableLM-jp-7B     |  En,Jp     |   51.1   |   *      |   *      |   *      |\n| KoGPT-6B           |  En,Ko     |   *      |   70.1   |   *      |   *      |\n| Polyglot-ko-13B    |  En,Ko     |   *      |   70.7   |   *      |   *      |\n| Baichuan2-13B      |  Multi     |   57.1   |   58.7   |   50.8   |   57.1   |\n| Qwen-14B           |  Multi     |   65.8   |   73.7   |   64.5   |   65.4   |\n| Llama2-13B         |  Multi     |   46.3   |   63.7   |   41.4   |   55.3   |\n| Yi-34B             |  Multi     |   67.1   |   72.2   |   58.7   | **68.8** |\n| **Orion-14B-Chat** |  Multi     | **69.1** | **79.5** | **67.9** |   67.3   |\n\n\n## 3.2. Chat Model Orion-14B-Chat Benchmarks\n### 3.2.1. Chat model subjective evaluation of MTBench\n| Model        | First-Turn | Second-Turn | **Average** |\n|----------------------|----------|----------|----------|\n| Baichuan2-13B-Chat   |   7.05   |   6.47   |   6.76   |\n| Qwen-14B-Chat        |   7.30   |   6.62   |   6.96   |\n| Llama2-13B-Chat      |   7.10   |   6.20   |   6.65   |\n| InternLM-20B-Chat    |   7.03   |   5.93   |   6.48   |\n| **Orion-14B-Chat**   | **7.68** | **7.07** | **7.37** |\n\\* use vllm for inference\n\n### 3.2.2. Chat model subjective evaluation of AlignBench\n| Model              | Math.  |  Logi. | Basic. | Chi.   | Comp.  | Writ.  | Role.  | Prof.  |**Avg.**|\n|--------------------|--------|--------|--------|--------|--------|--------|--------|--------|--------|\n| Baichuan2-13B-Chat |  3.76  |  4.07  |  6.22  |  6.05  |  7.11  |  6.97  |  6.75  |  6.43  |  5.25  |\n| Qwen-14B-Chat      |**4.91**|**4.71**|**6.90**|  6.36  |  6.74  |  6.64  |  6.59  |  6.56  |**5.72**|\n| Llama2-13B-Chat    |  3.05  |  3.79  |  5.43  |  4.40  |  6.76  |  6.63  |  6.99  |  5.65  |  4.70  |\n| InternLM-20B-Chat  |  3.39  |  3.92  |  5.96  |  5.50  |**7.18**|  6.19  |  6.49  |  6.22  |  4.96  |\n| **Orion-14B-Chat** |  4.00  |  4.24  |  6.18  |**6.57**|  7.16  |**7.36**|**7.16**|**6.99**|  5.51  |\n\\* use vllm for inference\n\n## 3.3. LongChat Model Orion-14B-LongChat Benchmarks\n### 3.3.1. LongChat evaluation of LongBench\n| Model           | NarrativeQA|MultiFieldQA-en|MultiFieldQA-zh| DuReader  | QMSum     | VCSUM     | TREC      | TriviaQA  | LSHT      |RepoBench-P|\n|--------------------------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|-----------|\n| GPT-3.5-Turbo-16k        | **23.60** | **52.30** | **61.20** |   28.70   |   23.40   | **16.00** |   68.00   | **91.40** |   29.20   |   53.60   |\n| LongChat-v1.5-7B-32k     |   16.90   |   41.40   |   29.10   |   19.50   |   22.70   |    9.90   |   63.50   |   82.30   |   23.20   |   55.30   |\n| Vicuna-v1.5-7B-16k       |   19.40   |   38.50   |   43.00   |   19.30   |   22.80   |   15.10   |   71.50   |   86.20   |   28.80   |   43.50   |\n| Yi-6B-200K               |   14.11   |   36.74   |   22.68   |   14.01   |   20.44   |    8.08   |   72.00   |   86.61   |   38.00   | **63.29** |\n| Orion-14B-LongChat       |   19.47   |   48.11   |   55.84   | **37.02** | **24.87** |   15.44   | **77.00** |   89.12   | **45.50** |   54.31   |\n\n\n## 3.4. Chat RAG Model Benchmarks\n### 3.4.1. LLM evaluation results of self-built RAG testsets\n|Model|Effectiveness of Response(Keyword)|*Effectiveness of Response（subjective evaluation）|Quoting Ability|Fallback Ability|*AutoQA|*Data Extraction|\n|---------------------|------|------|------|------|------|------|\n| Baichuan2-13B-Chat  |  85  |  76  |  1   |  0   |  69  |  51  |\n| Qwen-14B-Chat       |  79  |  77  |  75  |  47  |  68  |  72  |\n| Qwen-72B-Chat(Int4) |  87  |  89  |  90  |  32  |  67  |  76  |\n| GPT-4               |  91  |  94  |  96  |  95  |  75  |  86  |\n| Orion-14B-Chat-RAG  |  86  |  87  |  91  |  97  |  73  |  71  |\n \\* means manual assessment\n\n## 3.5. Chat Plugin Model Orion-14B-Chat-Plugin Benchmarks\n### 3.5.1. LLM evaluation results of self-built plugin testsets\n|Model |Intent Recognition with Full Params |Intent Recognition with Missing Params |Non-Plugin Invocation Recognition |\n|-----------------------|--------|-----------|--------|\n| Baichuan2-13B-Chat    |   25   |   0       |   0    |\n| Qwen-14B-Chat         |   55   |   0       |   50   |\n| GPT-4                 | **95** |   52.38   |   70   |\n| Orion-14B-Chat-Plugin |  92.5  | **60.32** | **90** |\n\n## 3.6. Quantized Model Orion-14B-Base-Int4 Benchmarks\n### 3.6.1. Comparison of before and after quantization\n|Model |Size(GB)|Inference Speed(tokens/s)|C-Eval|CMMLU|MMLU|RACE|HellaSwag|\n|-------------------------|-------|-----|------|------|------|------|------|\n| OrionStar-14B-Base      |  28.0 | 135 | 72.8 | 70.6 | 70.0 | 93.3 | 78.5 |\n| OrionStar-14B-Base-Int4 |  8.3  | 178 | 71.8 | 69.8 | 69.2 | 93.1 | 78.0 |\n\n\n<a name=\"model-inference\"></a><br>\n# 4. Model Inference\n\nModel weights, source code, and configuration needed for inference are published on Hugging Face, and the download link\nis available in the table at the beginning of this document. We demonstrate various inference methods here, and the\nprogram will automatically download the necessary resources from Hugging Face.\n\n## 4.1. Python Code\n\n```python\nimport torch\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\nfrom transformers.generation.utils import GenerationConfig\n\ntokenizer = AutoTokenizer.from_pretrained(\"OrionStarAI/Orion-14B\", use_fast=False, trust_remote_code=True)\nmodel = AutoModelForCausalLM.from_pretrained(\"OrionStarAI/Orion-14B\", device_map=\"auto\",\n                                             torch_dtype=torch.bfloat16, trust_remote_code=True)\n\nmodel.generation_config = GenerationConfig.from_pretrained(\"OrionStarAI/Orion-14B\")\nmessages = [{\"role\": \"user\", \"content\": \"Hello, what is your name? \"}]\nresponse = model.chat(tokenizer, messages, streaming=False)\nprint(response)\n\n```\n\nIn the above Python code, the model is loaded with `device_map='auto'` to utilize all available GPUs. To specify the\ndevice, you can use something like `export CUDA_VISIBLE_DEVICES=0,1` (using GPUs 0 and 1).\n\n## 4.2. Command Line Tool\n\n```shell\nCUDA_VISIBLE_DEVICES=0 python cli_demo.py\n```\n\nThis command-line tool is designed for chat scenarios, and thus, it does not support calling the base model.\n\n## 4.3. Direct Script Inference\n\n```shell\n\n# base model\nCUDA_VISIBLE_DEVICES=0 python demo/text_generation_base.py --model OrionStarAI/Orion-14B --tokenizer OrionStarAI/Orion-14B --prompt hello\n\n# chat model\nCUDA_VISIBLE_DEVICES=0 python demo/text_generation.py --model OrionStarAI/Orion-14B-Chat --tokenizer OrionStarAI/Orion-14B-Chat --prompt hi\n\n```\n<a name=\"vllm\"></a><br>\n## 4.4. Inference by vllm\n\n- Project URL<br>\n  https://github.com/vllm-project/vllm\n\n- Pull Request<br>\n  https://github.com/vllm-project/vllm/pull/2539\n\n<a name=\"llama-cpp\"></a><br>\n## 4.5. Inference by llama.cpp\n\n- Project URL<br>\n  https://github.com/ggerganov/llama.cpp\n\n- Pull Request<br>\n  https://github.com/ggerganov/llama.cpp/pull/5118\n\n- How to convert to GGUF model\n\n  ```shell\n  python convert-hf-to-gguf.py path/to/Orion-14B-Chat --outfile chat.gguf\n  ```\n\n- How to run generation\n\n  ```shell\n  ./main --frequency-penalty 0.5 --frequency-penalty 0.5 --top-k 5 --top-p 0.9 -m chat.gguf -p \"Building a website can be done in 10 simple steps:\\nStep 1:\" -n 400 -e\n  ```\n  \n## 4.6 Example Output\n\n### 4.6.1. Casual Chat\n\n`````\nUser: Hello\nOrion-14B: Hello! How can I help you today? If you have any questions or need assistance, feel free to ask.\nUser: What functions do you have?\nOrion-14B: As an AI language model, I have a wide range of functions and capabilities, including but not limited to:\n  Answering general knowledge questions: I can provide information on various topics such as history, science, geography, and more.\n  Providing definitions and explanations: I can explain complex concepts and provide definitions for words and phrases.\n  Assisting with tasks: I can help with simple tasks like setting reminders, converting units of measurement, and even ordering food from restaurants.\n  Generating text: I can write short stories, essays, articles, and other types of content based on prompts given to me.\n  Translating languages: I can translate text from one language to another.\n  Chatting: I can engage in conversation with users and respond to their queries in a conversational manner.\n  Summarizing long texts: I can summarize longer texts like articles, books, and research papers.\n  Generating random numbers and names: I can generate random numbers within a specified range and also suggest names based on certain criteria.\n  Playing games: I can play simple games like Hangman, Trivia, and more.\n  Providing recommendations: I can recommend movies, music, books, and other forms of entertainment based on user preferences.\n  These are just some of the many functions that I am capable of performing. If you have a specific task in mind, feel free to ask me about it.\nUser: Tell me a joke.\nOrion-14B: Sure, here's a classic one-liner: Why don't scientists trust atoms? Because they make up everything.\n`````\n\n### 4.6.2. Japanese & Korean Chat\n\n`````\nUser：自己を紹介してください\nOrion-14B：こんにちは、私の名前はChatMaxで、OrionStarによって開発されたAIアシスタントです。私はユーザーに正確で、客観的で、有用な回答を提供し、彼らが問題を解決し、情報を取得するのを助けることができます。\nUser：자기소개를 해주세요.\nOrion-14B：안녕하세요, 제 이름은 ChatMax입니다. OrionStar에서 개발한 AI 어시스턴트입니다. 저는 사용자들에게 정확하고 객관적이며 유용한 답변을 제공하여 문제를 해결하고 정보를 얻는 데 도움을 줄 수 있습니다.\n`````\n\n<a name=\"declarations-license\"></a><br>\n# 5. Declarations, License\n\n## 5.1. Declarations\n\nWe strongly urge all users not to use the Orion-14B model for any activities that may harm national or social security or violate the law.\nAdditionally, we request users not to use the Orion-14B model for internet services without proper security review and filing.\nWe hope all users abide by this principle to ensure that technological development takes place in a regulated and legal environment.\nWe have done our best to ensure the compliance of the data used in the model training process. However, despite our\nsignificant efforts, unforeseen issues may still arise due to the complexity of the model and data. Therefore, if any\nproblems arise due to the use of the Orion-14B open-source model, including but not limited to data security\nissues, public opinion risks, or any risks and issues arising from the model being misled, abused, disseminated, or\nimproperly utilized, we will not assume any responsibility.\n\n## 5.2. License\n\nCommunity use of the Orion-14B series models\n- For code, please comply with  [Apache License Version 2.0](./LICENSE)<br>\n- For model, please comply with [【Orion-14B Series】 Models Community License Agreement](./ModelsCommunityLicenseAgreement)\n\n\n<a name=\"company-introduction\"></a><br>\n# 6. Company Introduction\n\nOrionStar is a leading global service robot solutions company, founded in September 2016. OrionStar is dedicated to\nusing artificial intelligence technology to create the next generation of revolutionary robots, allowing people to break\nfree from repetitive physical labor and making human work and life more intelligent and enjoyable. Through technology,\nOrionStar aims to make society and the world a better place.\n\nOrionStar possesses fully self-developed end-to-end artificial intelligence technologies, such as voice interaction and\nvisual navigation. It integrates product development capabilities and technological application capabilities. Based on\nthe Orion robotic arm platform, it has launched products such as OrionStar AI Robot Greeting, AI Robot Greeting Mini,\nLucki, Coffee Master, and established the open platform OrionOS for Orion robots. Following the philosophy of \"Born for\nTruly Useful Robots\", OrionStar empowers more people through AI technology.\n\n**The core strengths of OrionStar lies in possessing end-to-end AI application capabilities,** including big data preprocessing, large model pretraining, fine-tuning, prompt engineering, agent, etc.  With comprehensive end-to-end model training capabilities, including systematic data processing workflows and the parallel model training capability of hundreds of GPUs, it has been successfully applied in various industry scenarios such as government affairs, cloud services, international e-commerce, and fast-moving consumer goods.\n\nCompanies with demands for deploying large-scale model applications are welcome to contact us.<br>\n**Enquiry Hotline: 400-898-7779**<br>\n**E-mail: ai@orionstar.com**<br>\n**Discord Link: https://discord.gg/zumjDWgdAs**\n\n\n<div align=\"center\">\n  <img src=\"./assets/imgs/wechat_group.jpg\" alt=\"wechat\" width=\"40%\" />\n</div>\n\n\n\n\n\n"
+            },
+            {
+              "id": "cheranengg/dhf-dvp-adapter",
+              "author": "cheranengg",
+              "sha": "fc6ac1a2b29e96048c61c433261cd189632ad83c",
+              "created_at": "2025-08-15T16:15:44+00:00",
+              "last_modified": "2025-08-15T16:16:01+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 25,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "adapter_config.json"
+                },
+                {
+                  "rfilename": "adapter_model.safetensors"
+                },
+                {
+                  "rfilename": "special_tokens_map.json"
+                },
+                {
+                  "rfilename": "tokenizer.json"
+                },
+                {
+                  "rfilename": "tokenizer.model"
+                },
+                {
+                  "rfilename": "tokenizer_config.json"
+                }
+              ],
+              "card_data": {
+                "language": [],
+                "library_name": "peft",
+                "tags": [],
+                "datasets": [],
+                "base_model": "mistralai/Mistral-7B-Instruct-v0.2",
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "peft",
+                "safetensors",
+                "arxiv:1910.09700",
+                "base_model:mistralai/Mistral-7B-Instruct-v0.2",
+                "base_model:adapter:mistralai/Mistral-7B-Instruct-v0.2",
+                "region:us"
+              ],
+              "library_name": "peft",
+              "readme": "---\nbase_model: mistralai/Mistral-7B-Instruct-v0.2\nlibrary_name: peft\n---\n\n# Model Card for Model ID\n\n<!-- Provide a quick summary of what the model is/does. -->\n\n\n\n## Model Details\n\n### Model Description\n\n<!-- Provide a longer summary of what this model is. -->\n\n\n\n- **Developed by:** [More Information Needed]\n- **Funded by [optional]:** [More Information Needed]\n- **Shared by [optional]:** [More Information Needed]\n- **Model type:** [More Information Needed]\n- **Language(s) (NLP):** [More Information Needed]\n- **License:** [More Information Needed]\n- **Finetuned from model [optional]:** [More Information Needed]\n\n### Model Sources [optional]\n\n<!-- Provide the basic links for the model. -->\n\n- **Repository:** [More Information Needed]\n- **Paper [optional]:** [More Information Needed]\n- **Demo [optional]:** [More Information Needed]\n\n## Uses\n\n<!-- Address questions around how the model is intended to be used, including the foreseeable users of the model and those affected by the model. -->\n\n### Direct Use\n\n<!-- This section is for the model use without fine-tuning or plugging into a larger ecosystem/app. -->\n\n[More Information Needed]\n\n### Downstream Use [optional]\n\n<!-- This section is for the model use when fine-tuned for a task, or when plugged into a larger ecosystem/app -->\n\n[More Information Needed]\n\n### Out-of-Scope Use\n\n<!-- This section addresses misuse, malicious use, and uses that the model will not work well for. -->\n\n[More Information Needed]\n\n## Bias, Risks, and Limitations\n\n<!-- This section is meant to convey both technical and sociotechnical limitations. -->\n\n[More Information Needed]\n\n### Recommendations\n\n<!-- This section is meant to convey recommendations with respect to the bias, risk, and technical limitations. -->\n\nUsers (both direct and downstream) should be made aware of the risks, biases and limitations of the model. More information needed for further recommendations.\n\n## How to Get Started with the Model\n\nUse the code below to get started with the model.\n\n[More Information Needed]\n\n## Training Details\n\n### Training Data\n\n<!-- This should link to a Dataset Card, perhaps with a short stub of information on what the training data is all about as well as documentation related to data pre-processing or additional filtering. -->\n\n[More Information Needed]\n\n### Training Procedure\n\n<!-- This relates heavily to the Technical Specifications. Content here should link to that section when it is relevant to the training procedure. -->\n\n#### Preprocessing [optional]\n\n[More Information Needed]\n\n\n#### Training Hyperparameters\n\n- **Training regime:** [More Information Needed] <!--fp32, fp16 mixed precision, bf16 mixed precision, bf16 non-mixed precision, fp16 non-mixed precision, fp8 mixed precision -->\n\n#### Speeds, Sizes, Times [optional]\n\n<!-- This section provides information about throughput, start/end time, checkpoint size if relevant, etc. -->\n\n[More Information Needed]\n\n## Evaluation\n\n<!-- This section describes the evaluation protocols and provides the results. -->\n\n### Testing Data, Factors & Metrics\n\n#### Testing Data\n\n<!-- This should link to a Dataset Card if possible. -->\n\n[More Information Needed]\n\n#### Factors\n\n<!-- These are the things the evaluation is disaggregating by, e.g., subpopulations or domains. -->\n\n[More Information Needed]\n\n#### Metrics\n\n<!-- These are the evaluation metrics being used, ideally with a description of why. -->\n\n[More Information Needed]\n\n### Results\n\n[More Information Needed]\n\n#### Summary\n\n\n\n## Model Examination [optional]\n\n<!-- Relevant interpretability work for the model goes here -->\n\n[More Information Needed]\n\n## Environmental Impact\n\n<!-- Total emissions (in grams of CO2eq) and additional considerations, such as electricity usage, go here. Edit the suggested text below accordingly -->\n\nCarbon emissions can be estimated using the [Machine Learning Impact calculator](https://mlco2.github.io/impact#compute) presented in [Lacoste et al. (2019)](https://arxiv.org/abs/1910.09700).\n\n- **Hardware Type:** [More Information Needed]\n- **Hours used:** [More Information Needed]\n- **Cloud Provider:** [More Information Needed]\n- **Compute Region:** [More Information Needed]\n- **Carbon Emitted:** [More Information Needed]\n\n## Technical Specifications [optional]\n\n### Model Architecture and Objective\n\n[More Information Needed]\n\n### Compute Infrastructure\n\n[More Information Needed]\n\n#### Hardware\n\n[More Information Needed]\n\n#### Software\n\n[More Information Needed]\n\n## Citation [optional]\n\n<!-- If there is a paper or blog post introducing the model, the APA and Bibtex information for that should go in this section. -->\n\n**BibTeX:**\n\n[More Information Needed]\n\n**APA:**\n\n[More Information Needed]\n\n## Glossary [optional]\n\n<!-- If relevant, include terms and calculations in this section that can help readers understand the model or model card. -->\n\n[More Information Needed]\n\n## More Information [optional]\n\n[More Information Needed]\n\n## Model Card Authors [optional]\n\n[More Information Needed]\n\n## Model Card Contact\n\n[More Information Needed]\n### Framework versions\n\n- PEFT 0.11.1"
+            },
+            {
+              "id": "nikoryagin/sae_Qwen_Qwen2.5-7B_resid_post_layer_25_size_16384_batchtopk_x197bh52_lora_fsbwmjb4",
+              "author": "nikoryagin",
+              "sha": "737dfe049c380211332ea228ac2603ac6429d6e4",
+              "created_at": "2025-04-06T03:57:10+00:00",
+              "last_modified": "2025-04-06T03:57:31+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 13,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "config.py"
+                },
+                {
+                  "rfilename": "model.py"
+                },
+                {
+                  "rfilename": "model.safetensors"
+                }
+              ],
+              "card_data": {
+                "language": [],
+                "library_name": "transformers",
+                "tags": [],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "safetensors",
+                "sae",
+                "feature-extraction",
+                "custom_code",
+                "arxiv:1910.09700",
+                "region:us"
+              ],
+              "pipeline_tag": "feature-extraction",
+              "library_name": "transformers",
+              "readme": "---\nlibrary_name: transformers\ntags: []\n---\n\n# Model Card for Model ID\n\n<!-- Provide a quick summary of what the model is/does. -->\n\n\n\n## Model Details\n\n### Model Description\n\n<!-- Provide a longer summary of what this model is. -->\n\nThis is the model card of a 🤗 transformers model that has been pushed on the Hub. This model card has been automatically generated.\n\n- **Developed by:** [More Information Needed]\n- **Funded by [optional]:** [More Information Needed]\n- **Shared by [optional]:** [More Information Needed]\n- **Model type:** [More Information Needed]\n- **Language(s) (NLP):** [More Information Needed]\n- **License:** [More Information Needed]\n- **Finetuned from model [optional]:** [More Information Needed]\n\n### Model Sources [optional]\n\n<!-- Provide the basic links for the model. -->\n\n- **Repository:** [More Information Needed]\n- **Paper [optional]:** [More Information Needed]\n- **Demo [optional]:** [More Information Needed]\n\n## Uses\n\n<!-- Address questions around how the model is intended to be used, including the foreseeable users of the model and those affected by the model. -->\n\n### Direct Use\n\n<!-- This section is for the model use without fine-tuning or plugging into a larger ecosystem/app. -->\n\n[More Information Needed]\n\n### Downstream Use [optional]\n\n<!-- This section is for the model use when fine-tuned for a task, or when plugged into a larger ecosystem/app -->\n\n[More Information Needed]\n\n### Out-of-Scope Use\n\n<!-- This section addresses misuse, malicious use, and uses that the model will not work well for. -->\n\n[More Information Needed]\n\n## Bias, Risks, and Limitations\n\n<!-- This section is meant to convey both technical and sociotechnical limitations. -->\n\n[More Information Needed]\n\n### Recommendations\n\n<!-- This section is meant to convey recommendations with respect to the bias, risk, and technical limitations. -->\n\nUsers (both direct and downstream) should be made aware of the risks, biases and limitations of the model. More information needed for further recommendations.\n\n## How to Get Started with the Model\n\nUse the code below to get started with the model.\n\n[More Information Needed]\n\n## Training Details\n\n### Training Data\n\n<!-- This should link to a Dataset Card, perhaps with a short stub of information on what the training data is all about as well as documentation related to data pre-processing or additional filtering. -->\n\n[More Information Needed]\n\n### Training Procedure\n\n<!-- This relates heavily to the Technical Specifications. Content here should link to that section when it is relevant to the training procedure. -->\n\n#### Preprocessing [optional]\n\n[More Information Needed]\n\n\n#### Training Hyperparameters\n\n- **Training regime:** [More Information Needed] <!--fp32, fp16 mixed precision, bf16 mixed precision, bf16 non-mixed precision, fp16 non-mixed precision, fp8 mixed precision -->\n\n#### Speeds, Sizes, Times [optional]\n\n<!-- This section provides information about throughput, start/end time, checkpoint size if relevant, etc. -->\n\n[More Information Needed]\n\n## Evaluation\n\n<!-- This section describes the evaluation protocols and provides the results. -->\n\n### Testing Data, Factors & Metrics\n\n#### Testing Data\n\n<!-- This should link to a Dataset Card if possible. -->\n\n[More Information Needed]\n\n#### Factors\n\n<!-- These are the things the evaluation is disaggregating by, e.g., subpopulations or domains. -->\n\n[More Information Needed]\n\n#### Metrics\n\n<!-- These are the evaluation metrics being used, ideally with a description of why. -->\n\n[More Information Needed]\n\n### Results\n\n[More Information Needed]\n\n#### Summary\n\n\n\n## Model Examination [optional]\n\n<!-- Relevant interpretability work for the model goes here -->\n\n[More Information Needed]\n\n## Environmental Impact\n\n<!-- Total emissions (in grams of CO2eq) and additional considerations, such as electricity usage, go here. Edit the suggested text below accordingly -->\n\nCarbon emissions can be estimated using the [Machine Learning Impact calculator](https://mlco2.github.io/impact#compute) presented in [Lacoste et al. (2019)](https://arxiv.org/abs/1910.09700).\n\n- **Hardware Type:** [More Information Needed]\n- **Hours used:** [More Information Needed]\n- **Cloud Provider:** [More Information Needed]\n- **Compute Region:** [More Information Needed]\n- **Carbon Emitted:** [More Information Needed]\n\n## Technical Specifications [optional]\n\n### Model Architecture and Objective\n\n[More Information Needed]\n\n### Compute Infrastructure\n\n[More Information Needed]\n\n#### Hardware\n\n[More Information Needed]\n\n#### Software\n\n[More Information Needed]\n\n## Citation [optional]\n\n<!-- If there is a paper or blog post introducing the model, the APA and Bibtex information for that should go in this section. -->\n\n**BibTeX:**\n\n[More Information Needed]\n\n**APA:**\n\n[More Information Needed]\n\n## Glossary [optional]\n\n<!-- If relevant, include terms and calculations in this section that can help readers understand the model or model card. -->\n\n[More Information Needed]\n\n## More Information [optional]\n\n[More Information Needed]\n\n## Model Card Authors [optional]\n\n[More Information Needed]\n\n## Model Card Contact\n\n[More Information Needed]"
+            },
+            {
+              "id": "Nitesh47/FS_BLOOM",
+              "author": "Nitesh47",
+              "sha": "8f11b28ef2764e5636133fb16527e3da8c1d3867",
+              "created_at": "2023-04-05T20:21:17+00:00",
+              "last_modified": "2023-04-05T21:04:06+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 0,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "adapter_config.json"
+                },
+                {
+                  "rfilename": "adapter_model.bin"
+                }
+              ],
+              "card_data": {
+                "language": [],
+                "pipeline_tag": "text-generation",
+                "tags": [],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "text-generation",
+                "region:us"
+              ],
+              "pipeline_tag": "text-generation",
+              "readme": "---\npipeline_tag: text-generation\n---"
+            },
+            {
+              "id": "lhong4759/fcfdb02e-1f99-4a73-8feb-9b3d9aba5852",
+              "author": "lhong4759",
+              "sha": "8f00fd8956a1b1f2f748c313f3a7831c364bc0d4",
+              "created_at": "2025-01-25T17:36:46+00:00",
+              "last_modified": "2025-01-25T18:13:15+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 11,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "adapter_config.json"
+                },
+                {
+                  "rfilename": "adapter_model.bin"
+                },
+                {
+                  "rfilename": "adapter_model.safetensors"
+                },
+                {
+                  "rfilename": "added_tokens.json"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "special_tokens_map.json"
+                },
+                {
+                  "rfilename": "tokenizer.json"
+                },
+                {
+                  "rfilename": "tokenizer.model"
+                }
+              ],
+              "card_data": {
+                "license": "apache-2.0",
+                "language": [],
+                "library_name": "peft",
+                "tags": [
+                  "axolotl",
+                  "generated_from_trainer"
+                ],
+                "datasets": [],
+                "base_model": "berkeley-nest/Starling-LM-7B-alpha",
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "peft",
+                "safetensors",
+                "mistral",
+                "axolotl",
+                "generated_from_trainer",
+                "base_model:berkeley-nest/Starling-LM-7B-alpha",
+                "base_model:adapter:berkeley-nest/Starling-LM-7B-alpha",
+                "license:apache-2.0",
+                "8-bit",
+                "bitsandbytes",
+                "region:us"
+              ],
+              "library_name": "peft",
+              "readme": "---\nlibrary_name: peft\nlicense: apache-2.0\nbase_model: berkeley-nest/Starling-LM-7B-alpha\ntags:\n- axolotl\n- generated_from_trainer\nmodel-index:\n- name: fcfdb02e-1f99-4a73-8feb-9b3d9aba5852\n  results: []\n---\n\n<!-- This model card has been generated automatically according to the information the Trainer had access to. You\nshould probably proofread and complete it, then remove this comment. -->\n\n[<img src=\"https://raw.githubusercontent.com/axolotl-ai-cloud/axolotl/main/image/axolotl-badge-web.png\" alt=\"Built with Axolotl\" width=\"200\" height=\"32\"/>](https://github.com/axolotl-ai-cloud/axolotl)\n<details><summary>See axolotl config</summary>\n\naxolotl version: `0.4.1`\n```yaml\nadapter: lora\nbase_model: berkeley-nest/Starling-LM-7B-alpha\nbf16: auto\nchat_template: llama3\ndataset_prepared_path: null\ndatasets:\n- data_files:\n  - 0ea2449c423cb6d0_train_data.json\n  ds_type: json\n  format: custom\n  path: /workspace/input_data/0ea2449c423cb6d0_train_data.json\n  type:\n    field_input: input\n    field_instruction: instruction\n    field_output: output\n    format: '{instruction} {input}'\n    no_input_format: '{instruction}'\n    system_format: '{system}'\n    system_prompt: ''\ndebug: null\ndeepspeed: null\nearly_stopping_patience: null\neval_max_new_tokens: 128\neval_table_size: null\nevals_per_epoch: 1\nflash_attention: true\nfp16: null\nfsdp: null\nfsdp_config: null\ngradient_accumulation_steps: 4\ngradient_checkpointing: true\ngradient_clipping: 1.0\ngroup_by_length: false\nhub_model_id: lhong4759/fcfdb02e-1f99-4a73-8feb-9b3d9aba5852\nhub_repo: null\nhub_strategy: end\nhub_token: null\nlearning_rate: 5.0e-05\nload_in_4bit: true\nload_in_8bit: true\nlocal_rank: null\nlogging_steps: 1\nlora_alpha: 16\nlora_dropout: 0.05\nlora_fan_in_fan_out: null\nlora_model_dir: null\nlora_r: 8\nlora_target_linear: true\nlr_scheduler: cosine\nmax_steps: 200\nmicro_batch_size: 2\nmlflow_experiment_name: /tmp/0ea2449c423cb6d0_train_data.json\nmodel_type: AutoModelForCausalLM\nnum_epochs: 1\noptimizer: adamw_bnb_8bit\noutput_dir: miner_id_24\npad_to_sequence_len: true\nresume_from_checkpoint: null\ns2_attention: null\nsample_packing: false\nsaves_per_epoch: 1\nsequence_len: 1024\nstrict: false\ntf32: false\ntokenizer_type: AutoTokenizer\ntrain_on_inputs: false\ntrust_remote_code: true\nval_set_size: 0.05\nwandb_entity: null\nwandb_mode: online\nwandb_name: e121fd77-44b5-4c84-975f-b6ca05b013b8\nwandb_project: Gradients-On-Demand\nwandb_run: your_name\nwandb_runid: e121fd77-44b5-4c84-975f-b6ca05b013b8\nwarmup_steps: 5\nweight_decay: 0.01\nxformers_attention: true\n\n```\n\n</details><br>\n\n# fcfdb02e-1f99-4a73-8feb-9b3d9aba5852\n\nThis model is a fine-tuned version of [berkeley-nest/Starling-LM-7B-alpha](https://huggingface.co/berkeley-nest/Starling-LM-7B-alpha) on the None dataset.\nIt achieves the following results on the evaluation set:\n- Loss: 1.5657\n\n## Model description\n\nMore information needed\n\n## Intended uses & limitations\n\nMore information needed\n\n## Training and evaluation data\n\nMore information needed\n\n## Training procedure\n\n### Training hyperparameters\n\nThe following hyperparameters were used during training:\n- learning_rate: 5e-05\n- train_batch_size: 2\n- eval_batch_size: 2\n- seed: 42\n- gradient_accumulation_steps: 4\n- total_train_batch_size: 8\n- optimizer: Use OptimizerNames.ADAMW_BNB with betas=(0.9,0.999) and epsilon=1e-08 and optimizer_args=No additional optimizer arguments\n- lr_scheduler_type: cosine\n- lr_scheduler_warmup_steps: 5\n- training_steps: 200\n\n### Training results\n\n| Training Loss | Epoch  | Step | Validation Loss |\n|:-------------:|:------:|:----:|:---------------:|\n| 8.2886        | 0.0926 | 200  | 1.5657          |\n\n\n### Framework versions\n\n- PEFT 0.13.2\n- Transformers 4.46.0\n- Pytorch 2.5.0+cu124\n- Datasets 3.0.1\n- Tokenizers 0.20.1"
+            },
+            {
+              "id": "cheranengg/dhf-dvp-adapter",
+              "author": "cheranengg",
+              "sha": "fc6ac1a2b29e96048c61c433261cd189632ad83c",
+              "created_at": "2025-08-15T16:15:44+00:00",
+              "last_modified": "2025-08-15T16:16:01+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 25,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "adapter_config.json"
+                },
+                {
+                  "rfilename": "adapter_model.safetensors"
+                },
+                {
+                  "rfilename": "special_tokens_map.json"
+                },
+                {
+                  "rfilename": "tokenizer.json"
+                },
+                {
+                  "rfilename": "tokenizer.model"
+                },
+                {
+                  "rfilename": "tokenizer_config.json"
+                }
+              ],
+              "card_data": {
+                "language": [],
+                "library_name": "peft",
+                "tags": [],
+                "datasets": [],
+                "base_model": "mistralai/Mistral-7B-Instruct-v0.2",
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "peft",
+                "safetensors",
+                "arxiv:1910.09700",
+                "base_model:mistralai/Mistral-7B-Instruct-v0.2",
+                "base_model:adapter:mistralai/Mistral-7B-Instruct-v0.2",
+                "region:us"
+              ],
+              "library_name": "peft",
+              "readme": "---\nbase_model: mistralai/Mistral-7B-Instruct-v0.2\nlibrary_name: peft\n---\n\n# Model Card for Model ID\n\n<!-- Provide a quick summary of what the model is/does. -->\n\n\n\n## Model Details\n\n### Model Description\n\n<!-- Provide a longer summary of what this model is. -->\n\n\n\n- **Developed by:** [More Information Needed]\n- **Funded by [optional]:** [More Information Needed]\n- **Shared by [optional]:** [More Information Needed]\n- **Model type:** [More Information Needed]\n- **Language(s) (NLP):** [More Information Needed]\n- **License:** [More Information Needed]\n- **Finetuned from model [optional]:** [More Information Needed]\n\n### Model Sources [optional]\n\n<!-- Provide the basic links for the model. -->\n\n- **Repository:** [More Information Needed]\n- **Paper [optional]:** [More Information Needed]\n- **Demo [optional]:** [More Information Needed]\n\n## Uses\n\n<!-- Address questions around how the model is intended to be used, including the foreseeable users of the model and those affected by the model. -->\n\n### Direct Use\n\n<!-- This section is for the model use without fine-tuning or plugging into a larger ecosystem/app. -->\n\n[More Information Needed]\n\n### Downstream Use [optional]\n\n<!-- This section is for the model use when fine-tuned for a task, or when plugged into a larger ecosystem/app -->\n\n[More Information Needed]\n\n### Out-of-Scope Use\n\n<!-- This section addresses misuse, malicious use, and uses that the model will not work well for. -->\n\n[More Information Needed]\n\n## Bias, Risks, and Limitations\n\n<!-- This section is meant to convey both technical and sociotechnical limitations. -->\n\n[More Information Needed]\n\n### Recommendations\n\n<!-- This section is meant to convey recommendations with respect to the bias, risk, and technical limitations. -->\n\nUsers (both direct and downstream) should be made aware of the risks, biases and limitations of the model. More information needed for further recommendations.\n\n## How to Get Started with the Model\n\nUse the code below to get started with the model.\n\n[More Information Needed]\n\n## Training Details\n\n### Training Data\n\n<!-- This should link to a Dataset Card, perhaps with a short stub of information on what the training data is all about as well as documentation related to data pre-processing or additional filtering. -->\n\n[More Information Needed]\n\n### Training Procedure\n\n<!-- This relates heavily to the Technical Specifications. Content here should link to that section when it is relevant to the training procedure. -->\n\n#### Preprocessing [optional]\n\n[More Information Needed]\n\n\n#### Training Hyperparameters\n\n- **Training regime:** [More Information Needed] <!--fp32, fp16 mixed precision, bf16 mixed precision, bf16 non-mixed precision, fp16 non-mixed precision, fp8 mixed precision -->\n\n#### Speeds, Sizes, Times [optional]\n\n<!-- This section provides information about throughput, start/end time, checkpoint size if relevant, etc. -->\n\n[More Information Needed]\n\n## Evaluation\n\n<!-- This section describes the evaluation protocols and provides the results. -->\n\n### Testing Data, Factors & Metrics\n\n#### Testing Data\n\n<!-- This should link to a Dataset Card if possible. -->\n\n[More Information Needed]\n\n#### Factors\n\n<!-- These are the things the evaluation is disaggregating by, e.g., subpopulations or domains. -->\n\n[More Information Needed]\n\n#### Metrics\n\n<!-- These are the evaluation metrics being used, ideally with a description of why. -->\n\n[More Information Needed]\n\n### Results\n\n[More Information Needed]\n\n#### Summary\n\n\n\n## Model Examination [optional]\n\n<!-- Relevant interpretability work for the model goes here -->\n\n[More Information Needed]\n\n## Environmental Impact\n\n<!-- Total emissions (in grams of CO2eq) and additional considerations, such as electricity usage, go here. Edit the suggested text below accordingly -->\n\nCarbon emissions can be estimated using the [Machine Learning Impact calculator](https://mlco2.github.io/impact#compute) presented in [Lacoste et al. (2019)](https://arxiv.org/abs/1910.09700).\n\n- **Hardware Type:** [More Information Needed]\n- **Hours used:** [More Information Needed]\n- **Cloud Provider:** [More Information Needed]\n- **Compute Region:** [More Information Needed]\n- **Carbon Emitted:** [More Information Needed]\n\n## Technical Specifications [optional]\n\n### Model Architecture and Objective\n\n[More Information Needed]\n\n### Compute Infrastructure\n\n[More Information Needed]\n\n#### Hardware\n\n[More Information Needed]\n\n#### Software\n\n[More Information Needed]\n\n## Citation [optional]\n\n<!-- If there is a paper or blog post introducing the model, the APA and Bibtex information for that should go in this section. -->\n\n**BibTeX:**\n\n[More Information Needed]\n\n**APA:**\n\n[More Information Needed]\n\n## Glossary [optional]\n\n<!-- If relevant, include terms and calculations in this section that can help readers understand the model or model card. -->\n\n[More Information Needed]\n\n## More Information [optional]\n\n[More Information Needed]\n\n## Model Card Authors [optional]\n\n[More Information Needed]\n\n## Model Card Contact\n\n[More Information Needed]\n### Framework versions\n\n- PEFT 0.11.1"
+            },
+            {
+              "id": "nikoryagin/sae_Qwen_Qwen2.5-7B_resid_post_layer_25_size_16384_batchtopk_x197bh52_lora_fsbwmjb4",
+              "author": "nikoryagin",
+              "sha": "737dfe049c380211332ea228ac2603ac6429d6e4",
+              "created_at": "2025-04-06T03:57:10+00:00",
+              "last_modified": "2025-04-06T03:57:31+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 13,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "config.py"
+                },
+                {
+                  "rfilename": "model.py"
+                },
+                {
+                  "rfilename": "model.safetensors"
+                }
+              ],
+              "card_data": {
+                "language": [],
+                "library_name": "transformers",
+                "tags": [],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "safetensors",
+                "sae",
+                "feature-extraction",
+                "custom_code",
+                "arxiv:1910.09700",
+                "region:us"
+              ],
+              "pipeline_tag": "feature-extraction",
+              "library_name": "transformers",
+              "readme": "---\nlibrary_name: transformers\ntags: []\n---\n\n# Model Card for Model ID\n\n<!-- Provide a quick summary of what the model is/does. -->\n\n\n\n## Model Details\n\n### Model Description\n\n<!-- Provide a longer summary of what this model is. -->\n\nThis is the model card of a 🤗 transformers model that has been pushed on the Hub. This model card has been automatically generated.\n\n- **Developed by:** [More Information Needed]\n- **Funded by [optional]:** [More Information Needed]\n- **Shared by [optional]:** [More Information Needed]\n- **Model type:** [More Information Needed]\n- **Language(s) (NLP):** [More Information Needed]\n- **License:** [More Information Needed]\n- **Finetuned from model [optional]:** [More Information Needed]\n\n### Model Sources [optional]\n\n<!-- Provide the basic links for the model. -->\n\n- **Repository:** [More Information Needed]\n- **Paper [optional]:** [More Information Needed]\n- **Demo [optional]:** [More Information Needed]\n\n## Uses\n\n<!-- Address questions around how the model is intended to be used, including the foreseeable users of the model and those affected by the model. -->\n\n### Direct Use\n\n<!-- This section is for the model use without fine-tuning or plugging into a larger ecosystem/app. -->\n\n[More Information Needed]\n\n### Downstream Use [optional]\n\n<!-- This section is for the model use when fine-tuned for a task, or when plugged into a larger ecosystem/app -->\n\n[More Information Needed]\n\n### Out-of-Scope Use\n\n<!-- This section addresses misuse, malicious use, and uses that the model will not work well for. -->\n\n[More Information Needed]\n\n## Bias, Risks, and Limitations\n\n<!-- This section is meant to convey both technical and sociotechnical limitations. -->\n\n[More Information Needed]\n\n### Recommendations\n\n<!-- This section is meant to convey recommendations with respect to the bias, risk, and technical limitations. -->\n\nUsers (both direct and downstream) should be made aware of the risks, biases and limitations of the model. More information needed for further recommendations.\n\n## How to Get Started with the Model\n\nUse the code below to get started with the model.\n\n[More Information Needed]\n\n## Training Details\n\n### Training Data\n\n<!-- This should link to a Dataset Card, perhaps with a short stub of information on what the training data is all about as well as documentation related to data pre-processing or additional filtering. -->\n\n[More Information Needed]\n\n### Training Procedure\n\n<!-- This relates heavily to the Technical Specifications. Content here should link to that section when it is relevant to the training procedure. -->\n\n#### Preprocessing [optional]\n\n[More Information Needed]\n\n\n#### Training Hyperparameters\n\n- **Training regime:** [More Information Needed] <!--fp32, fp16 mixed precision, bf16 mixed precision, bf16 non-mixed precision, fp16 non-mixed precision, fp8 mixed precision -->\n\n#### Speeds, Sizes, Times [optional]\n\n<!-- This section provides information about throughput, start/end time, checkpoint size if relevant, etc. -->\n\n[More Information Needed]\n\n## Evaluation\n\n<!-- This section describes the evaluation protocols and provides the results. -->\n\n### Testing Data, Factors & Metrics\n\n#### Testing Data\n\n<!-- This should link to a Dataset Card if possible. -->\n\n[More Information Needed]\n\n#### Factors\n\n<!-- These are the things the evaluation is disaggregating by, e.g., subpopulations or domains. -->\n\n[More Information Needed]\n\n#### Metrics\n\n<!-- These are the evaluation metrics being used, ideally with a description of why. -->\n\n[More Information Needed]\n\n### Results\n\n[More Information Needed]\n\n#### Summary\n\n\n\n## Model Examination [optional]\n\n<!-- Relevant interpretability work for the model goes here -->\n\n[More Information Needed]\n\n## Environmental Impact\n\n<!-- Total emissions (in grams of CO2eq) and additional considerations, such as electricity usage, go here. Edit the suggested text below accordingly -->\n\nCarbon emissions can be estimated using the [Machine Learning Impact calculator](https://mlco2.github.io/impact#compute) presented in [Lacoste et al. (2019)](https://arxiv.org/abs/1910.09700).\n\n- **Hardware Type:** [More Information Needed]\n- **Hours used:** [More Information Needed]\n- **Cloud Provider:** [More Information Needed]\n- **Compute Region:** [More Information Needed]\n- **Carbon Emitted:** [More Information Needed]\n\n## Technical Specifications [optional]\n\n### Model Architecture and Objective\n\n[More Information Needed]\n\n### Compute Infrastructure\n\n[More Information Needed]\n\n#### Hardware\n\n[More Information Needed]\n\n#### Software\n\n[More Information Needed]\n\n## Citation [optional]\n\n<!-- If there is a paper or blog post introducing the model, the APA and Bibtex information for that should go in this section. -->\n\n**BibTeX:**\n\n[More Information Needed]\n\n**APA:**\n\n[More Information Needed]\n\n## Glossary [optional]\n\n<!-- If relevant, include terms and calculations in this section that can help readers understand the model or model card. -->\n\n[More Information Needed]\n\n## More Information [optional]\n\n[More Information Needed]\n\n## Model Card Authors [optional]\n\n[More Information Needed]\n\n## Model Card Contact\n\n[More Information Needed]"
+            }
+          ],
+          "datasets": []
+        }
+      }
+    }
   },
   "idea_info_history": [
     {
