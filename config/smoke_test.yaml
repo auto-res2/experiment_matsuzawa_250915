@@ -2,8 +2,10 @@
 experiment_name: "garden_smoke_test"
 
 training:
-  epochs: 1
-  batch_size: 2
+  epochs: 2   # keep tiny for fast CI
+  batch_size: 16
 
 dataset:
-  name: "dummy"
+  name: "synthetic"
+  n_samples: 200
+  n_features: 20

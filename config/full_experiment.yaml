@@ -1,9 +1,13 @@
-# Full-scale configuration (placeholder – populate with real values later)
+# Full-scale configuration – still small enough to run quickly in CI,
+# but larger than the smoke test so we get visibly different metrics.
 experiment_name: "garden_full_experiment"
 
 training:
-  epochs: 50
-  batch_size: 128
+  epochs: 10
+  batch_size: 64
 
 dataset:
-  name: "home_events_carbon"
+  name: "synthetic"
+  n_samples: 5000
+  n_features: 20
+

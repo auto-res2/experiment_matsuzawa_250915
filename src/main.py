@@ -3,14 +3,6 @@
 Supports two CLI flags:
   --smoke-test       Run a lightweight configuration defined in config/smoke_test.yaml
   --full-experiment  Run the full configuration in config/full_experiment.yaml
-
-Examples
---------
-# Smoke test only
-uv run python -m src.main --smoke-test
-
-# Full experiment only
-uv run python -m src.main --full-experiment
 """
 from __future__ import annotations
 
@@ -78,7 +70,7 @@ def load_config(path: Path) -> Dict[str, Any]:
 
 def run(cfg: Dict[str, Any]) -> None:  # noqa: D401
     """Run the full workflow: preprocessing → training → evaluation."""
-    # 1. Pre-processing
+    # 1. Pre-processing (idempotent)
     prepare_datasets(cfg)
 
     # 2. Training
