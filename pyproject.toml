@@ -26,8 +26,9 @@ dependencies = [
     "pynvml",
     "psutil",
     "fvcore",
-    # TVM CPU build – avoids CUDA wheel issues during installation
-    "tvm==0.13.0",
+    # NOTE: TVM is a heavy optional dependency used only in hardware evaluation.
+    # It is intentionally omitted from the core requirements to keep installation
+    # lightweight and compatible with Python 3.11 on the provided CI runner.
     "networkx>=3.3",
     # Graph Ricci curvature – correct PyPI name
     "GraphRicciCurvature>=0.6.3",

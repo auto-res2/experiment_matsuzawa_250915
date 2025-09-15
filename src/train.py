@@ -223,8 +223,11 @@ def run_hardware_eval(cfg_path: str) -> None:  # noqa: C901 – large but self-c
     example_in = g.ndata["feat"][:1024]
 
     # TVM imports are heavy – do them only here
-    import tvm  # type: ignore
-    from tvm import relay  # type: ignore
+    try:
+        import tvm  # type: ignore
+        from tvm import relay  # type: ignore
+    except ModuleNotFoundError:
+        raise RuntimeError("TVM is required for hardware evaluation but is not installed.")
 
     results: Dict[str, Any] = {}
 
@@ -267,7 +270,7 @@ def run_hardware_eval(cfg_path: str) -> None:  # noqa: C901 – large but self-c
             )
             results[f"{tgt}_{kb}KB"] = res
 
-    out_path = Path(cfg["save_dir"]) / "hardware_energy.json"
+    out_path = Path(cfg.get("save_dir", ".research/iteration3/results")) / "hardware_energy.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     json.dump(results, open(out_path, "w"), indent=2)
     print("[HARDWARE] results saved to", out_path)
@@ -285,7 +288,7 @@ def run(cfg_file: str) -> None:
     if cfg.get("hyperopt") and optuna is not None:
         cfg = _run_hyperopt(cfg)
 
-    base_out = Path(".research/iteration2")
+    base_out = Path(".research/iteration3")
     base_out.mkdir(parents=True, exist_ok=True)
 
     for seed in cfg["seeds"]:
@@ -306,7 +309,7 @@ def run(cfg_file: str) -> None:
 
         # ------------------ quick plots -----------------------------------
         if plt is not None and sns is not None:
-            images_dir = Path(".research/iteration2/images")
+            images_dir = Path(".research/iteration3/images")
             images_dir.mkdir(parents=True, exist_ok=True)
             epochs = [h["epoch"] for h in history]
             accs = [h["acc"] for h in history]
