@@ -1,0 +1,6 @@
+[2025-09-15 16:45:10,312] INFO - Loaded config from /home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/config/full_experiment.yaml
+[2025-09-15 16:45:10,312] WARNING - prepare_datasets() called – no preprocessing implemented.
+[2025-09-15 16:45:10,312] WARNING - train() was called, but no training logic is implemented.
+[2025-09-15 16:45:10,315] INFO - Saved dummy checkpoint to .research/iteration2/dummy_model.pt
+[2025-09-15 16:45:10,315] WARNING - evaluate() was called, but no evaluation logic is implemented.
+[2025-09-15 16:45:10,315] INFO - Saved evaluation results to .research/iteration2/evaluation_results.json
