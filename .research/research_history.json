@@ -6,5 +6,82 @@
     "discrete diffusion inference speedup",
     "diffusion model step reduction",
     "efficient discrete denoising"
+  ],
+  "research_study_list": [
+    {
+      "title": "Faster Diffusion: Rethinking the Role of the Encoder for Diffusion Model Inference"
+    },
+    {
+      "title": "Accelerating Guided Diffusion Sampling with Splitting Numerical Methods"
+    },
+    {
+      "title": "Multistep Distillation of Diffusion Models via Moment Matching"
+    },
+    {
+      "title": "Fast Sampling via Discrete Non-Markov Diffusion Models with Predetermined Transition Time"
+    },
+    {
+      "title": "Diffusion Sampling with Momentum for Mitigating Divergence Artifacts"
+    },
+    {
+      "title": "A Continuous Time Framework for Discrete Denoising Models"
+    },
+    {
+      "title": "Fast Sampling via Discrete Non-Markov Diffusion Models with Predetermined Transition Time"
+    },
+    {
+      "title": "Reverse Transition Kernel: A Flexible Framework to Accelerate Diffusion Inference"
+    },
+    {
+      "title": "Multistep Distillation of Diffusion Models via Moment Matching"
+    },
+    {
+      "title": "The Poisson Midpoint Method for Langevin Dynamics:  Provably Efficient Discretization for Diffusion Models"
+    },
+    {
+      "title": "Faster Diffusion: Rethinking the Role of the Encoder for Diffusion Model Inference"
+    },
+    {
+      "title": "A Simple Early Exiting Framework for Accelerated Sampling in Diffusion Models"
+    },
+    {
+      "title": "Leveraging Early-Stage Robustness in Diffusion Models for Efficient and High-Quality Image Synthesis"
+    },
+    {
+      "title": "Training-Free Adaptive Diffusion with Bounded Difference Approximation Strategy"
+    },
+    {
+      "title": "On Distillation of Guided Diffusion Models"
+    },
+    {
+      "title": "Multistep Distillation of Diffusion Models via Moment Matching"
+    },
+    {
+      "title": "Training-Free Adaptive Diffusion with Bounded Difference Approximation Strategy"
+    },
+    {
+      "title": "A Simple Early Exiting Framework for Accelerated Sampling in Diffusion Models"
+    },
+    {
+      "title": "ResShift: Efficient Diffusion Model for Image Super-resolution by Residual Shifting"
+    },
+    {
+      "title": "Leveraging Early-Stage Robustness in Diffusion Models for Efficient and High-Quality Image Synthesis"
+    },
+    {
+      "title": "On the Posterior Distribution in Denoising: Application to Uncertainty Quantification"
+    },
+    {
+      "title": "Unsupervised Image Denoising with Score Function"
+    },
+    {
+      "title": "Real-World Efficient Blind Motion Deblurring via Blur Pixel Discretization"
+    },
+    {
+      "title": "Diffusion Priors for Variational Likelihood Estimation and Image Denoising"
+    },
+    {
+      "title": "The Discrete Gaussian for Differential Privacy"
+    }
   ]
 }
