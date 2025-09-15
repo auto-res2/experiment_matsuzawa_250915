@@ -1,1 +1,11 @@
-# Empty configuration because no experiment code to configure.
+# Heavier configuration for the full experiment run
+experiment_name: astral_full
+preprocess: {}
+train:
+  num_samples: 10000
+  epochs: 50
+  learning_rate: 0.05
+  noise_std: 0.1
+evaluate:
+  num_val_samples: 2048
+  noise_std: 0.1

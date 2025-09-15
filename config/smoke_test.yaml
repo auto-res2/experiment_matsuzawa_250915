@@ -1,2 +1,11 @@
-# Empty configuration because no experiment code to configure.
-# CI will fail by design (see Python files) until code is supplied.
+# Lightweight configuration for CI smoke tests
+experiment_name: astral_smoke
+preprocess: {}
+train:
+  num_samples: 128
+  epochs: 2
+  learning_rate: 0.2
+  noise_std: 0.1
+evaluate:
+  num_val_samples: 64
+  noise_std: 0.1

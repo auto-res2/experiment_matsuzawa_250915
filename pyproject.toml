@@ -4,14 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "astral-surrogate-experiment"
-version = "0.0.0"
-description = "Re-packaged experiment (original script was not supplied)"
+version = "0.0.1"
+description = "Minimal runnable placeholder for the ASTRAL surrogate research pipeline"
 requires-python = ">=3.9"
-keywords = ["diffusion", "astral", "research"]
-# Minimal dependencies so that the project remains installable even though no code is present
-# If the missing experiment code is later supplied, dependencies must be updated accordingly.
+keywords = ["diffusion", "astral", "research", "placeholder"]
 dependencies = [
-  "torch>=1.9.0",
+  "torch>=2.0.0",
   "numpy>=1.21.0",
   "PyYAML>=6.0",
 ]
