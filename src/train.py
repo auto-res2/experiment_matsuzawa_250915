@@ -58,7 +58,7 @@ def load_models(cfg: Dict[str, Any]) -> Tuple[object, Dict[str, Any]]:
     """Download/instantiate HuggingFace models specified in the config.
 
     For the *smoke-test* we instantiate *stub* objects only so that CI runs fast
-    and offline.  The full heavyweight models are created for the
+    and offline. The full heavyweight models are created for the
     "full_experiment" configuration.
     """
     if cfg.get("_name") == "smoke_test":
@@ -70,6 +70,7 @@ def load_models(cfg: Dict[str, Any]) -> Tuple[object, Dict[str, Any]]:
     # ------------------------------------------------------------------ full run
     from diffusers import StableDiffusionPipeline  # heavy import – avoid in CI
     from transformers import AutoModelForCausalLM, AutoTokenizer
+    import importlib.util  # local import only needed for xformers detection
 
     device = _select_device(cfg)
 
@@ -80,9 +81,20 @@ def load_models(cfg: Dict[str, Any]) -> Tuple[object, Dict[str, Any]]:
         torch_dtype=torch.float16 if device.type == "cuda" else torch.float32,
         use_auth_token=HF_TOKEN,
     ).to(device)
+
+    # Enable xFormers *only if* the package is installed ----------------------
     if device.type == "cuda":
-        # xFormers only available on CUDA
-        sd_pipe.enable_xformers_memory_efficient_attention()
+        if importlib.util.find_spec("xformers") is not None:
+            # Safe to enable – provides large memory savings on GPU
+            sd_pipe.enable_xformers_memory_efficient_attention()
+        else:
+            # Inform user but continue – this is an *optional* optimisation
+            print(
+                "[WARN] xformers not found – continuing without "
+                "`enable_xformers_memory_efficient_attention()`. "
+                "Install xformers for lower GPU memory usage.",
+                flush=True,
+            )
 
     # ---- LLM-Chat -----------------------------------------------------------
     llama_id = "NousResearch/Llama-2-7b-chat-hf"
@@ -165,8 +177,8 @@ def train_tinyformer(cfg: Dict[str, Any]) -> Path:  # noqa: D401
 
 
 def dump_result(payload: Dict[str, Any], cfg_name: str) -> None:
-    """Saves *payload* under .research/iteration3/ and prints to stdout."""
-    out_dir = Path(".research/iteration3")
+    """Saves *payload* under .research/iteration4/ and prints to stdout."""
+    out_dir = Path(".research/iteration4")
     out_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
     out_file = out_dir / f"result_{cfg_name}_{ts}.json"
