@@ -13,9 +13,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, Any
 
 import yaml
@@ -64,7 +63,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="CAJUN-GNN experiment runner")
     g = parser.add_mutually_exclusive_group(required=True)
     g.add_argument("--smoke-test", action="store_true", help="Run the tiny synthetic smoke test")
-    g.add_argument("--full-experiment", action="store_true", help="Run the full experiment (requires data)")
+    g.add_argument("--full-experiment", action="store_true", help="Run the full experiment (may require data)")
     g.add_argument("--config", type=str, help="Path to a custom YAML config file")
 
     args = parser.parse_args()
@@ -92,7 +91,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Persist results – one JSON file per run
     # ------------------------------------------------------------------
-    out_dir = Path(".research/iteration2")
+    out_dir = Path(".research/iteration3")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     ts = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
