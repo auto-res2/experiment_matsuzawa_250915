@@ -1,0 +1,11 @@
+=== uv sync start Mon Sep 15 01:09:15 PM UTC 2025 ===
+=== uv install end Mon Sep 15 01:10:25 PM UTC 2025 ===
+=== [PHASE 1/2] Smoke test start Mon Sep 15 01:10:25 PM UTC 2025 ===
+
+=== Experiment 1 – Variable-Rate Replay vs. Baselines ===
+
+[Exp-1] Preparing dataset …
+
+[Exp-1] Variant=R3  Memory=32 kB
+  Task 00  AA=50.00%  BufferBits=      0  BufferBytes=      0
+  Task 01  AA=25.00%  BufferBits=      0  BufferBytes=      0

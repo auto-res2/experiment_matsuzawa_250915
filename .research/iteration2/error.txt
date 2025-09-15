@@ -1,0 +1,166 @@
+Using CPython 3.11.13
+Creating virtual environment at: .venv
+Resolved 89 packages in 716ms
+   Building edgebench-r3 @ file:///home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915
+Downloading setuptools (1.1MiB)
+Downloading nvidia-cufft-cu12 (184.2MiB)
+Downloading torch (846.9MiB)
+Downloading torchvision (8.2MiB)
+Downloading scipy (34.2MiB)
+Downloading nvidia-cuda-cupti-cu12 (9.8MiB)
+Downloading nvidia-cusparse-cu12 (274.9MiB)
+Downloading nvidia-cublas-cu12 (566.8MiB)
+Downloading torchaudio (3.8MiB)
+Downloading scikit-learn (9.3MiB)
+Downloading sympy (6.0MiB)
+Downloading nvidia-curand-cu12 (60.7MiB)
+Downloading nvidia-cusolver-cu12 (255.1MiB)
+Downloading pyarrow (40.8MiB)
+Downloading triton (148.3MiB)
+Downloading nvidia-nccl-cu12 (307.4MiB)
+Downloading aiohttp (1.7MiB)
+Downloading nvidia-cusparselt-cu12 (273.9MiB)
+Downloading pillow (6.3MiB)
+Downloading nvidia-cufile-cu12 (1.1MiB)
+Downloading pandas (11.8MiB)
+Downloading matplotlib (8.3MiB)
+Downloading networkx (1.9MiB)
+Downloading kiwisolver (1.4MiB)
+Downloading nvidia-cudnn-cu12 (674.0MiB)
+Downloading nvidia-cuda-nvrtc-cu12 (84.0MiB)
+Downloading fonttools (4.7MiB)
+Downloading numpy (16.2MiB)
+Downloading nvidia-nvjitlink-cu12 (37.4MiB)
+Downloading hf-xet (3.0MiB)
+ Downloading nvidia-cufile-cu12
+ Downloading kiwisolver
+ Downloading aiohttp
+ Downloading hf-xet
+ Downloading setuptools
+ Downloading torchaudio
+ Downloading networkx
+ Downloading fonttools
+      Built edgebench-r3 @ file:///home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915
+ Downloading pillow
+ Downloading torchvision
+ Downloading matplotlib
+ Downloading nvidia-cuda-cupti-cu12
+ Downloading scikit-learn
+ Downloading sympy
+ Downloading numpy
+ Downloading pandas
+ Downloading nvidia-nvjitlink-cu12
+ Downloading scipy
+ Downloading nvidia-curand-cu12
+ Downloading pyarrow
+ Downloading nvidia-cuda-nvrtc-cu12
+ Downloading triton
+ Downloading nvidia-cufft-cu12
+ Downloading nvidia-cusolver-cu12
+ Downloading nvidia-cusparse-cu12
+ Downloading nvidia-cusparselt-cu12
+ Downloading nvidia-nccl-cu12
+ Downloading nvidia-cublas-cu12
+ Downloading nvidia-cudnn-cu12
+ Downloading torch
+Prepared 73 packages in 1m 02s
+Installed 73 packages in 5.52s
+ + aiohappyeyeballs==2.6.1
+ + aiohttp==3.12.15
+ + aiosignal==1.4.0
+ + attrs==25.3.0
+ + certifi==2025.8.3
+ + charset-normalizer==3.4.3
+ + contourpy==1.3.3
+ + cycler==0.12.1
+ + datasets==4.0.0
+ + dill==0.3.8
+ + edgebench-r3==0.1.0 (from file:///home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915)
+ + filelock==3.19.1
+ + fonttools==4.59.2
+ + frozenlist==1.7.0
+ + fsspec==2025.3.0
+ + hf-xet==1.1.10
+ + huggingface-hub==0.34.4
+ + idna==3.10
+ + jinja2==3.1.6
+ + joblib==1.5.2
+ + kiwisolver==1.4.9
+ + markupsafe==3.0.2
+ + matplotlib==3.10.6
+ + mpmath==1.3.0
+ + multidict==6.6.4
+ + multiprocess==0.70.16
+ + networkx==3.5
+ + numpy==2.3.3
+ + nvidia-cublas-cu12==12.8.4.1
+ + nvidia-cuda-cupti-cu12==12.8.90
+ + nvidia-cuda-nvrtc-cu12==12.8.93
+ + nvidia-cuda-runtime-cu12==12.8.90
+ + nvidia-cudnn-cu12==9.10.2.21
+ + nvidia-cufft-cu12==11.3.3.83
+ + nvidia-cufile-cu12==1.13.1.3
+ + nvidia-curand-cu12==10.3.9.90
+ + nvidia-cusolver-cu12==11.7.3.90
+ + nvidia-cusparse-cu12==12.5.8.93
+ + nvidia-cusparselt-cu12==0.7.1
+ + nvidia-ml-py==13.580.82
+ + nvidia-nccl-cu12==2.27.3
+ + nvidia-nvjitlink-cu12==12.8.93
+ + nvidia-nvtx-cu12==12.8.90
+ + packaging==25.0
+ + pandas==2.3.2
+ + pillow==11.3.0
+ + propcache==0.3.2
+ + psutil==7.0.0
+ + pyarrow==21.0.0
+ + pynvml==13.0.1
+ + pyparsing==3.2.4
+ + python-dateutil==2.9.0.post0
+ + pytz==2025.2
+ + pyyaml==6.0.2
+ + requests==2.32.5
+ + scikit-learn==1.7.2
+ + scipy==1.16.2
+ + seaborn==0.13.2
+ + setuptools==80.9.0
+ + six==1.17.0
+ + sympy==1.14.0
+ + thop==0.1.1.post2209072238
+ + threadpoolctl==3.6.0
+ + torch==2.8.0
+ + torchaudio==2.8.0
+ + torchvision==0.23.0
+ + tqdm==4.67.1
+ + triton==3.4.0
+ + typing-extensions==4.15.0
+ + tzdata==2025.2
+ + urllib3==2.5.0
+ + xxhash==3.5.0
+ + yarl==1.20.1
+/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/.venv/lib/python3.11/site-packages/torch/cuda/__init__.py:63: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+  0%|          | 0.00/169M [00:00<?, ?B/s]  0%|          | 32.8k/169M [00:00<15:21, 183kB/s]  0%|          | 65.5k/169M [00:00<15:18, 184kB/s]  0%|          | 98.3k/169M [00:00<15:00, 188kB/s]  0%|          | 229k/169M [00:00<06:57, 404kB/s]   0%|          | 459k/169M [00:00<03:52, 723kB/s]  1%|          | 885k/169M [00:00<01:51, 1.51MB/s]  1%|          | 1.08M/169M [00:01<01:44, 1.60MB/s]  1%|          | 1.84M/169M [00:01<00:59, 2.81MB/s]  2%|▏         | 3.15M/169M [00:01<00:31, 5.33MB/s]  2%|▏         | 4.10M/169M [00:01<00:25, 6.42MB/s]  4%|▍         | 6.55M/169M [00:01<00:16, 9.64MB/s]  5%|▌         | 9.11M/169M [00:01<00:11, 13.5MB/s]  6%|▌         | 10.6M/169M [00:01<00:11, 13.5MB/s]  7%|▋         | 12.4M/169M [00:01<00:12, 13.0MB/s]  9%|▉         | 15.4M/169M [00:02<00:10, 14.2MB/s] 11%|█         | 18.0M/169M [00:02<00:08, 17.0MB/s] 12%|█▏        | 19.8M/169M [00:02<00:09, 16.5MB/s] 13%|█▎        | 21.6M/169M [00:02<00:10, 14.7MB/s] 14%|█▍        | 24.3M/169M [00:02<00:09, 15.0MB/s] 16%|█▌        | 27.3M/169M [00:02<00:09, 15.4MB/s] 18%|█▊        | 30.1M/169M [00:03<00:08, 15.6MB/s] 20%|█▉        | 33.0M/169M [00:03<00:08, 15.8MB/s] 21%|██▏       | 35.9M/169M [00:03<00:08, 16.0MB/s] 23%|██▎       | 39.1M/169M [00:03<00:07, 16.5MB/s] 25%|██▍       | 42.2M/169M [00:03<00:07, 16.9MB/s] 27%|██▋       | 45.3M/169M [00:03<00:07, 16.7MB/s] 29%|██▊       | 48.3M/169M [00:04<00:07, 16.8MB/s] 30%|███       | 51.4M/169M [00:04<00:06, 17.0MB/s] 32%|███▏      | 54.6M/169M [00:04<00:06, 17.2MB/s] 34%|███▍      | 57.7M/169M [00:04<00:06, 17.4MB/s] 36%|███▌      | 60.8M/169M [00:04<00:06, 17.5MB/s] 38%|███▊      | 63.9M/169M [00:05<00:05, 17.6MB/s] 39%|███▉      | 66.6M/169M [00:05<00:05, 19.4MB/s] 41%|████      | 68.7M/169M [00:05<00:05, 17.7MB/s] 42%|████▏     | 70.5M/169M [00:05<00:05, 16.9MB/s] 43%|████▎     | 73.2M/169M [00:05<00:05, 17.2MB/s] 45%|████▍     | 75.7M/169M [00:05<00:05, 18.5MB/s] 46%|████▌     | 77.6M/169M [00:05<00:05, 17.6MB/s] 47%|████▋     | 79.4M/169M [00:05<00:05, 17.1MB/s] 48%|████▊     | 81.8M/169M [00:05<00:04, 18.8MB/s] 50%|████▉     | 83.8M/169M [00:06<00:05, 16.6MB/s] 51%|█████     | 85.7M/169M [00:06<00:04, 17.2MB/s] 52%|█████▏    | 87.9M/169M [00:06<00:04, 18.5MB/s] 53%|█████▎    | 89.9M/169M [00:06<00:04, 16.1MB/s] 54%|█████▍    | 92.1M/169M [00:06<00:04, 17.4MB/s] 56%|█████▌    | 94.3M/169M [00:06<00:04, 16.0MB/s] 57%|█████▋    | 96.5M/169M [00:06<00:04, 17.4MB/s] 58%|█████▊    | 98.5M/169M [00:06<00:03, 18.1MB/s] 59%|█████▉    | 100M/169M [00:07<00:04, 16.1MB/s]  60%|██████    | 102M/169M [00:07<00:04, 16.3MB/s] 62%|██████▏   | 105M/169M [00:07<00:03, 18.9MB/s] 63%|██████▎   | 107M/169M [00:07<00:03, 16.3MB/s] 64%|██████▍   | 109M/169M [00:07<00:03, 17.1MB/s] 66%|██████▌   | 111M/169M [00:07<00:03, 15.9MB/s] 67%|██████▋   | 114M/169M [00:07<00:02, 18.5MB/s] 69%|██████▊   | 116M/169M [00:08<00:03, 16.1MB/s] 70%|██████▉   | 118M/169M [00:08<00:02, 17.1MB/s] 71%|███████   | 120M/169M [00:08<00:03, 16.0MB/s] 73%|███████▎  | 123M/169M [00:08<00:02, 18.6MB/s] 74%|███████▍  | 125M/169M [00:08<00:02, 16.3MB/s] 75%|███████▌  | 127M/169M [00:08<00:02, 17.0MB/s] 76%|███████▋  | 129M/169M [00:08<00:02, 15.6MB/s] 78%|███████▊  | 132M/169M [00:08<00:02, 17.6MB/s] 79%|███████▉  | 133M/169M [00:09<00:02, 15.5MB/s] 80%|████████  | 136M/169M [00:09<00:01, 17.2MB/s] 82%|████████▏ | 138M/169M [00:09<00:01, 18.7MB/s] 83%|████████▎ | 140M/169M [00:09<00:01, 16.1MB/s] 84%|████████▍ | 143M/169M [00:09<00:01, 18.2MB/s] 86%|████████▌ | 145M/169M [00:09<00:01, 15.8MB/s] 87%|████████▋ | 147M/169M [00:09<00:01, 17.5MB/s] 88%|████████▊ | 149M/169M [00:10<00:01, 15.8MB/s] 89%|████████▉ | 151M/169M [00:10<00:01, 16.8MB/s] 91%|█████████ | 153M/169M [00:10<00:00, 18.8MB/s] 92%|█████████▏| 155M/169M [00:10<00:00, 16.2MB/s] 94%|█████████▎| 158M/169M [00:10<00:00, 16.1MB/s] 95%|█████████▍| 160M/169M [00:10<00:00, 17.5MB/s] 96%|█████████▌| 163M/169M [00:10<00:00, 18.6MB/s] 97%|█████████▋| 165M/169M [00:10<00:00, 16.1MB/s] 99%|█████████▉| 167M/169M [00:11<00:00, 16.1MB/s]100%|██████████| 169M/169M [00:11<00:00, 15.1MB/s]
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/src/main.py", line 49, in <module>
+    main()
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/src/main.py", line 41, in main
+    run_experiment_1(cfg["experiment_1"], device, results_dir)
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/src/train.py", line 308, in run_experiment_1
+    loss += criterion(
+            ^^^^^^^^^^
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/.venv/lib/python3.11/site-packages/torch/nn/modules/loss.py", line 1310, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/.venv/lib/python3.11/site-packages/torch/nn/functional.py", line 3462, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: Expected input batch_size (2024) to match target batch_size (32).
