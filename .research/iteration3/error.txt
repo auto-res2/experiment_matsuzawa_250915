@@ -1,0 +1,88 @@
+Using CPython 3.11.13
+Creating virtual environment at: .venv
+Resolved 89 packages in 1.24s
+   Building edgebench-r3 @ file:///home/toma/t-80-8-b-03/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915
+Downloading hf-xet (3.0MiB)
+Downloading nvidia-curand-cu12 (60.7MiB)
+Downloading torchaudio (3.8MiB)
+Downloading scikit-learn (9.3MiB)
+Downloading nvidia-nvjitlink-cu12 (37.4MiB)
+Downloading setuptools (1.1MiB)
+Downloading nvidia-cublas-cu12 (566.8MiB)
+Downloading kiwisolver (1.4MiB)
+Downloading torchvision (8.2MiB)
+Downloading pyarrow (40.8MiB)
+Downloading nvidia-cudnn-cu12 (674.0MiB)
+Downloading nvidia-cusparse-cu12 (274.9MiB)
+Downloading numpy (16.2MiB)
+Downloading nvidia-cufft-cu12 (184.2MiB)
+Downloading nvidia-cufile-cu12 (1.1MiB)
+Downloading fonttools (4.7MiB)
+Downloading triton (148.3MiB)
+Downloading nvidia-cusolver-cu12 (255.1MiB)
+Downloading pillow (6.3MiB)
+Downloading matplotlib (8.3MiB)
+Downloading pandas (11.8MiB)
+Downloading nvidia-cuda-nvrtc-cu12 (84.0MiB)
+Downloading nvidia-cuda-cupti-cu12 (9.8MiB)
+Downloading torch (846.9MiB)
+Downloading nvidia-nccl-cu12 (307.4MiB)
+Downloading nvidia-cusparselt-cu12 (273.9MiB)
+Downloading aiohttp (1.7MiB)
+Downloading sympy (6.0MiB)
+Downloading scipy (34.2MiB)
+Downloading networkx (1.9MiB)
+ Downloading nvidia-cufile-cu12
+ Downloading setuptools
+      Built edgebench-r3 @ file:///home/toma/t-80-8-b-03/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915
+ Downloading kiwisolver
+ Downloading aiohttp
+ Downloading networkx
+ Downloading hf-xet
+ Downloading torchaudio
+ Downloading fonttools
+ Downloading sympy
+ Downloading pillow
+ Downloading torchvision
+ Downloading matplotlib
+ Downloading scikit-learn
+ Downloading nvidia-cuda-cupti-cu12
+ Downloading pandas
+ Downloading numpy
+ Downloading scipy
+ Downloading nvidia-nvjitlink-cu12
+ Downloading pyarrow
+ Downloading nvidia-curand-cu12
+ Downloading nvidia-cuda-nvrtc-cu12
+ Downloading triton
+ Downloading nvidia-cufft-cu12
+  × Failed to download `nvidia-cusparse-cu12==12.5.8.93`
+  ├─▶ Failed to extract archive:
+  │   nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+  ├─▶ I/O operation failed during extraction
+  ╰─▶ failed to write to file
+      `/home/toma/.cache/uv/.tmpPtqu2O/nvidia/cusparse/lib/libcusparse.so.12`:
+      Stale file handle (os error 116)
+  help: `nvidia-cusparse-cu12` (v12.5.8.93) was included because
+        `edgebench-r3` (v0.1.0) depends on `torch` (v2.8.0) which depends on
+        `nvidia-cusparse-cu12`
+Downloading nvidia-cusparse-cu12 (274.9MiB)
+Downloading nvidia-cusparselt-cu12 (273.9MiB)
+Downloading nvidia-cusolver-cu12 (255.1MiB)
+Downloading nvidia-cudnn-cu12 (674.0MiB)
+Downloading nvidia-cublas-cu12 (566.8MiB)
+Downloading nvidia-nccl-cu12 (307.4MiB)
+Downloading torch (846.9MiB)
+ Downloading nvidia-cusolver-cu12
+ Downloading nvidia-cusparselt-cu12
+ Downloading nvidia-cusparse-cu12
+ Downloading nvidia-nccl-cu12
+  × Failed to download `torch==2.8.0`
+  ├─▶ Failed to extract archive:
+  │   torch-2.8.0-cp311-cp311-manylinux_2_28_x86_64.whl
+  ├─▶ I/O operation failed during extraction
+  ╰─▶ failed to write to file
+      `/home/toma/.cache/uv/.tmpsxFVws/torch/lib/libtorch_cuda.so`: Stale file
+      handle (os error 116)
+  help: `torch` (v2.8.0) was included because `edgebench-r3` (v0.1.0) depends
+        on `torch`
