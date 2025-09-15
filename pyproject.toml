@@ -1,1 +1,31 @@
-# Please list the required python packages.
+[project]
+name = "edgebench_r3"
+version = "0.1.0"
+description = "R³ continual-learning experiments for EdgeBench-MCU"
+requires-python = ">=3.9"
+
+# Dependencies kept identical to the original monolithic script
+# (list form – mandatory for the autograder)
+dependencies = [
+    "torch>=2.2.0",
+    "torchvision>=0.17.0",
+    "torchaudio>=2.2.0",
+    "tqdm>=4.66.0",
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scikit-learn>=1.4",
+    "seaborn>=0.13",
+    "matplotlib>=3.8",
+    "pyyaml>=6.0",
+    "huggingface_hub>=0.21",
+    "datasets>=2.17",
+    "thop>=0.1.1.post2209072238",
+    "psutil>=5.9",
+    "pynvml>=11.5",
+    "Pillow>=10.2",
+    "scipy>=1.12",
+]
+
+[build-system]
+requires = ["setuptools>=67"]
+build-backend = "setuptools.build_meta"

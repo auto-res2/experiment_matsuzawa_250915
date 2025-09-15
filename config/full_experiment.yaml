@@ -1,0 +1,21 @@
+general:
+  seeds: [13, 21, 42, 87, 101]
+  num_workers: 16
+  results_dir: .research/iteration1
+  figures_dir: .research/iteration1/images
+
+experiment_1:
+  enabled: true
+  dataset: EdgeBench-Vision-1
+  tasks: 50              # full CIFAR-100 → 100 classes / 50 tasks
+  budgets:
+    memory_kb: [32, 64]
+    compute_mflops: 15
+  variants: [R3, R3_NoVR, ER_JPEG]
+  hyper:
+    epochs_per_pass: 3
+
+experiment_2:
+  enabled: false
+experiment_3:
+  enabled: false
