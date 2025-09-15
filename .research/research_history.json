@@ -6,5 +6,82 @@
     "continual learning memory compression",
     "continual learning quantization",
     "replay buffer compression"
+  ],
+  "research_study_list": [
+    {
+      "title": "Continual Learning in Low-rank Orthogonal Subspaces"
+    },
+    {
+      "title": "Contextual Transformation Networks for Online Continual Learning"
+    },
+    {
+      "title": "Improving Task-free Continual Learning by Distributionally Robust Memory Evolution"
+    },
+    {
+      "title": "Improving Task-free Continual Learning by Distributionally Robust Memory Evolution"
+    },
+    {
+      "title": "SparCL: Sparse Continual Learning on the Edge"
+    },
+    {
+      "title": "Computationally Budgeted Continual Learning: What Does Matter?"
+    },
+    {
+      "title": "Continual Learning on a Diet:  Learning from Sparsely Labeled Streams Under Constrained Computation"
+    },
+    {
+      "title": "An Effective Dynamic Gradient Calibration Method for Continual Learning"
+    },
+    {
+      "title": "Uncertainty-guided Continual Learning with Bayesian Neural Networks"
+    },
+    {
+      "title": "Look-ahead Meta Learning for Continual Learning"
+    },
+    {
+      "title": "Online Learned Continual Compression with Adaptive Quantization Modules"
+    },
+    {
+      "title": "Remember the Past: Distilling Datasets into Addressable Memories for Neural Networks"
+    },
+    {
+      "title": "Contextual Transformation Networks for Online Continual Learning"
+    },
+    {
+      "title": "Forget-free Continual Learning with Winning Subnetworks"
+    },
+    {
+      "title": "Forget-free Continual Learning with Winning Subnetworks"
+    },
+    {
+      "title": "Online Learned Continual Compression with Adaptive Quantization Modules"
+    },
+    {
+      "title": "Vector Quantization Prompting for Continual Learning"
+    },
+    {
+      "title": "Mitigating Forgetting in Online Continual Learning with  Neuron Calibration"
+    },
+    {
+      "title": "Uncertainty-guided Continual Learning with Bayesian Neural Networks"
+    },
+    {
+      "title": "Lifelong Domain Adaptation via Consolidated Internal Distribution"
+    },
+    {
+      "title": "Analysis of Stochastic Processes through Replay Buffers"
+    },
+    {
+      "title": "Analysis of Stochastic Processes through Replay Buffers"
+    },
+    {
+      "title": "Large Batch Experience Replay"
+    },
+    {
+      "title": "Large Batch Experience Replay"
+    },
+    {
+      "title": "Improving Computational Efficiency in Visual Reinforcement Learning via Stored Embeddings"
+    }
   ]
 }
