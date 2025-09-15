@@ -1,0 +1,9 @@
+# Full-scale configuration (placeholder – populate with real values later)
+experiment_name: "garden_full_experiment"
+
+training:
+  epochs: 50
+  batch_size: 128
+
+dataset:
+  name: "home_events_carbon"

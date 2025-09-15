@@ -1,0 +1,9 @@
+# Lightweight configuration for CI / quick validation
+experiment_name: "garden_smoke_test"
+
+training:
+  epochs: 1
+  batch_size: 2
+
+dataset:
+  name: "dummy"
