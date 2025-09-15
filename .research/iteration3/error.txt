@@ -1,0 +1,17 @@
+[2025-09-15 16:50:43,284] INFO - Loaded config from /home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/config/full_experiment.yaml
+[2025-09-15 16:50:43,314] INFO - Saved synthetic dataset tensors to .research/iteration3
+[2025-09-15 16:50:43,314] INFO - Dataset stats: {"total_samples": 5000, "n_features": 20, "train_samples": 4000, "val_samples": 1000}
+[2025-09-15 16:50:45,165] INFO - Epoch 1/10 – loss: 0.3998 – val_acc: 0.9820
+[2025-09-15 16:50:45,232] INFO - Epoch 2/10 – loss: 0.2283 – val_acc: 0.9880
+[2025-09-15 16:50:45,299] INFO - Epoch 3/10 – loss: 0.1864 – val_acc: 0.9890
+[2025-09-15 16:50:45,365] INFO - Epoch 4/10 – loss: 0.1641 – val_acc: 0.9910
+[2025-09-15 16:50:45,431] INFO - Epoch 5/10 – loss: 0.1494 – val_acc: 0.9900
+[2025-09-15 16:50:45,498] INFO - Epoch 6/10 – loss: 0.1387 – val_acc: 0.9890
+[2025-09-15 16:50:45,564] INFO - Epoch 7/10 – loss: 0.1304 – val_acc: 0.9900
+[2025-09-15 16:50:45,631] INFO - Epoch 8/10 – loss: 0.1239 – val_acc: 0.9920
+[2025-09-15 16:50:45,698] INFO - Epoch 9/10 – loss: 0.1184 – val_acc: 0.9900
+[2025-09-15 16:50:45,765] INFO - Epoch 10/10 – loss: 0.1137 – val_acc: 0.9930
+[2025-09-15 16:50:45,767] INFO - Saved model checkpoint to .research/iteration3/model.pt
+[2025-09-15 16:50:45,767] INFO - Saved training metrics to .research/iteration3/train_metrics.json
+[2025-09-15 16:50:45,767] INFO - Starting evaluation …
+[2025-09-15 16:50:45,779] INFO - Saved evaluation results to .research/iteration3/evaluation_results.json
