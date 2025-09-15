@@ -1,0 +1,14 @@
+Using CPython 3.11.13
+Creating virtual environment at: .venv
+Resolved 1 package in 1.56s
+   Building cosmicx @ file:///home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915
+      Built cosmicx @ file:///home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915
+Prepared 1 package in 293ms
+Installed 1 package in 13ms
+ + cosmicx==0.0.1 (from file:///home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915)
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/src/main.py", line 3, in <module>
+    raise RuntimeError("Experiment code not supplied; main pipeline cannot be constructed.")
+RuntimeError: Experiment code not supplied; main pipeline cannot be constructed.
