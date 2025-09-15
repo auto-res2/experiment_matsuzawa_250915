@@ -1,0 +1,8 @@
+=== uv sync start Mon Sep 15 01:01:15 PM UTC 2025 ===
+=== uv install end Mon Sep 15 01:01:27 PM UTC 2025 ===
+=== [PHASE 1/2] Smoke test start Mon Sep 15 01:01:27 PM UTC 2025 ===
+
+=== Experiment 1 – Variable-Rate Replay vs. Baselines ===
+
+[Exp-1] Preparing dataset …
+Downloading: "https://download.pytorch.org/models/mobilenet_v2-b0353104.pth" to /home/toma/.cache/torch/hub/checkpoints/mobilenet_v2-b0353104.pth
