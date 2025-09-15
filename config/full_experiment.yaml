@@ -1,4 +1,8 @@
-# Placeholder configuration because original settings unavailable.
+# Full-scale run configuration – expects real dataset paths
+use_synthetic_data: false  # MUST be false to prevent silent fallbacks
+random_seed: 11
 train_epochs: 20
 batch_size: 1024
 learning_rate: 0.0005
+# Example (user must adjust):
+# dataset_path: /data/cityflow_curb/train.parquet
