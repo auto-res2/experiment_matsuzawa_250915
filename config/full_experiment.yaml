@@ -1,0 +1,59 @@
+# -------------------------------------------------------------------
+# Full-scale experiment configuration – matches PHOENIX-RELAX paper
+# -------------------------------------------------------------------
+
+datasets:
+  long_bench_trace: "/datasets/LONG-BENCH-v4/office.json"
+  gplay_thermal: "/datasets/GPLAY-Thermal"
+  aicamera_burst: "/datasets/AICamera-Burst"
+
+artifacts:
+  checkpoints: "/checkpoints/phoenix_relax"
+
+hyperparams:
+  batch_size: 256
+  lr: 0.0003
+  epochs: 3
+
+device: "cuda"
+
+task: "diffusion"
+
+prompts:
+  - "A DSLR-grade 512×512 photo of a hummingbird frozen in mid-air, ultra-sharp, natural lighting."
+  - "Stylised cyber-punk skyline at night with neon reflections, cinematic grade."
+  - "Renaissance oil painting of a medieval marketplace bustling with people."
+  - "A schematic diagram of a mobile SoC showing power rails in pastel colours."
+
+# Hyper-parameters for the TinyFormer used in thermal prediction
+thermal_model:
+  window: 128
+  d_model: 192
+  horizon: 1.0
+  lr: 0.0003
+  epochs: 8
+  batch_size: 512
+  scheduler_update_s: 0.12
+
+# Auction parameters (Exp-1)
+auction:
+  slot_ms: 10
+  dvfs_granularity_mhz: 50
+  bid_lr: 0.3
+
+# MPC scheduler (Exp-3)
+mpc:
+  horizon_s: 1.0
+  update_s: 0.12
+  slack_sigma: 0.05
+  skin_limit_c: 35.0
+
+# Misc
+seed: 42
+random_seeds: [42, 43, 44, 45, 46]
+sm_version: "A100_MIG_20GB"
+run_notes: |
+  Matches experimental setup in Section 4 of the PHOENIX-RELAX paper.
+  All datasets must be mounted locally *before* execution.
+
+# End of configuration

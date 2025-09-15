@@ -1,0 +1,22 @@
+# ---------------------------------------------------------------
+# Smoke-test configuration – runs on a *tiny* slice of each dataset
+# ---------------------------------------------------------------
+
+datasets:
+  long_bench_trace: "/data/long_bench_v4/office_seed42.json"
+  gplay_thermal: "/data/gplay_thermal/split_small"
+
+artifacts:
+  checkpoints: "/tmp/phoenix_relax_ckpts"
+
+hyperparams:
+  batch_size: 32
+  lr: 0.001
+  epochs: 1
+
+device: "cuda"
+
+task: "diffusion"
+
+prompts:
+  - "A photo-realistic image of an astronaut riding a horse on Mars, smoke-test."
