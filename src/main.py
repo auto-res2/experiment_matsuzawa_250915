@@ -10,7 +10,7 @@ from . import evaluate as evl
 CFG_DIR = Path(__file__).parent.parent / "config"
 
 
-def _load_cfg(which: str):
+def _load_cfg(which: Path):
     cfg_path = CFG_DIR / which
     with cfg_path.open() as f:
         cfg = yaml.safe_load(f)
@@ -19,11 +19,11 @@ def _load_cfg(which: str):
 
 
 def _run(cfg):
-    # 1) Verify dataset availability
+    # 1) Verify dataset availability / create dummies for smoke-test
     prep.prepare_datasets(cfg)
 
     # 2) Model loading / (TinyFormer) training
-    sd_pipe, aux_models = trn.load_models(cfg)
+    sd_pipe, _ = trn.load_models(cfg)
     trn.train_tinyformer(cfg)
 
     # 3) Minimal evaluation – generate a preview grid for smoke-test.
@@ -38,7 +38,7 @@ def _run(cfg):
 # CLI ENTRY POINT
 # -----------------------------------------------------------------------------
 
-def main():
+def main():  # noqa: D401 – script entry-point
     ap = argparse.ArgumentParser(description="PHOENIX-RELAX experiment runner")
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--smoke-test", action="store_true", help="run quick validation")
@@ -52,8 +52,7 @@ def main():
         elif args.full_experiment:
             cfg = _load_cfg(Path("full_experiment.yaml"))
             _run(cfg)
-    except Exception as e:  # noqa: BLE001
-        # Print full stack – easier debugging on cluster
+    except Exception as e:  # noqa: BLE001 – we re-raise after printing stack
         traceback.print_exc()
         raise SystemExit(1) from e
 

@@ -5,8 +5,10 @@ from pathlib import Path
 from typing import Dict, Any, Tuple
 
 import torch
-from diffusers import StableDiffusionPipeline
-from transformers import AutoModelForCausalLM, AutoTokenizer
+
+# NOTE: heavy libraries (diffusers/transformers) are imported lazily only when
+#       required for the *full* experiment.  This keeps the smoke-test fast and
+#       memory-friendly on CPU-only CI runners.
 
 HF_TOKEN = os.getenv("HF_TOKEN", None)
 
@@ -35,34 +37,59 @@ def _select_device(cfg: Dict[str, Any]) -> torch.device:
 # Public API
 # -----------------------------------------------------------------------------
 
-def load_models(cfg: Dict[str, Any]) -> Tuple[StableDiffusionPipeline, Dict[str, Any]]:
+def _dummy_sd_pipeline():  # noqa: D401 – minimal stub for smoke-test
+    """Returns a light-weight stub mimicking Diffusers pipeline."""
+    from types import SimpleNamespace
+    from PIL import Image
+    import numpy as np
+
+    class _Pipe:  # pylint: disable=too-few-public-methods
+        def __call__(self, prompts):  # noqa: D401 – mimic diffusers API
+            images = []
+            for _ in prompts:
+                arr = (np.random.rand(64, 64, 3) * 255).astype("uint8")
+                images.append(Image.fromarray(arr))
+            return SimpleNamespace(images=images)
+
+    return _Pipe()
+
+
+def load_models(cfg: Dict[str, Any]) -> Tuple[object, Dict[str, Any]]:
     """Download/instantiate HuggingFace models specified in the config.
 
-    Returns
-    -------
-    sd_pipe : diffusers.StableDiffusionPipeline
-        The Stable-Diffusion pipeline used in Experiment 3.
-    auxiliary : Dict[str, torch.nn.Module]
-        Currently contains Llama-7B chat for Experiment 1 (LLM-chat) and
-        Whisper-tiny for ASR.  Additional tasks can be inserted here.
+    For the *smoke-test* we instantiate *stub* objects only so that CI runs fast
+    and offline.  The full heavyweight models are created for the
+    "full_experiment" configuration.
     """
+    if cfg.get("_name") == "smoke_test":
+        # ------------------------------------------------------------------ stubs
+        sd_pipe = _dummy_sd_pipeline()
+        auxiliary: Dict[str, Any] = {}
+        return sd_pipe, auxiliary
+
+    # ------------------------------------------------------------------ full run
+    from diffusers import StableDiffusionPipeline  # heavy import – avoid in CI
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
     device = _select_device(cfg)
 
     # ---- Stable-Diffusion ----------------------------------------------------
     sd_id = "sd-legacy/stable-diffusion-v1-5"
     sd_pipe = StableDiffusionPipeline.from_pretrained(
         sd_id,
-        torch_dtype=torch.float16,
+        torch_dtype=torch.float16 if device.type == "cuda" else torch.float32,
         use_auth_token=HF_TOKEN,
     ).to(device)
-    sd_pipe.enable_xformers_memory_efficient_attention()
+    if device.type == "cuda":
+        # xFormers only available on CUDA
+        sd_pipe.enable_xformers_memory_efficient_attention()
 
     # ---- LLM-Chat -----------------------------------------------------------
     llama_id = "NousResearch/Llama-2-7b-chat-hf"
     llama_tok = AutoTokenizer.from_pretrained(llama_id, use_auth_token=HF_TOKEN)
     llama_model = AutoModelForCausalLM.from_pretrained(
         llama_id,
-        torch_dtype=torch.float16,
+        torch_dtype=torch.float16 if device.type == "cuda" else torch.float32,
         device_map="auto",
         use_auth_token=HF_TOKEN,
     )
@@ -72,7 +99,7 @@ def load_models(cfg: Dict[str, Any]) -> Tuple[StableDiffusionPipeline, Dict[str,
     whisper_tok = AutoTokenizer.from_pretrained(whisper_id)
     whisper_model = AutoModelForCausalLM.from_pretrained(
         whisper_id,
-        torch_dtype=torch.float16,
+        torch_dtype=torch.float16 if device.type == "cuda" else torch.float32,
         device_map="auto",
     )
 
@@ -86,23 +113,17 @@ def load_models(cfg: Dict[str, Any]) -> Tuple[StableDiffusionPipeline, Dict[str,
     return sd_pipe, auxiliary
 
 
-def train_tinyformer(cfg: Dict[str, Any]) -> Path:
+def train_tinyformer(cfg: Dict[str, Any]) -> Path:  # noqa: D401
     """Fine-tunes / trains the TinyFormer used for 1-second thermal forecast.
 
-    The routine checks for the presence of the GPLAY-Thermal dataset and trains
-    only if no existing trained checkpoint is found (idempotent).  In a
-    full-scale run this takes ≤ 5 min on a single A100; for smoke-test the
-    number of epochs is reduced via the config.
-
-    Returns
-    -------
-    Path to the trained TinyFormer ``*.pt`` file.
+    For the smoke-test we train a *tiny* linear model on randomly generated
+    tensors so that the step finishes within a few hundred milliseconds.
     """
     from torch.utils.data import DataLoader, TensorDataset  # local import
+    import numpy as np
+    import torch.nn as nn
+    import torch.optim as optim
 
-    # ------------------------------------------------------------------ paths
-    dataset_dir = Path(cfg["datasets"]["gplay_thermal"])
-    _assert_path(dataset_dir, "GPLAY-Thermal dataset")
     ckpt_dir = Path(cfg["artifacts"]["checkpoints"])
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     ckpt_path = ckpt_dir / "tinyformer_s.pt"
@@ -110,28 +131,29 @@ def train_tinyformer(cfg: Dict[str, Any]) -> Path:
     if ckpt_path.exists():
         return ckpt_path  # Already trained – skip.
 
-    # --------------------------------------------------------- very light demo
-    # NOTE: This is *real* training code but restricted to a minimal subset so
-    #       that the smoke-test finishes in < 30 sec.  Full-experiment values
-    #       come from the YAML.
-    import torch.nn as nn
-    import torch.optim as optim
-    import numpy as np
+    if cfg.get("_name") == "smoke_test":
+        # ------------------------------------------------------------- tiny stub
+        x = np.random.rand(256, 8).astype("float32")
+        y = np.random.rand(256, 1).astype("float32")
+    else:
+        dataset_dir = Path(cfg["datasets"]["gplay_thermal"])
+        _assert_path(dataset_dir, "GPLAY-Thermal dataset")
+        x = np.load(dataset_dir / "train_inputs.npy")
+        y = np.load(dataset_dir / "train_targets.npy")
 
-    x = np.load(dataset_dir / "train_inputs.npy")
-    y = np.load(dataset_dir / "train_targets.npy")
-    ds = TensorDataset(torch.from_numpy(x).float(), torch.from_numpy(y).float())
+    ds = TensorDataset(torch.from_numpy(x), torch.from_numpy(y))
     dl = DataLoader(ds, batch_size=cfg["hyperparams"]["batch_size"], shuffle=True)
 
-    model = nn.Sequential(
-        nn.Linear(x.shape[-1], 128), nn.ReLU(), nn.Linear(128, 1)
-    ).to(_select_device(cfg))
+    model = nn.Sequential(nn.Linear(x.shape[-1], 32), nn.ReLU(), nn.Linear(32, 1))
+    device = _select_device(cfg)
+    model.to(device)
+
     loss_fn = nn.MSELoss()
     optimiser = optim.Adam(model.parameters(), lr=cfg["hyperparams"]["lr"])
 
-    for epoch in range(cfg["hyperparams"]["epochs"]):
+    for _ in range(cfg["hyperparams"]["epochs"]):
         for xb, yb in dl:
-            xb, yb = xb.to(model[0].weight.device), yb.to(model[0].weight.device)
+            xb, yb = xb.to(device), yb.to(device)
             pred = model(xb)
             loss = loss_fn(pred.squeeze(), yb.squeeze())
             loss.backward()
@@ -143,11 +165,12 @@ def train_tinyformer(cfg: Dict[str, Any]) -> Path:
 
 
 def dump_result(payload: Dict[str, Any], cfg_name: str) -> None:
-    """Saves *payload* under .research/iteration1/ and prints to stdout."""
-    out_dir = Path(".research/iteration1")
+    """Saves *payload* under .research/iteration2/ and prints to stdout."""
+    out_dir = Path(".research/iteration2")
     out_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
     out_file = out_dir / f"result_{cfg_name}_{ts}.json"
     with out_file.open("w") as f:
         json.dump(payload, f, indent=2)
+    # Also print to STDOUT for quick validation
     print(json.dumps(payload, indent=2))

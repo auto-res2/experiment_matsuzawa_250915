@@ -3,18 +3,18 @@
 # ---------------------------------------------------------------
 
 datasets:
-  long_bench_trace: "/data/long_bench_v4/office_seed42.json"
-  gplay_thermal: "/data/gplay_thermal/split_small"
+  long_bench_trace: "./data/long_bench_v4/office_seed42.json"
+  gplay_thermal: "./data/gplay_thermal/split_small"
 
 artifacts:
-  checkpoints: "/tmp/phoenix_relax_ckpts"
+  checkpoints: "./artifacts/ckpts"
 
 hyperparams:
-  batch_size: 32
+  batch_size: 8
   lr: 0.001
   epochs: 1
 
-device: "cuda"
+device: "cpu"
 
 task: "diffusion"
 
