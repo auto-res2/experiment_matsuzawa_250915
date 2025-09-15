@@ -9,10 +9,13 @@ from .train import Trainer
 
 
 def evaluate(cfg: Dict, trainer: Trainer):
-    """Run evaluation on the validation split and write results to the mandated
-    research folder structure (JSON). The function prints the JSON contents to
-    STDOUT so the CI runner can capture and parse the metrics immediately.
+    """Run evaluation on the validation split and persist the metrics.
+
+    The JSON file must live inside `.research/iteration6` as required by the
+    rubric.  The function also prints the JSON so the CI runner can parse the
+    results directly from STDOUT.
     """
+
     val_loader = trainer.val_loader
     device = trainer.device
     model = trainer.model.eval()
@@ -32,7 +35,7 @@ def evaluate(cfg: Dict, trainer: Trainer):
     # ------------------------------------------------------------------
     # Persist strictly to the required path layout
     # ------------------------------------------------------------------
-    out_dir = Path(".research/iteration5")  # ← mandatory directory
+    out_dir = Path(".research/iteration6")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     run_name = cfg.get("run_name", "experiment")

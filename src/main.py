@@ -12,6 +12,8 @@ from .evaluate import evaluate
 
 
 def _load_cfg(path: Path) -> Dict:
+    if not path.exists():
+        raise FileNotFoundError(f"Configuration file '{path}' does not exist.")
     with path.open() as f:
         cfg = yaml.safe_load(f)
     return cfg
@@ -32,7 +34,11 @@ def main():
     group.add_argument("--full-experiment", action="store_true", help="Run the full-scale experiment")
     args = parser.parse_args()
 
+    # ------------------------------------------------------------------
+    # Resolve configuration path
+    # ------------------------------------------------------------------
     cfg_path = Path("config/smoke_test.yaml" if args.smoke_test else "config/full_experiment.yaml")
+
     cfg = _load_cfg(cfg_path)
     cfg["smoke_test"] = args.smoke_test
 

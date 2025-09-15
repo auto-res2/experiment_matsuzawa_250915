@@ -9,4 +9,4 @@ training:
   weight_decay: 0.0001
   num_workers: 8
 data:
-  root: /scratch/datasets
+  root: ./data
