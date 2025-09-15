@@ -6,5 +6,82 @@
     "diffusion sampling speedup",
     "diffusion progressive distillation",
     "diffusion pruning quantization"
+  ],
+  "research_study_list": [
+    {
+      "title": "Fast Sampling via Discrete Non-Markov Diffusion Models with Predetermined Transition Time"
+    },
+    {
+      "title": "Wavelet Diffusion Models Are Fast and Scalable Image Generators"
+    },
+    {
+      "title": "DeepCache: Accelerating Diffusion Models for Free"
+    },
+    {
+      "title": "A Simple Early Exiting Framework for Accelerated Sampling in Diffusion Models"
+    },
+    {
+      "title": "A Continuous Time Framework for Discrete Denoising Models"
+    },
+    {
+      "title": "Faster Diffusion: Rethinking the Role of the Encoder for Diffusion Model Inference"
+    },
+    {
+      "title": "Post-Training Quantization on Diffusion Models"
+    },
+    {
+      "title": "A Simple Early Exiting Framework for Accelerated Sampling in Diffusion Models"
+    },
+    {
+      "title": "Leveraging Early-Stage Robustness in Diffusion Models for Efficient and High-Quality Image Synthesis"
+    },
+    {
+      "title": "DeepCache: Accelerating Diffusion Models for Free"
+    },
+    {
+      "title": "A Simple Early Exiting Framework for Accelerated Sampling in Diffusion Models"
+    },
+    {
+      "title": "Multistep Distillation of Diffusion Models via Moment Matching"
+    },
+    {
+      "title": "Fast ODE-based Sampling for Diffusion Models in Around 5 Steps"
+    },
+    {
+      "title": "Leveraging Early-Stage Robustness in Diffusion Models for Efficient and High-Quality Image Synthesis"
+    },
+    {
+      "title": "The Poisson Midpoint Method for Langevin Dynamics:  Provably Efficient Discretization for Diffusion Models"
+    },
+    {
+      "title": "Multistep Distillation of Diffusion Models via Moment Matching"
+    },
+    {
+      "title": "On Distillation of Guided Diffusion Models"
+    },
+    {
+      "title": "Data Distillation Can Be Like Vodka: Distilling More Times For Better Quality"
+    },
+    {
+      "title": "Plug-and-Play Diffusion Distillation"
+    },
+    {
+      "title": "PaGoDA: Progressive Growing of a One-Step Generator from a Low-Resolution Diffusion Teacher"
+    },
+    {
+      "title": "Temporal Dynamic Quantization for Diffusion Models"
+    },
+    {
+      "title": "Structural Pruning for Diffusion Models"
+    },
+    {
+      "title": "Towards Accurate Post-training Quantization for Diffusion Models"
+    },
+    {
+      "title": "BitsFusion: 1.99 bits Weight Quantization of Diffusion Model"
+    },
+    {
+      "title": "PTQD: Accurate Post-Training Quantization for Diffusion Models"
+    }
   ]
 }
