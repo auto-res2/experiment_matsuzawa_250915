@@ -1,3 +1,13 @@
-# Placeholder configuration – no details because experiment code missing
-num_epochs: 10
+# Full benchmark – still toy but heavier than smoke test
+num_epochs: 5
 batch_size: 64
+learning_rate: 0.001
+device: cpu  # CI runners rarely expose GPUs; switch manually if available
+hidden_dim: 128
+
+# Dataset size bumped 10× vs smoke test
+dataset:
+  num_samples: 3000
+  input_dim: 20
+  num_classes: 5
+  seed: 2025

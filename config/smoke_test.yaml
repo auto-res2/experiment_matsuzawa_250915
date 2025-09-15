@@ -1,3 +1,13 @@
-# Placeholder configuration – no details because experiment code missing
+# Quick config used by CI smoke tests – runs in <5 s on CPU
 num_epochs: 1
-batch_size: 2
+batch_size: 32
+learning_rate: 0.005
+device: cpu
+hidden_dim: 64
+
+# Synthetic dataset params (very small)
+dataset:
+  num_samples: 300
+  input_dim: 10
+  num_classes: 3
+  seed: 123

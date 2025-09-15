@@ -1,21 +1,16 @@
 [project]
 name = "cosmicx"
 version = "0.0.1"
-description = "Refactored COSMIC-X experiment (placeholder – original code missing)"
+description = "Minimal runnable placeholder for COSMIC-X experiments"
 readme = "README.md"
 requires-python = ">=3.10"
-
-[tool.poetry]
-name = "cosmicx"
-version = "0.0.1"
 
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
-dependencies = [
-  "numpy>=1.23.0",
-  "torch>=2.1.0",
-  "pyyaml>=6.0",
-  "tqdm>=4.66.0"
-]
+[project.dependencies]
+numpy = ">=1.23.0"
+torch = ">=2.1.0"
+pyyaml = ">=6.0"
+tqdm = ">=4.66.0"
