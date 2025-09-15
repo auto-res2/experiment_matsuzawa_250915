@@ -6,5 +6,82 @@
     "discrete diffusion sampling speedup",
     "diffusion inference optimization",
     "efficient discrete diffusion"
+  ],
+  "research_study_list": [
+    {
+      "title": "Faster Diffusion: Rethinking the Role of the Encoder for Diffusion Model Inference"
+    },
+    {
+      "title": "Accelerating Guided Diffusion Sampling with Splitting Numerical Methods"
+    },
+    {
+      "title": "Multistep Distillation of Diffusion Models via Moment Matching"
+    },
+    {
+      "title": "Fast Sampling via Discrete Non-Markov Diffusion Models with Predetermined Transition Time"
+    },
+    {
+      "title": "Diffusion Sampling with Momentum for Mitigating Divergence Artifacts"
+    },
+    {
+      "title": "Multistep Distillation of Diffusion Models via Moment Matching"
+    },
+    {
+      "title": "Reverse Transition Kernel: A Flexible Framework to Accelerate Diffusion Inference"
+    },
+    {
+      "title": "Fast Sampling of Diffusion Models with Exponential Integrator"
+    },
+    {
+      "title": "On Distillation of Guided Diffusion Models"
+    },
+    {
+      "title": "Denoising Diffusion Implicit Models"
+    },
+    {
+      "title": "A Simple Early Exiting Framework for Accelerated Sampling in Diffusion Models"
+    },
+    {
+      "title": "Fast Sampling via Discrete Non-Markov Diffusion Models with Predetermined Transition Time"
+    },
+    {
+      "title": "A Continuous Time Framework for Discrete Denoising Models"
+    },
+    {
+      "title": "Multistep Distillation of Diffusion Models via Moment Matching"
+    },
+    {
+      "title": "Fast Sampling of Diffusion Models with Exponential Integrator"
+    },
+    {
+      "title": "Diffusion Models as Plug-and-Play Priors"
+    },
+    {
+      "title": "A Simple Early Exiting Framework for Accelerated Sampling in Diffusion Models"
+    },
+    {
+      "title": "Where to Diffuse, How to Diffuse, and How to Get Back: Automated Learning for Multivariate Diffusions"
+    },
+    {
+      "title": "Reverse Transition Kernel: A Flexible Framework to Accelerate Diffusion Inference"
+    },
+    {
+      "title": "Analyzing and Improving the Training Dynamics of Diffusion Models"
+    },
+    {
+      "title": "Discrete Modeling via Boundary Conditional Diffusion Processes"
+    },
+    {
+      "title": "A Continuous Time Framework for Discrete Denoising Models"
+    },
+    {
+      "title": "Blackout Diffusion: Generative Diffusion Models in Discrete-State Spaces"
+    },
+    {
+      "title": "Diffusion bridges vector quantized variational autoencoders"
+    },
+    {
+      "title": "Diffusion bridges vector quantized variational autoencoders"
+    }
   ]
 }
