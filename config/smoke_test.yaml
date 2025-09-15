@@ -1,0 +1,51 @@
+# Quick 3-minute integrity test
+experiment:
+  name: orion_smoke
+  seeds: [42]
+  runs_per_exp: 1
+
+models:
+  baseline: "sshleifer/tiny-gpt2"
+  orion:    "sshleifer/tiny-gpt2"
+
+datasets:
+  reddit:
+    hf_name: "reddit"
+    split: "train[:0.5%]"
+  whatsapp:
+    hf_name: "mashable/sms_spam"
+    split: "train[:0.5%]"
+  emoji_chat:
+    hf_name: "daily_dialog"
+    split: "train[:0.5%]"
+  malware_sniffer:
+    hf_name: "tweet_eval"
+    subset: "offensive"
+    split: "train[:0.5%]"
+
+token_injection:
+  interval: 200
+  n_min: 3
+  n_max: 5
+
+training:
+  batch_size: 8
+  micro_batch: 2
+  epochs: 1
+  lr: 3.0e-5
+  max_seq_len: 256
+  amp: true
+
+lrt:
+  scan_every: 8
+  tau: 0.9
+
+bloom:
+  k: 16
+  bits: 64
+  noise_sigma: 0.5
+
+fcf:
+  lambda: 0.3
+
+output_dir: "results_smoke"
