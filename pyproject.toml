@@ -1,1 +1,17 @@
-# Please list the required python packages.
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "astral-surrogate-experiment"
+version = "0.0.0"
+description = "Re-packaged experiment (original script was not supplied)"
+requires-python = ">=3.9"
+keywords = ["diffusion", "astral", "research"]
+# Minimal dependencies so that the project remains installable even though no code is present
+# If the missing experiment code is later supplied, dependencies must be updated accordingly.
+dependencies = [
+  "torch>=1.9.0",
+  "numpy>=1.21.0",
+  "PyYAML>=6.0",
+]
