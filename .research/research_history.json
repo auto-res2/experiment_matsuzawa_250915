@@ -548,7 +548,331 @@
     }
   ],
   "new_method": {
-    "method": "Open Problems: 1) Existing CL methods treat “data memory” and “parameter growth” as two separate issues; none couples them with compute- or energy-budget constraints. 2) Even the most compact replay buffers still keep either raw pixels or floating-point latents; none can store task evidence in *sub-byte* form while remaining differentiable. 3) Fixed encoders eliminate drift but collapse when the input domain drifts (e.g.\nweather, camera, modality). 4) Current PEFT branches are memory-light yet SRAM-hungry at training time because optimizers must maintain full-precision momenta. 5) No prior work reports *on-device* energy or privacy leakage under the same memory budget.\nMethods: We propose UniMem, a hardware-aware, privacy-preserving continual-learning system that couples ultra-compressed episodic storage with zero-growth adaptation.\nA. Sub-byte Hierarchical Latent Replay (SHLR)\n  • A shallow, frozen vision-speech encoder maps input x→z∈R^128.  Two-stage product quantization (PQ-VQ) converts z to 2 four-bit indices (≈1 byte) which are arithmetic-coded offline (⇢0.6 byte/img).  \n  • A TinyBit-VAE decoder (350 k params) is trained once; at replay time it reconstructs differentiable latents via straight-through Gumbel tricks.  \n  • To keep the 1-byte code informative under domain shift, we introduce “codebook reheating”: whenever validation loss spikes, only the embedding vectors referenced in the last K batches are fine-tuned for one epoch, then re-quantised—no new bytes are stored.\nB. Budget-neutral Meta-Adapters\n  • Instead of LoRA, we learn rank-4 Butterfly-structured adapters whose weights are ternary (-1,0,1).  Gradients are accumulated in 8-bit Kahan buffers and flushed every 8 steps, eliminating 32-bit optimiser state.\n  • After a task, adapters are merged into the backbone using a closed-form Hadamard update; the ternary diff is XOR-compressed and archived (≈6 kB per task). During inference the active model is *identical* in size to the original.\nC. Unified neuro-compression scheduler\n  • Given a target RAM+Flash+Energy budget, an ILP chooses (buffer bytes, decoder width, adapter rank) that maximises expected accuracy under analytic FLOP/energy models calibrated on an ARM Cortex-M55.\nD. Privacy guard\n  • Each stored code is encrypted with task-specific one-time pads; guessing any raw pixel from a 0.6-byte code has <2⁻³⁰ success probability.  We publish a formal DP bound.\n\nExperimental Setup: Datasets & modalities: Split CIFAR-100 (32×32), Tiny-ImageNet-200 (64×64), ImageNet-R (224×224, 10 tasks), SpeechCommands-35 (1-s audio), and Ego4D 32×32 action clips.\nBaselines: ER (5 k), ER-SVHN-PQ, SparCL-DER++, InfLoRA, AQM, and fine-tune.\nBudgets: (RAM,Flash) = {(0.5 MB,2 MB), (2 MB,8 MB)}.  Measure: AvgAccuracy, AvgForgetting, Energy/train-step (Keysight DAQ), DP-ε, and code-reconstruction PSNR.\nAblations: (i) raw-pixel buffer of equal bytes, (ii) no codebook reheating, (iii) float adapters, (iv) optimiser state pruning off.\nEdge deployment: run on STM32H7 (Cortex-M7, 600 MHz) with CMSIS-NN kernels; report wall-clock and peak power.\nExpected Result: • At 0.5 MB RAM / 2 MB Flash UniMem matches 40 MB ER on CIFAR-100 (+1 pp) and beats InfLoRA by 3 pp on ImageNet-R while consuming 4× less energy.\n• Average code size 0.62 byte per sample, 50× smaller than AQM and 300× smaller than raw replay; privacy breach prob <2⁻²⁹.\n• After 20 tasks total model parameters grow <1.5 %, archived XOR diffs ≈120 kB.\n• On-device training reaches 6.8 images/s at 120 mW; competing methods either exceed RAM or run 4× slower.\n• Without codebook reheating accuracy drops by 7 pp on cross-domain tasks, demonstrating necessity of adaptive quantiser.\nExpected Conclusion: UniMem shows that sub-byte latent replay combined with ternary, merge-and-archive adapters can satisfy stringent memory *and* energy budgets while preserving privacy in continual learning.  By jointly optimising data, parameters and optimiser state under a single budget, UniMem advances the feasibility of lifelong learning on micro-controllers, wearables and privacy-critical IoT cameras.  Future work: extend SHLR to text tokens and integrate diffusion decoders for higher-fidelity reconstruction without extra bytes."
+    "method": "Open Problems: 1) Existing CL methods treat “data memory” and “parameter growth” as two separate issues; none couples them with compute- or energy-budget constraints. 2) Even the most compact replay buffers still keep either raw pixels or floating-point latents; none can store task evidence in *sub-byte* form while remaining differentiable. 3) Fixed encoders eliminate drift but collapse when the input domain drifts (e.g.\nweather, camera, modality). 4) Current PEFT branches are memory-light yet SRAM-hungry at training time because optimizers must maintain full-precision momenta. 5) No prior work reports *on-device* energy or privacy leakage under the same memory budget.\nMethods: We propose UniMem, a hardware-aware, privacy-preserving continual-learning system that couples ultra-compressed episodic storage with zero-growth adaptation.\nA. Sub-byte Hierarchical Latent Replay (SHLR)\n  • A shallow, frozen vision-speech encoder maps input x→z∈R^128.  Two-stage product quantization (PQ-VQ) converts z to 2 four-bit indices (≈1 byte) which are arithmetic-coded offline (⇢0.6 byte/img).  \n  • A TinyBit-VAE decoder (350 k params) is trained once; at replay time it reconstructs differentiable latents via straight-through Gumbel tricks.  \n  • To keep the 1-byte code informative under domain shift, we introduce “codebook reheating”: whenever validation loss spikes, only the embedding vectors referenced in the last K batches are fine-tuned for one epoch, then re-quantised—no new bytes are stored.\nB. Budget-neutral Meta-Adapters\n  • Instead of LoRA, we learn rank-4 Butterfly-structured adapters whose weights are ternary (-1,0,1).  Gradients are accumulated in 8-bit Kahan buffers and flushed every 8 steps, eliminating 32-bit optimiser state.\n  • After a task, adapters are merged into the backbone using a closed-form Hadamard update; the ternary diff is XOR-compressed and archived (≈6 kB per task). During inference the active model is *identical* in size to the original.\nC. Unified neuro-compression scheduler\n  • Given a target RAM+Flash+Energy budget, an ILP chooses (buffer bytes, decoder width, adapter rank) that maximises expected accuracy under analytic FLOP/energy models calibrated on an ARM Cortex-M55.\nD. Privacy guard\n  • Each stored code is encrypted with task-specific one-time pads; guessing any raw pixel from a 0.6-byte code has <2⁻³⁰ success probability.  We publish a formal DP bound.\n\nExperimental Setup: Datasets & modalities: Split CIFAR-100 (32×32), Tiny-ImageNet-200 (64×64), ImageNet-R (224×224, 10 tasks), SpeechCommands-35 (1-s audio), and Ego4D 32×32 action clips.\nBaselines: ER (5 k), ER-SVHN-PQ, SparCL-DER++, InfLoRA, AQM, and fine-tune.\nBudgets: (RAM,Flash) = {(0.5 MB,2 MB), (2 MB,8 MB)}.  Measure: AvgAccuracy, AvgForgetting, Energy/train-step (Keysight DAQ), DP-ε, and code-reconstruction PSNR.\nAblations: (i) raw-pixel buffer of equal bytes, (ii) no codebook reheating, (iii) float adapters, (iv) optimiser state pruning off.\nEdge deployment: run on STM32H7 (Cortex-M7, 600 MHz) with CMSIS-NN kernels; report wall-clock and peak power.\nExpected Result: • At 0.5 MB RAM / 2 MB Flash UniMem matches 40 MB ER on CIFAR-100 (+1 pp) and beats InfLoRA by 3 pp on ImageNet-R while consuming 4× less energy.\n• Average code size 0.62 byte per sample, 50× smaller than AQM and 300× smaller than raw replay; privacy breach prob <2⁻²⁹.\n• After 20 tasks total model parameters grow <1.5 %, archived XOR diffs ≈120 kB.\n• On-device training reaches 6.8 images/s at 120 mW; competing methods either exceed RAM or run 4× slower.\n• Without codebook reheating accuracy drops by 7 pp on cross-domain tasks, demonstrating necessity of adaptive quantiser.\nExpected Conclusion: UniMem shows that sub-byte latent replay combined with ternary, merge-and-archive adapters can satisfy stringent memory *and* energy budgets while preserving privacy in continual learning.  By jointly optimising data, parameters and optimiser state under a single budget, UniMem advances the feasibility of lifelong learning on micro-controllers, wearables and privacy-critical IoT cameras.  Future work: extend SHLR to text tokens and integrate diffusion decoders for higher-fidelity reconstruction without extra bytes.",
+    "experimental_design": {
+      "experiment_strategy": "============================================================\nEXPERIMENT 1. Budget-Constrained Continual-Learning Benchmark\n------------------------------------------------------------\nGoal: Show that UniMem hits the best accuracy / forgetting numbers while strictly obeying a unified RAM-Flash-Energy budget.\n\nProtocol\n1. Datasets & task order\n   • Vision – Split CIFAR-100 (10×10 classes), Tiny-ImageNet-200 (20×10), ImageNet-R (10×10).\n   • Audio – SpeechCommands-35 (7 sequential keyword groups).\n   Total = 47 tasks, ~2 M samples.\n2. Budgets (identical to paper):\n   (0.5 MB RAM / 2 MB Flash) and (2 MB RAM / 8 MB Flash).\n3. Baselines (all re-implemented with the same CNN/CRNN backbone): ER-5 k, ER-SVHN-PQ, SparCL-DER++, InfLoRA, AQM, full fine-tune.\n4. Metrics per task & averaged at the end:\n   • AvgAccuracy ↑, AvgForgetting ↓\n   • Peak RAM (CUDA-profiler) & Flash footprint\n   • Energy/train-step measured with NVIDIA’s nvidia-smi power draw and Keysight DAQ for STM32 (see Exp-3)\n   • Training wall-clock & FLOPs.\n5. Runs: 3 seeds, report mean±σ.\n\nExpected Outcome\n• Under the 0.5 MB/2 MB budget, UniMem reaches 71 % AvgAcc on CIFAR-100 (+1 pp vs 40 MB ER, +6 pp vs best budget-matched baseline) and 64 % on ImageNet-R (+3 pp vs InfLoRA).\n• Peak RAM stays ≤0.49 MB and Flash ≤1.98 MB for all 47 tasks; competing methods overshoot or early-stop.\n• Energy per train-step is 4× lower than SparCL and 6× lower than ER-SVHN-PQ, validating the coupled optimiser-state and replay compression design.\nDemonstration: UniMem simultaneously satisfies memory and energy caps while improving CL performance, proving the value of jointly optimising data and parameter footprints.\n\n============================================================\nEXPERIMENT 2. Domain-Shift Stress-Test & Codebook Reheating Ablation\n------------------------------------------------------------\nGoal: Verify that Sub-byte Hierarchical Latent Replay (SHLR) and the reheating mechanism preserve information when the input distribution drifts.\n\nProtocol\n1. Source/Target pairs\n   • CIFAR-100 → CIFAR-C (15 corruption types, 5 severities)\n   • Tiny-ImageNet → Tiny-ImageNet-C\n   • Ego4D 32×32 clips → Ego4D-Outdoor (different camera/weather)\n2. Train UniMem for 10 tasks on the source splits under 0.5 MB budget, then continue with 5 tasks drawn from the target domain.\n3. Compare the following variants:\n   A. Full UniMem (with reheating)\n   B. UniMem-NoReheat (embedding fixed)\n   C. Raw-pixel buffer that stores exactly the same number of bytes (≈0.62 bytes/img × N) using PNG-to-bytes anecdotally.\n4. Metrics:\n   • Target-domain AvgAcc & Forgetting\n   • Latent reconstruction PSNR / SSIM\n   • Extra bytes written after drift (should stay 0 for UniMem)\n   • Decoder fine-tune time & energy.\n\nExpected Outcome\n• Variant A loses <2 pp accuracy between source and target, whereas B drops ~9 pp and C drops ~5 pp (too few pixels to be useful).\n• Reheating touches <3 % of the codebook vectors and writes zero new replay bytes, confirming “zero-growth”.\n• PSNR improves by ~4 dB after each reheating event, correlating with regained accuracy.\nDemonstration: SHLR codes remain adaptive and informative without expanding memory, highlighting UniMem’s robustness under real-world distribution shift.\n\n============================================================\nEXPERIMENT 3. Edge-Device Deployment: Energy & Privacy Evaluation\n------------------------------------------------------------\nGoal: Show that UniMem can learn on a micro-controller within tight power budgets while leaking negligible private information.\n\nProtocol\n1. Hardware: STM32H7 (Cortex-M7, 600 MHz, 512 kB SRAM, 2 MB Flash) + Keysight N6705C power analyser.\n2. Port the TinyBit-VAE and ternary Butterfly adapters to CMSIS-NN; quantise weights to int8/ternary, activations to int8.\n3. Train 5 CIFAR-100 tasks (500 steps each) on-device:\n   • UniMem (scheduler chooses: buffer = 50 kB, decoder width = 32, rank = 4)\n   • InfLoRA-int8 (closest state-of-the-art that fits SRAM)\n   • Fine-tune-int8 (no replay, no adapters).\n4. Measure:\n   • Images/second, mJ/train-step, peak current draw\n   • Final accuracy & forgetting\n   • Total bytes written to Flash across tasks\n   • Privacy risk: run a shadow-model membership-inference attack on stored codes vs 8-bit latent baseline; report attack AUC and empirical δ in (ε,δ)-DP.\n\nExpected Outcome\n• UniMem trains at 6.8 img/s, 120 mW average, never exceeds 480 kB SRAM. InfLoRA runs 1.6 img/s and OOMs without optimizer off-loading; Fine-tune matches speed but ends 18 pp lower in accuracy.\n• Cumulative Flash usage after 5 tasks: UniMem = 78 kB (codes + XOR diffs); InfLoRA = 640 kB.\n• Membership-inference AUC is 0.52 (≈random) for UniMem codes vs 0.71 for 8-bit latents; empirical δ≈1e-9 at ε=1.2, supporting formal bound.\nDemonstration: On real hardware, UniMem meets sub-watt power envelopes and materially reduces privacy leakage, confirming the practical value of its hardware-aware and encrypted sub-byte design.\n============================================================",
+      "experiment_details": "==============================\nEXPERIMENT 1 – Budget-Constrained Continual-Learning Benchmark\n==============================\n1. Models\n   • Proposed:  UniMem\n     – Backbone (shared with all baselines):  EfficientNet-V2-S (vision, 3.3 M fp16 parameters) and CRNN-Small (audio, 0.9 M fp16).\n     – Frozen front‐end encoder: first 3 stages of EfficientNet (vision) / first 2 conv blocks of CRNN (audio) → 128-d latent z.\n     – TinyBit-VAE (≈350 k params, 2 residual blocks, latent 128→128) + SHLR (2×4-bit PQ-VQ) + Gumbel-ST.\n     – Budget-neutral Meta-Adapters: rank-4 ternary butterfly modules inserted after MBConv blocks; merged post-task.\n   • Baselines (identical backbone, fp16 unless stated):\n     – ER-5 k (Chaudhry 2019)\n     – ER-SVHN-PQ (Hayes 2021)\n     – SparCL-DER++ (Yoon 2023)\n     – InfLoRA (Park 2024)\n     – AQM (Lin 2024)\n     – Fine-tune (no replay / adapters).\n     All baselines re-implemented to obey the same two budgets; replay size scaled down when necessary.\n\n2. Datasets\n   • CIFAR-100 Split: 10 tasks × 10 classes (50 k train / 10 k test)\n   • Tiny-ImageNet-200 Split: 20 tasks × 10 classes (100 k / 10 k)\n   • ImageNet-R Split: 10 tasks × 10 classes (24 k / 6 k)\n   • SpeechCommands-35: 7 tasks (≈84 k wavs) grouped by phonetic similarity.\n   All datasets downloaded from official mirrors; MD5 verified.\n\n3. Pre-processing\n   Vision –\n     Resize: 224² (Tiny-ImageNet / ImageNet-R) or 32² (CIFAR).\n     Augs: RandAug (N=2,M=9), CutMix 1.0, RandErase 0.25.\n     Normalise to ImageNet mean/std.\n   Audio –\n     16-kHz mono; 25-ms hop, 64-bin log-Mel.  SpecAug (time/freq mask 2/2).\n   Latent quantisation codebook initialised with k-means on 5 % of first task.\n\n4. Splitting & Curriculum\n   For every dataset, tasks presented sequentially (vision first, then audio) → 47 tasks total.  No shuffling.  Standard test sets kept untouched.  Validation = 10 % of current task’s train set, stratified.\n   Continual-learning loop repeats for 3 random seeds {1,10,42}.\n\n5. Training details\n   Optimiser: AdamW (β=(0.9,0.95)), lr=3e-4 (UniMem & baselines); adapters use lr=2× base lr.\n   Schedulers: cosine decay, warm-up 500 steps.  Batch = 256 (CIFAR), 128 (others) on 8×A100 @ fp16 with gradient-accum 2.\n   Selection criterion: best-val accuracy for each task snapshot; at the end we report\n     (i) last-epoch accuracy (AvgAcc_last)\n     (ii) best-val checkpoint accuracy (AvgAcc_best).  Main paper chooses (i).\n   Early-stopping if val loss ≯ min(loss) for 8 epochs.\n\n6. Evaluation metrics\n   Primary:  AvgAccuracy ↑, AvgForgetting ↓\n   Secondary:  Peak RAM, Flash, Energy/train-step, Training wall-clock, FLOPs/train-step (fvcore), code-PSNR, DP-ε (Renyi).  All values mean±std over 3 seeds.\n\n7. Hyper-parameter sweep\n   • Buffer bytes ∈ {0.25,0.5,1.0 MB}\n   • Adapter rank ∈ {2,4,8}\n   • Learning rate ∈ {1e-4,3e-4,1e-3}\n   Grid search on first 3 CIFAR tasks under 2 MB flash budget; best AvgAcc_best continues.\n\n8. Robustness checks (inside Exp-1 run)\n   Add 15 % Gaussian noise to 10 % of minibatches and randomly permute 2 % labels.  Report accuracy drop.\n\n9. Resource measurement\n   • PyTorch profiler: FLOPs, GPU-mem, time.\n   • nvidia-smi –loop-ms=200 ⇒ power draw averaged over 2 k steps → energy.\n   • Flash footprint: bytes(sys.getsizeof(model.state_dict())).\n\n10. Example code (excerpt)\n```\nseed=1\nset_seed(seed)\ndevice=torch.device('cuda')\nmodel=UniMem(backbone='efficientnet_v2_s').to(device)\ncl_loader=TaskStream([...])\nfor task_id,(train_ds,val_ds,test_ds) in enumerate(cl_loader):\n    train_loader=torch.utils.data.DataLoader(train_ds,batch_size=bs,shuffle=True,num_workers=8,pin_memory=True)\n    optim=torch.optim.AdamW(model.parameters(),lr=3e-4,weight_decay=1e-4)\n    best_acc=0\n    for epoch in range(max_epoch):\n        for x,y in train_loader:\n            out=model(x.to(device))\n            loss=ce(out,y.to(device))+model.replay_loss()\n            loss.backward()\n            if (step+1)%accum==0:\n                optim.step(); optim.zero_grad(); model.step_scheduler()\n        val_acc=eval(model,val_ds)\n        if val_acc>best_acc:\n            best_acc,ckpt=val_acc,model.state_dict()\n        if early_stop(val_history): break\n    model.load_state_dict(ckpt)\n    model.finish_task()              # merge adapters, quantise new codes\n```\n\n==============================\nEXPERIMENT 2 – Domain-Shift Stress-Test & Reheating Ablation\n==============================\n1. Variants\n   A. UniMem (default)\n   B. UniMem-NoReheat (freeze codebook after first 10 tasks)\n   C. RawPixel-0.6B (store ⌈0.62 × N⌉ bytes PNG – obviously very few pixels)\n\n2. Procedure\n   • Train on 10 source tasks (CIFAR-100 or Tiny-ImageNet), budget 0.5 MB RAM / 2 MB Flash.\n   • Switch to 5 target tasks (CIFAR-C etc.).  Reheating triggered when val loss > μ+2σ.\n   • No hyper-parameter change during shift.\n\n3. Metrics & logging\n   – Target-domain AvgAcc, Forgetting.\n   – Latent PSNR/SSIM w.r.t. encoder output.\n   – #Codebook vectors fine-tuned, extra bytes written (flash write counter).\n   – Fine-tune compute: time, energy (GPU wattmeter).\n   – Robustness: corruption mCE (mean Corruption Error) per Hendrycks.\n\n4. Example code (reheating)\n```\nif val_loss>mu+2*sigma:\n    touched=collect_recent_codes(K=512)\n    optimiser=Adam(touched_vectors,lr=1e-3)\n    for epoch in range(1):\n        recon_loss=vae(dec(quant(touched)))\n        (recon_loss*lambda).backward(); optimiser.step(); optimiser.zero_grad()\n    requantise(touched_vectors)\n```\n\n==============================\nEXPERIMENT 3 – Edge-Device Deployment, Energy & Privacy\n==============================\n1. Hardware / Tool-chain\n   • STM32H7B3I-DK board (600 MHz Cortex-M7, 512 kB SRAM, 2 MB Q-SPI flash)\n   • CMSIS-NN 5.10 + Arm-clang 6.19 –O3 –mcpu=cortex-m7 –mfpu=fpv5-sp-d16 –mfloat-abi=hard.\n   • On-board ST-LINK energy probe wired to Keysight N6705C.\n\n2. Porting steps\n   • Convert TinyBit-VAE & backbone to int8 weights using ONNX-Runtime-Quant.\n   • Custom ternary GEMM kernel (3-valued weight, int8 act) via pack-2bits → reuse CMSIS-NN depthwise.\n   • Replay buffer stored in Q-SPI; DMA bursts 1 kB into SRAM circular cache.\n\n3. Training loop parameters\n   Batch=16, lr=5e-4 fixed-point (Q1.15), optimiser=8-bit Kahan (acc buf int32).\n   5 CIFAR-100 tasks ×500 updates each.\n\n4. Measurements\n   • Throughput: RTOS timestamp before/after 1 k steps.\n   • Power: Keysight 50 ksps log; energy = ∫V·I dt.\n   • Privacy attack: record 10 k stored codes, train ResNet-18 shadow, compute AUC.\n   • DP bound: compute ε(δ) following analytic moments of Rényi DP with σ=0.3 noise on codes.\n\n5. Example C pseudo-code\n```\nvoid train_step(int8_t *images, uint8_t *labels){\n  encode_latent(images, z_buf);\n  quantise(z_buf, &code);\n  reconstruct(code, recon);\n  fwd_backbone(recon, logits);\n  ce_loss(logits,labels, &loss);\n  kahan_update(loss, params, grads, acc8);\n  if(step%8==7) flush_accumulators();\n}\n```\n\n6. Reporting\n   Tabulate images/s, mJ/step, peak mA, final Acc, Forgetting, Flash bytes written, MI-AUC, ε,δ.\n\n==============================\nShared components\n==============================\nHyper-parameter sensitivity study (across all exps) – vary lr ±2×, buffer bytes ±50 %, adapter rank {2,4,8}, temperature τ∈{0.5,0.9,1.3}.  Plot heat-map of AvgAcc versus memory & energy.\nNoise & adversarial robustness – PGD-l∞(ε=4/255) on CIFAR test for UniMem vs InfLoRA.\nFLOPs / time / memory – automatically exported by PyTorch profiler; edge device numbers obtained via cycle counter (DWT_CYCCNT).\n\n==============================\nFoot-notes / Implementation clarifications\n==============================\n† All baselines retrained with half-precision activations and int8 replay to respect flash; original papers used fp32.\n† InfLoRA required per-layer scale renormalisation to avoid overflow in int8; details in supplementary code.\n† Energy on A100 excludes idle power by subtracting baseline board draw measured with empty loop.\n\n",
+      "expected_models": [
+        "EfficientNet-V2-S",
+        "CRNN-Small",
+        "TinyBit-VAE",
+        "UniMem (SHLR + ternary Butterfly adapters)",
+        "ER-5k",
+        "ER-SVHN-PQ",
+        "SparCL-DER++",
+        "InfLoRA",
+        "AQM",
+        "Fine-tune",
+        "UniMem-NoReheat",
+        "RawPixel-0.6B",
+        "InfLoRA-int8",
+        "Fine-tune-int8"
+      ],
+      "expected_datasets": [
+        "CIFAR-100",
+        "Tiny-ImageNet-200",
+        "ImageNet-R",
+        "SpeechCommands-35",
+        "Ego4D",
+        "CIFAR-C",
+        "Tiny-ImageNet-C",
+        "Ego4D-Outdoor"
+      ],
+      "external_resources": {
+        "hugging_face": {
+          "models": [
+            {
+              "id": "qualcomm/EfficientNet-V2-s",
+              "author": "qualcomm",
+              "sha": "e28dacb78cc49b5eca515904506ba99533f23441",
+              "created_at": "2024-11-27T00:17:47+00:00",
+              "last_modified": "2025-08-29T23:16:51+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 81,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "DEPLOYMENT_MODEL_LICENSE.pdf"
+                },
+                {
+                  "rfilename": "EfficientNet-V2-s.dlc"
+                },
+                {
+                  "rfilename": "EfficientNet-V2-s.onnx.zip"
+                },
+                {
+                  "rfilename": "EfficientNet-V2-s.tflite"
+                },
+                {
+                  "rfilename": "EfficientNet-V2-s_w8a16.dlc"
+                },
+                {
+                  "rfilename": "LICENSE"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "precompiled/qualcomm-qcs6490-proxy/EfficientNet-V2-s_w8a16.bin"
+                },
+                {
+                  "rfilename": "precompiled/qualcomm-qcs6490-proxy/sdk_versions.yml"
+                }
+              ],
+              "card_data": {
+                "license": "other",
+                "language": [],
+                "library_name": "pytorch",
+                "pipeline_tag": "image-classification",
+                "tags": [
+                  "backbone",
+                  "android"
+                ],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "pytorch",
+                "tflite",
+                "backbone",
+                "android",
+                "image-classification",
+                "arxiv:2104.00298",
+                "license:other",
+                "region:us"
+              ],
+              "pipeline_tag": "image-classification",
+              "library_name": "pytorch",
+              "readme": "---\nlibrary_name: pytorch\nlicense: other\ntags:\n- backbone\n- android\npipeline_tag: image-classification\n\n---\n\n![](https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-models/models/efficientnet_v2_s/web-assets/model_demo.png)\n\n# EfficientNet-V2-s: Optimized for Mobile Deployment\n## Imagenet classifier and general purpose backbone\n\n\nEfficientNetV2-s is a machine learning model that can classify images from the Imagenet dataset. It can also be used as a backbone in building more complex models for specific use cases.\n\nThis model is an implementation of EfficientNet-V2-s found [here](https://github.com/pytorch/vision/blob/main/torchvision/models/efficientnet.py).\n\n\nThis repository provides scripts to run EfficientNet-V2-s on Qualcomm® devices.\nMore details on model performance across various devices, can be found\n[here](https://aihub.qualcomm.com/models/efficientnet_v2_s).\n\n\n\n### Model Details\n\n- **Model Type:** Model_use_case.image_classification\n- **Model Stats:**\n  - Model checkpoint: Imagenet\n  - Input resolution: 384x384\n  - Number of parameters: 21.4M\n  - Model size (float): 81.7 MB\n  - Model size (w8a16): 27.2 MB\n\n| Model | Precision | Device | Chipset | Target Runtime | Inference Time (ms) | Peak Memory Range (MB) | Primary Compute Unit | Target Model\n|---|---|---|---|---|---|---|---|---|\n| EfficientNet-V2-s | float | QCS8275 (Proxy) | Qualcomm® QCS8275 (Proxy) | TFLITE | 10.968 ms | 0 - 77 MB | NPU | [EfficientNet-V2-s.tflite](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.tflite) |\n| EfficientNet-V2-s | float | QCS8275 (Proxy) | Qualcomm® QCS8275 (Proxy) | QNN_DLC | 10.771 ms | 0 - 35 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.dlc) |\n| EfficientNet-V2-s | float | QCS8450 (Proxy) | Qualcomm® QCS8450 (Proxy) | TFLITE | 4.866 ms | 0 - 92 MB | NPU | [EfficientNet-V2-s.tflite](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.tflite) |\n| EfficientNet-V2-s | float | QCS8450 (Proxy) | Qualcomm® QCS8450 (Proxy) | QNN_DLC | 5.527 ms | 1 - 46 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.dlc) |\n| EfficientNet-V2-s | float | QCS8550 (Proxy) | Qualcomm® QCS8550 (Proxy) | TFLITE | 2.693 ms | 0 - 372 MB | NPU | [EfficientNet-V2-s.tflite](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.tflite) |\n| EfficientNet-V2-s | float | QCS8550 (Proxy) | Qualcomm® QCS8550 (Proxy) | QNN_DLC | 2.549 ms | 0 - 27 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.dlc) |\n| EfficientNet-V2-s | float | QCS9075 (Proxy) | Qualcomm® QCS9075 (Proxy) | TFLITE | 3.864 ms | 0 - 77 MB | NPU | [EfficientNet-V2-s.tflite](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.tflite) |\n| EfficientNet-V2-s | float | QCS9075 (Proxy) | Qualcomm® QCS9075 (Proxy) | QNN_DLC | 3.702 ms | 1 - 35 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.dlc) |\n| EfficientNet-V2-s | float | Samsung Galaxy S23 | Snapdragon® 8 Gen 2 Mobile | TFLITE | 2.686 ms | 0 - 374 MB | NPU | [EfficientNet-V2-s.tflite](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.tflite) |\n| EfficientNet-V2-s | float | Samsung Galaxy S23 | Snapdragon® 8 Gen 2 Mobile | QNN_DLC | 2.579 ms | 0 - 22 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.dlc) |\n| EfficientNet-V2-s | float | Samsung Galaxy S23 | Snapdragon® 8 Gen 2 Mobile | ONNX | 2.592 ms | 0 - 158 MB | NPU | [EfficientNet-V2-s.onnx.zip](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.onnx.zip) |\n| EfficientNet-V2-s | float | Samsung Galaxy S24 | Snapdragon® 8 Gen 3 Mobile | TFLITE | 2.0 ms | 0 - 103 MB | NPU | [EfficientNet-V2-s.tflite](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.tflite) |\n| EfficientNet-V2-s | float | Samsung Galaxy S24 | Snapdragon® 8 Gen 3 Mobile | QNN_DLC | 1.88 ms | 1 - 56 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.dlc) |\n| EfficientNet-V2-s | float | Samsung Galaxy S24 | Snapdragon® 8 Gen 3 Mobile | ONNX | 1.97 ms | 0 - 63 MB | NPU | [EfficientNet-V2-s.onnx.zip](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.onnx.zip) |\n| EfficientNet-V2-s | float | Snapdragon 8 Elite QRD | Snapdragon® 8 Elite Mobile | TFLITE | 1.847 ms | 0 - 81 MB | NPU | [EfficientNet-V2-s.tflite](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.tflite) |\n| EfficientNet-V2-s | float | Snapdragon 8 Elite QRD | Snapdragon® 8 Elite Mobile | QNN_DLC | 1.734 ms | 1 - 40 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.dlc) |\n| EfficientNet-V2-s | float | Snapdragon 8 Elite QRD | Snapdragon® 8 Elite Mobile | ONNX | 1.858 ms | 1 - 36 MB | NPU | [EfficientNet-V2-s.onnx.zip](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.onnx.zip) |\n| EfficientNet-V2-s | float | Snapdragon X Elite CRD | Snapdragon® X Elite | QNN_DLC | 2.859 ms | 216 - 216 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.dlc) |\n| EfficientNet-V2-s | float | Snapdragon X Elite CRD | Snapdragon® X Elite | ONNX | 2.772 ms | 47 - 47 MB | NPU | [EfficientNet-V2-s.onnx.zip](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s.onnx.zip) |\n| EfficientNet-V2-s | w8a16 | QCS8275 (Proxy) | Qualcomm® QCS8275 (Proxy) | QNN_DLC | 5.272 ms | 0 - 64 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s_w8a16.dlc) |\n| EfficientNet-V2-s | w8a16 | QCS8450 (Proxy) | Qualcomm® QCS8450 (Proxy) | QNN_DLC | 3.129 ms | 0 - 75 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s_w8a16.dlc) |\n| EfficientNet-V2-s | w8a16 | QCS8550 (Proxy) | Qualcomm® QCS8550 (Proxy) | QNN_DLC | 2.594 ms | 0 - 17 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s_w8a16.dlc) |\n| EfficientNet-V2-s | w8a16 | QCS9075 (Proxy) | Qualcomm® QCS9075 (Proxy) | QNN_DLC | 2.977 ms | 0 - 64 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s_w8a16.dlc) |\n| EfficientNet-V2-s | w8a16 | RB3 Gen 2 (Proxy) | Qualcomm® QCS6490 (Proxy) | QNN_DLC | 9.441 ms | 0 - 127 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s_w8a16.dlc) |\n| EfficientNet-V2-s | w8a16 | Samsung Galaxy S23 | Snapdragon® 8 Gen 2 Mobile | QNN_DLC | 2.616 ms | 0 - 16 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s_w8a16.dlc) |\n| EfficientNet-V2-s | w8a16 | Samsung Galaxy S24 | Snapdragon® 8 Gen 3 Mobile | QNN_DLC | 1.764 ms | 0 - 75 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s_w8a16.dlc) |\n| EfficientNet-V2-s | w8a16 | Snapdragon 8 Elite QRD | Snapdragon® 8 Elite Mobile | QNN_DLC | 1.477 ms | 0 - 71 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s_w8a16.dlc) |\n| EfficientNet-V2-s | w8a16 | Snapdragon X Elite CRD | Snapdragon® X Elite | QNN_DLC | 2.9 ms | 103 - 103 MB | NPU | [EfficientNet-V2-s.dlc](https://huggingface.co/qualcomm/EfficientNet-V2-s/blob/main/EfficientNet-V2-s_w8a16.dlc) |\n\n\n\n\n## Installation\n\n\nInstall the package via pip:\n```bash\npip install qai-hub-models\n```\n\n\n## Configure Qualcomm® AI Hub to run this model on a cloud-hosted device\n\nSign-in to [Qualcomm® AI Hub](https://app.aihub.qualcomm.com/) with your\nQualcomm® ID. Once signed in navigate to `Account -> Settings -> API Token`.\n\nWith this API token, you can configure your client to run models on the cloud\nhosted devices.\n```bash\nqai-hub configure --api_token API_TOKEN\n```\nNavigate to [docs](https://app.aihub.qualcomm.com/docs/) for more information.\n\n\n\n## Demo off target\n\nThe package contains a simple end-to-end demo that downloads pre-trained\nweights and runs this model on a sample input.\n\n```bash\npython -m qai_hub_models.models.efficientnet_v2_s.demo\n```\n\nThe above demo runs a reference implementation of pre-processing, model\ninference, and post processing.\n\n**NOTE**: If you want running in a Jupyter Notebook or Google Colab like\nenvironment, please add the following to your cell (instead of the above).\n```\n%run -m qai_hub_models.models.efficientnet_v2_s.demo\n```\n\n\n### Run model on a cloud-hosted device\n\nIn addition to the demo, you can also run the model on a cloud-hosted Qualcomm®\ndevice. This script does the following:\n* Performance check on-device on a cloud-hosted device\n* Downloads compiled assets that can be deployed on-device for Android.\n* Accuracy check between PyTorch and on-device outputs.\n\n```bash\npython -m qai_hub_models.models.efficientnet_v2_s.export\n```\n\n\n\n## How does this work?\n\nThis [export script](https://aihub.qualcomm.com/models/efficientnet_v2_s/qai_hub_models/models/EfficientNet-V2-s/export.py)\nleverages [Qualcomm® AI Hub](https://aihub.qualcomm.com/) to optimize, validate, and deploy this model\non-device. Lets go through each step below in detail:\n\nStep 1: **Compile model for on-device deployment**\n\nTo compile a PyTorch model for on-device deployment, we first trace the model\nin memory using the `jit.trace` and then call the `submit_compile_job` API.\n\n```python\nimport torch\n\nimport qai_hub as hub\nfrom qai_hub_models.models.efficientnet_v2_s import Model\n\n# Load the model\ntorch_model = Model.from_pretrained()\n\n# Device\ndevice = hub.Device(\"Samsung Galaxy S24\")\n\n# Trace model\ninput_shape = torch_model.get_input_spec()\nsample_inputs = torch_model.sample_inputs()\n\npt_model = torch.jit.trace(torch_model, [torch.tensor(data[0]) for _, data in sample_inputs.items()])\n\n# Compile model on a specific device\ncompile_job = hub.submit_compile_job(\n    model=pt_model,\n    device=device,\n    input_specs=torch_model.get_input_spec(),\n)\n\n# Get target model to run on-device\ntarget_model = compile_job.get_target_model()\n\n```\n\n\nStep 2: **Performance profiling on cloud-hosted device**\n\nAfter compiling models from step 1. Models can be profiled model on-device using the\n`target_model`. Note that this scripts runs the model on a device automatically\nprovisioned in the cloud.  Once the job is submitted, you can navigate to a\nprovided job URL to view a variety of on-device performance metrics.\n```python\nprofile_job = hub.submit_profile_job(\n    model=target_model,\n    device=device,\n)\n        \n```\n\nStep 3: **Verify on-device accuracy**\n\nTo verify the accuracy of the model on-device, you can run on-device inference\non sample input data on the same cloud hosted device.\n```python\ninput_data = torch_model.sample_inputs()\ninference_job = hub.submit_inference_job(\n    model=target_model,\n    device=device,\n    inputs=input_data,\n)\n    on_device_output = inference_job.download_output_data()\n\n```\nWith the output of the model, you can compute like PSNR, relative errors or\nspot check the output with expected output.\n\n**Note**: This on-device profiling and inference requires access to Qualcomm®\nAI Hub. [Sign up for access](https://myaccount.qualcomm.com/signup).\n\n\n\n## Run demo on a cloud-hosted device\n\nYou can also run the demo on-device.\n\n```bash\npython -m qai_hub_models.models.efficientnet_v2_s.demo --eval-mode on-device\n```\n\n**NOTE**: If you want running in a Jupyter Notebook or Google Colab like\nenvironment, please add the following to your cell (instead of the above).\n```\n%run -m qai_hub_models.models.efficientnet_v2_s.demo -- --eval-mode on-device\n```\n\n\n## Deploying compiled model to Android\n\n\nThe models can be deployed using multiple runtimes:\n- TensorFlow Lite (`.tflite` export): [This\n  tutorial](https://www.tensorflow.org/lite/android/quickstart) provides a\n  guide to deploy the .tflite model in an Android application.\n\n\n- QNN (`.so` export ): This [sample\n  app](https://docs.qualcomm.com/bundle/publicresource/topics/80-63442-50/sample_app.html)\nprovides instructions on how to use the `.so` shared library  in an Android application.\n\n\n## View on Qualcomm® AI Hub\nGet more details on EfficientNet-V2-s's performance across various devices [here](https://aihub.qualcomm.com/models/efficientnet_v2_s).\nExplore all available models on [Qualcomm® AI Hub](https://aihub.qualcomm.com/)\n\n\n## License\n* The license for the original implementation of EfficientNet-V2-s can be found\n  [here](https://github.com/pytorch/vision/blob/main/LICENSE).\n* The license for the compiled assets for on-device deployment can be found [here](https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-models/Qualcomm+AI+Hub+Proprietary+License.pdf)\n\n\n\n## References\n* [EfficientNetV2: Smaller Models and Faster Training](https://arxiv.org/abs/2104.00298)\n* [Source Model Implementation](https://github.com/pytorch/vision/blob/main/torchvision/models/efficientnet.py)\n\n\n\n## Community\n* Join [our AI Hub Slack community](https://aihub.qualcomm.com/community/slack) to collaborate, post questions and learn more about on-device AI.\n* For questions or feedback please [reach out to us](mailto:ai-hub-support@qti.qualcomm.com).\n\n\n"
+            },
+            {
+              "id": "PrunaAI/efficientnet_v2_m-turbo-green-smashed",
+              "author": "PrunaAI",
+              "sha": "e5a4b2f3e0a74bc90e327ee7380b630faac83111",
+              "created_at": "2024-03-07T13:20:49+00:00",
+              "last_modified": "2024-08-02T15:26:09+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 6,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "model/optimized_model.pkl"
+                },
+                {
+                  "rfilename": "model/smash_config.json"
+                },
+                {
+                  "rfilename": "plots.png"
+                }
+              ],
+              "card_data": {
+                "language": [],
+                "library_name": "pruna-engine",
+                "tags": [],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [
+                  "memory_disk",
+                  "memory_inference",
+                  "inference_latency",
+                  "inference_throughput",
+                  "inference_CO2_emissions",
+                  "inference_energy_consumption"
+                ],
+                "widget": []
+              },
+              "tags": [
+                "pruna-engine",
+                "region:us"
+              ],
+              "library_name": "pruna-engine",
+              "readme": "---\nlibrary_name: pruna-engine\nthumbnail: \"https://assets-global.website-files.com/646b351987a8d8ce158d1940/64ec9e96b4334c0e1ac41504_Logo%20with%20white%20text.svg\"\nmetrics:\n- memory_disk\n- memory_inference\n- inference_latency\n- inference_throughput\n- inference_CO2_emissions\n- inference_energy_consumption\n---\n<!-- header start -->\n<!-- 200823 -->\n<div style=\"width: auto; margin-left: auto; margin-right: auto\">\n    <a href=\"https://www.pruna.ai/\" target=\"_blank\" rel=\"noopener noreferrer\">\n        <img src=\"https://i.imgur.com/eDAlcgk.png\" alt=\"PrunaAI\" style=\"width: 100%; min-width: 400px; display: block; margin: auto;\">\n    </a>\n</div>\n<!-- header end -->\n\n[![Twitter](https://img.shields.io/twitter/follow/PrunaAI?style=social)](https://twitter.com/PrunaAI)\n[![GitHub](https://img.shields.io/github/followers/PrunaAI?label=Follow%20%40PrunaAI&style=social)](https://github.com/PrunaAI)\n[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://www.linkedin.com/company/93832878/admin/feed/posts/?feedType=following)\n[![Discord](https://img.shields.io/badge/Discord-Join%20Us-blue?style=social&logo=discord)](https://discord.gg/rskEr4BZJx)\n\n# Simply make AI models cheaper, smaller, faster, and greener!\n\n- Give a thumbs up if you like this model!\n- Contact us and tell us which model to compress next [here](https://www.pruna.ai/contact).\n- Request access to easily compress your *own* AI models [here](https://z0halsaff74.typeform.com/pruna-access?typeform-source=www.pruna.ai).\n- Read the documentations to know more [here](https://pruna-ai-pruna.readthedocs-hosted.com/en/latest/)\n- Join Pruna AI community on Discord [here](https://discord.gg/rskEr4BZJx) to share feedback/suggestions or get help.\n\n## Results\n\n![image info](./plots.png)\n\n**Frequently Asked Questions**\n- ***How does the compression work?*** The model is compressed by combining quantization, xformers, jit, cuda graphs, triton.\n- ***How does the model quality change?*** The quality of the model output might slightly vary compared to the base model.\n- ***How is the model efficiency evaluated?*** These results were obtained on NVIDIA A100-PCIE-40GB with configuration described in `model/smash_config.json` and are obtained after a hardware warmup. The smashed model is directly compared to the original base model. Efficiency results may vary in other settings (e.g. other hardware, image size, batch size, ...). We recommend to directly run them in the use-case conditions to know if the smashed model can benefit you.\n- ***What is the model format?*** We used a custom Pruna model format based on pickle to make models compatible with the compression methods. We provide a tutorial to run models in dockers in the documentation [here](https://pruna-ai-pruna.readthedocs-hosted.com/en/latest/) if needed.\n- ***What is the naming convention for Pruna Huggingface models?*** We take the original model name and append \"turbo\", \"tiny\", or \"green\" if the smashed model has a measured inference speed, inference memory, or inference energy consumption which is less than 90% of the original base model.\n- ***How to compress my own models?*** You can request premium access to more compression methods and tech support for your specific use-cases [here](https://z0halsaff74.typeform.com/pruna-access?typeform-source=www.pruna.ai).\n- ***What are \"first\" metrics?*** Results mentioning \"first\" are obtained after the first run of the model. The first run might take more memory or be slower than the subsequent runs due cuda overheads.\n- ***What are \"Sync\" and \"Async\" metrics?*** \"Sync\" metrics are obtained by syncing all GPU processes and stop measurement when all of them are executed. \"Async\" metrics are obtained without syncing all GPU processes and stop when the model output can be used by the CPU. We provide both metrics since both could be relevant depending on the use-case. We recommend to test the efficiency gains directly in your use-cases.\n\n## Setup\n\nYou can run the smashed model with these steps:\n\n0. Check that you have linux, python 3.10, and cuda 12.1.0 requirements installed. For cuda, check with `nvcc --version` and install with `conda install nvidia/label/cuda-12.1.0::cuda`.\n1. Install the `pruna-engine` available [here](https://pypi.org/project/pruna-engine/) on Pypi. It might take up to 15 minutes to install.\n    ```bash\n   pip install pruna-engine[gpu]==0.7.1 --extra-index-url https://pypi.nvidia.com --extra-index-url https://pypi.ngc.nvidia.com --extra-index-url https://prunaai.pythonanywhere.com/\n    ```\n2. Download the model files using one of these three options. \n   - Option 1 - Use command line interface (CLI):\n       ```bash\n       mkdir efficientnet_v2_m-turbo-green-smashed\n       huggingface-cli download PrunaAI/efficientnet_v2_m-turbo-green-smashed --local-dir efficientnet_v2_m-turbo-green-smashed --local-dir-use-symlinks False\n       ```\n   - Option 2 - Use Python:\n       ```python\n       import subprocess\n       repo_name = \"efficientnet_v2_m-turbo-green-smashed\"\n       subprocess.run([\"mkdir\", repo_name])\n       subprocess.run([\"huggingface-cli\", \"download\", 'PrunaAI/'+ repo_name, \"--local-dir\", repo_name, \"--local-dir-use-symlinks\", \"False\"])\n       ```\n   - Option 3 - Download them manually on the HuggingFace model page.\n3. Load & run the model.\n    ```python \n   from pruna_engine.PrunaModel import PrunaModel\n   \n   model_path = \"efficientnet_v2_m-turbo-green-smashed/model\"  # Specify the downloaded model path.\n   smashed_model = PrunaModel.load_model(model_path)  # Load the model.\n   \n   import torch; image = torch.rand(1, 3, 224, 224).to('cuda')\n   smashed_model(image)\n    ```\n\n## Configurations\n\nThe configuration info are in `model/smash_config.json`.\n\n## Credits & License\n\nThe license of the smashed model follows the license of the original model. Please check the license of the original model efficientnet_v2_m before using this model which provided the base model. The license  of the `pruna-engine` is [here](https://pypi.org/project/pruna-engine/) on Pypi.\n\n## Want to compress other models?\n\n- Contact us and tell us which model to compress next [here](https://www.pruna.ai/contact).\n- Request access to easily compress your own AI models [here](https://z0halsaff74.typeform.com/pruna-access?typeform-source=www.pruna.ai)."
+            },
+            {
+              "id": "PrunaAI/efficientnet_v2_s-turbo-green-smashed",
+              "author": "PrunaAI",
+              "sha": "0a8ac8abc988255ff2e1fe4fe97f485f5a09f9e3",
+              "created_at": "2024-03-07T13:20:37+00:00",
+              "last_modified": "2024-08-02T15:26:09+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 3,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "model/optimized_model.pkl"
+                },
+                {
+                  "rfilename": "model/smash_config.json"
+                },
+                {
+                  "rfilename": "plots.png"
+                }
+              ],
+              "card_data": {
+                "language": [],
+                "library_name": "pruna-engine",
+                "tags": [],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [
+                  "memory_disk",
+                  "memory_inference",
+                  "inference_latency",
+                  "inference_throughput",
+                  "inference_CO2_emissions",
+                  "inference_energy_consumption"
+                ],
+                "widget": []
+              },
+              "tags": [
+                "pruna-engine",
+                "region:us"
+              ],
+              "library_name": "pruna-engine",
+              "readme": "---\nlibrary_name: pruna-engine\nthumbnail: \"https://assets-global.website-files.com/646b351987a8d8ce158d1940/64ec9e96b4334c0e1ac41504_Logo%20with%20white%20text.svg\"\nmetrics:\n- memory_disk\n- memory_inference\n- inference_latency\n- inference_throughput\n- inference_CO2_emissions\n- inference_energy_consumption\n---\n<!-- header start -->\n<!-- 200823 -->\n<div style=\"width: auto; margin-left: auto; margin-right: auto\">\n    <a href=\"https://www.pruna.ai/\" target=\"_blank\" rel=\"noopener noreferrer\">\n        <img src=\"https://i.imgur.com/eDAlcgk.png\" alt=\"PrunaAI\" style=\"width: 100%; min-width: 400px; display: block; margin: auto;\">\n    </a>\n</div>\n<!-- header end -->\n\n[![Twitter](https://img.shields.io/twitter/follow/PrunaAI?style=social)](https://twitter.com/PrunaAI)\n[![GitHub](https://img.shields.io/github/followers/PrunaAI?label=Follow%20%40PrunaAI&style=social)](https://github.com/PrunaAI)\n[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://www.linkedin.com/company/93832878/admin/feed/posts/?feedType=following)\n[![Discord](https://img.shields.io/badge/Discord-Join%20Us-blue?style=social&logo=discord)](https://discord.gg/rskEr4BZJx)\n\n# Simply make AI models cheaper, smaller, faster, and greener!\n\n- Give a thumbs up if you like this model!\n- Contact us and tell us which model to compress next [here](https://www.pruna.ai/contact).\n- Request access to easily compress your *own* AI models [here](https://z0halsaff74.typeform.com/pruna-access?typeform-source=www.pruna.ai).\n- Read the documentations to know more [here](https://pruna-ai-pruna.readthedocs-hosted.com/en/latest/)\n- Join Pruna AI community on Discord [here](https://discord.gg/rskEr4BZJx) to share feedback/suggestions or get help.\n\n## Results\n\n![image info](./plots.png)\n\n**Frequently Asked Questions**\n- ***How does the compression work?*** The model is compressed by combining quantization, xformers, jit, cuda graphs, triton.\n- ***How does the model quality change?*** The quality of the model output might slightly vary compared to the base model.\n- ***How is the model efficiency evaluated?*** These results were obtained on NVIDIA A100-PCIE-40GB with configuration described in `model/smash_config.json` and are obtained after a hardware warmup. The smashed model is directly compared to the original base model. Efficiency results may vary in other settings (e.g. other hardware, image size, batch size, ...). We recommend to directly run them in the use-case conditions to know if the smashed model can benefit you.\n- ***What is the model format?*** We used a custom Pruna model format based on pickle to make models compatible with the compression methods. We provide a tutorial to run models in dockers in the documentation [here](https://pruna-ai-pruna.readthedocs-hosted.com/en/latest/) if needed.\n- ***What is the naming convention for Pruna Huggingface models?*** We take the original model name and append \"turbo\", \"tiny\", or \"green\" if the smashed model has a measured inference speed, inference memory, or inference energy consumption which is less than 90% of the original base model.\n- ***How to compress my own models?*** You can request premium access to more compression methods and tech support for your specific use-cases [here](https://z0halsaff74.typeform.com/pruna-access?typeform-source=www.pruna.ai).\n- ***What are \"first\" metrics?*** Results mentioning \"first\" are obtained after the first run of the model. The first run might take more memory or be slower than the subsequent runs due cuda overheads.\n- ***What are \"Sync\" and \"Async\" metrics?*** \"Sync\" metrics are obtained by syncing all GPU processes and stop measurement when all of them are executed. \"Async\" metrics are obtained without syncing all GPU processes and stop when the model output can be used by the CPU. We provide both metrics since both could be relevant depending on the use-case. We recommend to test the efficiency gains directly in your use-cases.\n\n## Setup\n\nYou can run the smashed model with these steps:\n\n0. Check that you have linux, python 3.10, and cuda 12.1.0 requirements installed. For cuda, check with `nvcc --version` and install with `conda install nvidia/label/cuda-12.1.0::cuda`.\n1. Install the `pruna-engine` available [here](https://pypi.org/project/pruna-engine/) on Pypi. It might take up to 15 minutes to install.\n    ```bash\n   pip install pruna-engine[gpu]==0.7.1 --extra-index-url https://pypi.nvidia.com --extra-index-url https://pypi.ngc.nvidia.com --extra-index-url https://prunaai.pythonanywhere.com/\n    ```\n2. Download the model files using one of these three options. \n   - Option 1 - Use command line interface (CLI):\n       ```bash\n       mkdir efficientnet_v2_s-turbo-green-smashed\n       huggingface-cli download PrunaAI/efficientnet_v2_s-turbo-green-smashed --local-dir efficientnet_v2_s-turbo-green-smashed --local-dir-use-symlinks False\n       ```\n   - Option 2 - Use Python:\n       ```python\n       import subprocess\n       repo_name = \"efficientnet_v2_s-turbo-green-smashed\"\n       subprocess.run([\"mkdir\", repo_name])\n       subprocess.run([\"huggingface-cli\", \"download\", 'PrunaAI/'+ repo_name, \"--local-dir\", repo_name, \"--local-dir-use-symlinks\", \"False\"])\n       ```\n   - Option 3 - Download them manually on the HuggingFace model page.\n3. Load & run the model.\n    ```python \n   from pruna_engine.PrunaModel import PrunaModel\n   \n   model_path = \"efficientnet_v2_s-turbo-green-smashed/model\"  # Specify the downloaded model path.\n   smashed_model = PrunaModel.load_model(model_path)  # Load the model.\n   \n   import torch; image = torch.rand(1, 3, 224, 224).to('cuda')\n   smashed_model(image)\n    ```\n\n## Configurations\n\nThe configuration info are in `model/smash_config.json`.\n\n## Credits & License\n\nThe license of the smashed model follows the license of the original model. Please check the license of the original model efficientnet_v2_s before using this model which provided the base model. The license  of the `pruna-engine` is [here](https://pypi.org/project/pruna-engine/) on Pypi.\n\n## Want to compress other models?\n\n- Contact us and tell us which model to compress next [here](https://www.pruna.ai/contact).\n- Request access to easily compress your own AI models [here](https://z0halsaff74.typeform.com/pruna-access?typeform-source=www.pruna.ai)."
+            },
+            {
+              "id": "Felix92/onnxtr-crnn-mobilenet-v3-small",
+              "author": "Felix92",
+              "sha": "96dcb28209d6454213d0197029e8754625ce9d53",
+              "created_at": "2024-08-16T06:37:22+00:00",
+              "last_modified": "2024-08-16T08:40:14+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 470,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "model.onnx"
+                }
+              ],
+              "card_data": {
+                "license": "apache-2.0",
+                "language": [
+                  "en",
+                  "fr"
+                ],
+                "tags": [],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "onnx",
+                "en",
+                "fr",
+                "license:apache-2.0",
+                "region:us"
+              ],
+              "readme": "\n---\nlanguage:\n- en\n- fr\nlicense: apache-2.0\n---\n\n<p align=\"center\">\n<img src=\"https://github.com/felixdittrich92/OnnxTR/raw/main/docs/images/logo.jpg\" width=\"40%\">\n</p>\n\n**Optical Character Recognition made seamless & accessible to anyone, powered by Onnxruntime**\n\n## Task: recognition\n\nhttps://github.com/felixdittrich92/OnnxTR\n\n### Example usage:\n\n```python\n>>> from onnxtr.io import DocumentFile\n>>> from onnxtr.models import ocr_predictor, from_hub\n\n>>> img = DocumentFile.from_images(['<image_path>'])\n>>> # Load your model from the hub\n>>> model = from_hub('onnxtr/my-model')\n\n>>> # Pass it to the predictor\n>>> # If your model is a recognition model:\n>>> predictor = ocr_predictor(det_arch='db_mobilenet_v3_large',\n>>>                           reco_arch=model)\n\n>>> # If your model is a detection model:\n>>> predictor = ocr_predictor(det_arch=model,\n>>>                           reco_arch='crnn_mobilenet_v3_small')\n\n>>> # Get your predictions\n>>> res = predictor(img)\n```\n"
+            },
+            {
+              "id": "MIT/ast-finetuned-audioset-10-10-0.4593",
+              "author": "MIT",
+              "sha": "f826b80d28226b62986cc218e5cec390b1096902",
+              "created_at": "2022-11-14T18:41:48+00:00",
+              "last_modified": "2023-09-06T14:49:15+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 2868128,
+              "likes": 328,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "model.safetensors"
+                },
+                {
+                  "rfilename": "preprocessor_config.json"
+                },
+                {
+                  "rfilename": "pytorch_model.bin"
+                }
+              ],
+              "card_data": {
+                "license": "bsd-3-clause",
+                "language": [],
+                "tags": [
+                  "audio-classification"
+                ],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "pytorch",
+                "safetensors",
+                "audio-spectrogram-transformer",
+                "audio-classification",
+                "arxiv:2104.01778",
+                "license:bsd-3-clause",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "audio-classification",
+              "library_name": "transformers",
+              "readme": "---\nlicense: bsd-3-clause\ntags:\n- audio-classification\n---\n\n# Audio Spectrogram Transformer (fine-tuned on AudioSet) \n\nAudio Spectrogram Transformer (AST) model fine-tuned on AudioSet. It was introduced in the paper [AST: Audio Spectrogram Transformer](https://arxiv.org/abs/2104.01778) by Gong et al. and first released in [this repository](https://github.com/YuanGongND/ast). \n\nDisclaimer: The team releasing Audio Spectrogram Transformer did not write a model card for this model so this model card has been written by the Hugging Face team.\n\n## Model description\n\nThe Audio Spectrogram Transformer is equivalent to [ViT](https://huggingface.co/docs/transformers/model_doc/vit), but applied on audio. Audio is first turned into an image (as a spectrogram), after which a Vision Transformer is applied. The model gets state-of-the-art results on several audio classification benchmarks.\n\n## Usage\n\nYou can use the raw model for classifying audio into one of the AudioSet classes. See the [documentation](https://huggingface.co/docs/transformers/main/en/model_doc/audio-spectrogram-transformer#transformers.ASTForAudioClassification.forward.example) for more info."
+            }
+          ],
+          "datasets": []
+        }
+      }
+    }
   },
   "idea_info_history": [
     {
