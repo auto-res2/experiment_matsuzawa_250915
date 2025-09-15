@@ -1,0 +1,33 @@
+=== [PHASE 2/2] Full experiment start Mon Sep 15 11:23:46 AM UTC 2025 ===
+[Epoch 1/5] loss=1.2140 val_acc=0.9617
+[Epoch 2/5] loss=0.5635 val_acc=0.9933
+[Epoch 3/5] loss=0.2891 val_acc=0.9950
+[Epoch 4/5] loss=0.1704 val_acc=0.9967
+[Epoch 5/5] loss=0.1137 val_acc=0.9967
+{
+  "config": "full_experiment.yaml",
+  "prep_seconds": 0.06767916679382324,
+  "train_history": {
+    "train_loss": [
+      1.2139532534281412,
+      0.5635272326734331,
+      0.28907024151749083,
+      0.17044349014759064,
+      0.11370915416214201
+    ],
+    "val_acc": [
+      0.9616666666666667,
+      0.9933333333333333,
+      0.995,
+      0.9966666666666667,
+      0.9966666666666667
+    ],
+    "run_ts": 1757935429.3158727
+  },
+  "test_metrics": {
+    "top1_acc": 0.995
+  },
+  "timestamp": 1757935429.320749
+}
+Saved results → .research/iteration3/full_experiment.json
+=== [PHASE 2/2] Full experiment end Mon Sep 15 11:23:49 AM UTC 2025 ===
