@@ -32,7 +32,9 @@ from src.evaluate import evaluate
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s - %(message)s")
 
+# -----------------------------------------------------------------------------
 # Config paths
+# -----------------------------------------------------------------------------
 ROOT_DIR = Path(__file__).resolve().parent.parent
 CFG_DIR = ROOT_DIR / "config"
 
@@ -40,7 +42,12 @@ SMOKE_CFG = CFG_DIR / "smoke_test.yaml"
 FULL_CFG = CFG_DIR / "full_experiment.yaml"
 
 
-def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+# -----------------------------------------------------------------------------
+# CLI helpers
+# -----------------------------------------------------------------------------
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:  # noqa: D401
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run experiment workflow")
 
     group = parser.add_mutually_exclusive_group(required=True)
@@ -50,7 +57,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+# -----------------------------------------------------------------------------
+# I/O helpers
+# -----------------------------------------------------------------------------
+
 def load_config(path: Path) -> Dict[str, Any]:
+    """Load a YAML config file into memory."""
     if not path.exists():
         logger.error("Config file %s not found", path)
         sys.exit(1)
@@ -60,7 +72,11 @@ def load_config(path: Path) -> Dict[str, Any]:
     return cfg
 
 
-def run(cfg: Dict[str, Any]) -> None:
+# -----------------------------------------------------------------------------
+# Workflow
+# -----------------------------------------------------------------------------
+
+def run(cfg: Dict[str, Any]) -> None:  # noqa: D401
     """Run the full workflow: preprocessing → training → evaluation."""
     # 1. Pre-processing
     prepare_datasets(cfg)
@@ -72,19 +88,19 @@ def run(cfg: Dict[str, Any]) -> None:
     _ = evaluate(cfg, train_result.model_path)
 
 
-def main() -> None:
+# -----------------------------------------------------------------------------
+# Entry-point
+# -----------------------------------------------------------------------------
+
+def main() -> None:  # noqa: D401
     args = parse_args()
 
-    if args.smoke_test:
-        cfg_path = SMOKE_CFG
-    else:
-        cfg_path = FULL_CFG
-
+    cfg_path = SMOKE_CFG if args.smoke_test else FULL_CFG
     cfg = load_config(cfg_path)
 
     # Inject optional environment variables (e.g. HF_TOKEN) into config
     cfg["env"] = {
-        "HF_TOKEN": os.getenv("HF_TOKEN", "")
+        "HF_TOKEN": os.getenv("HF_TOKEN", ""),
     }
 
     try:

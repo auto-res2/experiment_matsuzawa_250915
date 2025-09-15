@@ -7,6 +7,7 @@ from typing import Any, Dict
 logger = logging.getLogger(__name__)
 
 
-def prepare_datasets(cfg: Dict[str, Any]) -> None:
+def prepare_datasets(cfg: Dict[str, Any]) -> None:  # noqa: D401  (simple-return)
     """Download / preprocess datasets if needed. Stub implementation."""
+
     logger.warning("prepare_datasets() called – no preprocessing implemented.")

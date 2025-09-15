@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict
 
 import torch
@@ -14,10 +15,18 @@ import torch
 logger = logging.getLogger(__name__)
 
 
-def get_device() -> torch.device:
+# -----------------------------------------------------------------------------
+# Helper utilities
+# -----------------------------------------------------------------------------
+
+def get_device() -> torch.device:  # noqa: D401  (simple-return)
     """Return CUDA device if available, else CPU."""
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
+# -----------------------------------------------------------------------------
+# Public dataclasses
+# -----------------------------------------------------------------------------
 
 @dataclass
 class TrainResult:
@@ -27,7 +36,11 @@ class TrainResult:
     model_path: str
 
 
-def train(cfg: Dict[str, Any]) -> TrainResult:
+# -----------------------------------------------------------------------------
+# Main entry-point
+# -----------------------------------------------------------------------------
+
+def train(cfg: Dict[str, Any]) -> TrainResult:  # noqa: D401  (simple-return)
     """Main training entry-point (stub).
 
     Parameters
@@ -44,8 +57,17 @@ def train(cfg: Dict[str, Any]) -> TrainResult:
         "loss": 0.0,
         "accuracy": 0.0,
     }
-    # Save an empty file to represent the model checkpoint
-    checkpoint_path = ".research/iteration1/dummy_model.pt"
-    torch.save({}, checkpoint_path)
 
-    return TrainResult(metrics=dummy_metrics, model_path=checkpoint_path)
+    # ------------------------------------------------------------------
+    # Persist dummy checkpoint so that evaluation step has a valid path.
+    # All research artefacts must live under .research/iteration2/ according
+    # to the task instructions.
+    # ------------------------------------------------------------------
+    out_dir = Path(".research/iteration2")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    checkpoint_path = out_dir / "dummy_model.pt"
+    torch.save({}, checkpoint_path)
+    logger.info("Saved dummy checkpoint to %s", checkpoint_path)
+
+    return TrainResult(metrics=dummy_metrics, model_path=str(checkpoint_path))
