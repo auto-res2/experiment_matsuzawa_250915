@@ -1,1 +1,16 @@
-# Cannot create pyproject.toml because the source experimental script was not provided.
+[project]
+name = "wavelet_capsule_gnn_stub"
+version = "0.1.0"
+description = "Minimal stub for experiment pipeline – preprocess/train/evaluate."
+requires-python = ">=3.9"
+readme = "README.md"
+
+# Runtime dependencies required by the stub implementation
+# (Keep the list lean to speed-up CI installation.)
+dependencies = [
+    "pyyaml>=5.4",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"

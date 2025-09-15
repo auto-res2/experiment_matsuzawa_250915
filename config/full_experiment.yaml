@@ -1,1 +1,7 @@
-# Cannot create full_experiment.yaml because the source experimental script was not provided.
+# Full-scale (placeholder) configuration – heavy parameters trimmed
+experiment_name: full_experiment
+seed: 123
+epochs: 5
+learning_rate: 0.0003
+batch_size: 32
+optimizer: adamw

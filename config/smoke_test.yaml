@@ -1,1 +1,6 @@
-# Cannot create smoke_test.yaml because the source experimental script was not provided.
+# Small-scale configuration for CI smoke testing
+experiment_name: smoke_test
+seed: 42
+epochs: 1
+learning_rate: 0.001
+batch_size: 4
