@@ -1,0 +1,9 @@
+=== [PHASE 2/2] Full experiment start Mon Sep 15 11:47:23 AM UTC 2025 ===
+[WARN] xformers not found – continuing without memory-efficient attention. Install xformers for lower GPU memory usage.
+[WARN] Could not load Llama model (accelerate package missing – cannot use device_map). Using light-weight stub.
+[WARN] Could not load Whisper model (accelerate package missing – cannot use device_map). Using stub.
+{
+  "pixel_mean": 116.27795791625977,
+  "image_grid": ".research/iteration6/images/sd_preview.png"
+}
+=== [PHASE 2/2] Full experiment end Mon Sep 15 11:47:43 AM UTC 2025 ===
