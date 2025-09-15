@@ -1,4 +1,4 @@
-"""train.py – model construction, training loop, (optional) hardware‐energy phase
+"""train.py – model construction, training loop, (optional) hardware-energy phase
 Strictly self-contained; obeys the constraints defined in the root README.
 """
 from __future__ import annotations
@@ -273,7 +273,7 @@ def run_hardware_eval(cfg_path: str) -> None:  # noqa: C901 – large but self-c
             )
             results[f"{tgt}_{kb}KB"] = res
 
-    out_path = Path(cfg.get("save_dir", ".research/iteration5/results")) / "hardware_energy.json"
+    out_path = Path(cfg.get("save_dir", ".research/iteration6/results")) / "hardware_energy.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     json.dump(results, open(out_path, "w"), indent=2)
     print("[HARDWARE] results saved to", out_path)
@@ -291,7 +291,7 @@ def run(cfg_file: str) -> None:
     if cfg.get("hyperopt") and optuna is not None:
         cfg = _run_hyperopt(cfg)
 
-    base_out = Path(cfg.get("save_dir", ".research/iteration5"))
+    base_out = Path(cfg.get("save_dir", ".research/iteration6"))
     base_out.mkdir(parents=True, exist_ok=True)
 
     for seed in cfg["seeds"]:
@@ -312,7 +312,7 @@ def run(cfg_file: str) -> None:
 
         # ------------------ quick plots -----------------------------------
         if plt is not None and sns is not None:
-            images_dir = Path(".research/iteration5/images")
+            images_dir = Path(".research/iteration6/images")
             images_dir.mkdir(parents=True, exist_ok=True)
             epochs = [h["epoch"] for h in history]
             accs = [h["acc"] for h in history]

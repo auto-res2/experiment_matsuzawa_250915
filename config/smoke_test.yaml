@@ -20,4 +20,4 @@ train:
   zero_stage: 1
   clip_grad: 1.0
 eval_every: 1
-save_dir: .research/iteration5/results/smoke
+save_dir: .research/iteration6/results/smoke
