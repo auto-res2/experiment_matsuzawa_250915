@@ -1,105 +1,127 @@
-"""Simple training module for COSMIC-X placeholder implementation.
-
-This minimal trainer is designed to make the automated smoke test & full
-benchmark pipelines runnable even though the full research code base is not yet
-public.  It intentionally keeps the logic *tiny*:
-
-    • Synthetic classification dataset created on-the-fly by
-      preprocess.get_dataloaders.
-    • Two-layer MLP (Linear → ReLU → Linear) implemented in <20 lines.
-    • Standard cross-entropy objective, Adam optimiser.
-
-The goal is **not** scientific novelty; it is only to produce *concrete numeric
-results* so that the CI harness sees a successful experiment run (loss and
-accuracy values) and downstream JSON artefacts.
-
-If you need to swap in the real COSMIC-X models later, change only the
-`build_model` function and the training loop – all other plumbing stays the
-same.
-"""
-from __future__ import annotations
-
-import time
+import os
+import random
+from pathlib import Path
 from typing import Dict, Tuple
 
 import torch
-from torch import nn
-from torch.utils.data import DataLoader
-from tqdm import tqdm
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, Dataset
 
-# ---------------------------------------------------------------------------
-# Helper – model definition
-# ---------------------------------------------------------------------------
+# timm is far more light-weight than the full torchvision classification zoo and already
+# included in the external resources list.
+import timm
 
-def build_model(input_dim: int, num_classes: int, hidden_dim: int = 128) -> nn.Module:  # noqa: D401
-    """Return a *tiny* 2-layer MLP suitable for the synthetic dataset."""
-
-    return nn.Sequential(
-        nn.Linear(input_dim, hidden_dim),
-        nn.ReLU(inplace=True),
-        nn.Linear(hidden_dim, num_classes),
-    )
+from .preprocess import build_datasets
 
 
-# ---------------------------------------------------------------------------
-# Public API – train()
-# ---------------------------------------------------------------------------
+class _RandomFallbackDataset(Dataset):
+    """A tiny in-RAM dataset that is only used during the smoke-test phase when the
+    real datasets are intentionally skipped for CI speed. DO NOT use this in the
+    full experiment – the `main.py` driver will load the real data paths.
+    """
 
-def train(
-    train_loader: DataLoader,
-    val_loader: DataLoader,
-    input_dim: int,
-    num_classes: int,
-    config: Dict,
-) -> Tuple[nn.Module, Dict]:
-    """Run a *very* short training according to *config* and return metrics."""
+    def __init__(self, length: int = 32, num_classes: int = 10):
+        self.length = length
+        self.x = torch.randn(length, 3, 224, 224)
+        self.y = torch.randint(0, num_classes, (length,))
 
-    device = torch.device(config.get("device", "cpu"))
-    num_epochs: int = int(config["num_epochs"])
-    learning_rate: float = float(config.get("learning_rate", 1e-3))
+    def __len__(self):
+        return self.length
 
-    model = build_model(input_dim, num_classes, hidden_dim=config.get("hidden_dim", 128))
-    model.to(device)
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
 
-    criterion = torch.nn.CrossEntropyLoss()
-    optim = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    history = {"train_loss": [], "val_acc": []}
+class Trainer:
+    def __init__(self, cfg: Dict):
+        self.cfg = cfg
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    for epoch in range(num_epochs):
-        model.train()
-        running_loss = 0.0
-        for xb, yb in train_loader:
-            xb, yb = xb.to(device), yb.to(device)
-            optim.zero_grad(set_to_none=True)
-            logits = model(xb)
-            loss = criterion(logits, yb)
-            loss.backward()
-            optim.step()
-            running_loss += loss.item() * xb.size(0)
+        model_name = cfg["model"].get("name", "timm/resnet18.a1_in1k")
+        num_classes = cfg["model"].get("num_classes", 1000)
+        try:
+            # `timm.create_model` automatically downloads the weights if not cached.
+            self.model = timm.create_model(model_name, pretrained=True, num_classes=num_classes)
+        except Exception as exc:
+            raise RuntimeError(f"Unable to load model '{model_name}': {exc}") from exc
 
-        epoch_loss = running_loss / len(train_loader.dataset)
-        history["train_loss"].append(epoch_loss)
+        self.model.to(self.device)
 
-        # ------------------------------------------------------------------
-        # quick val pass
-        # ------------------------------------------------------------------
-        model.eval()
-        correct, total = 0, 0
-        with torch.no_grad():
-            for xb, yb in val_loader:
-                xb, yb = xb.to(device), yb.to(device)
-                preds = model(xb).argmax(dim=1)
-                correct += (preds == yb).sum().item()
-                total += yb.size(0)
-        val_acc = correct / total if total > 0 else 0.0
-        history["val_acc"].append(val_acc)
-
-        tqdm.write(
-            f"[Epoch {epoch+1}/{num_epochs}] loss={epoch_loss:.4f} val_acc={val_acc:.4f}"
+        self.criterion = nn.CrossEntropyLoss().to(self.device)
+        self.optimizer = optim.AdamW(
+            self.model.parameters(),
+            lr=cfg["training"].get("lr", 3e-4),
+            weight_decay=cfg["training"].get("weight_decay", 1e-2),
         )
+        self.epochs = int(cfg["training"].get("epochs", 1))
+        self.batch_size = int(cfg["training"].get("batch_size", 32))
+        self.num_workers = int(cfg["training"].get("num_workers", 4))
 
-    # add run-time to history
-    history["run_ts"] = time.time()
+        self.train_loader, self.val_loader = self._build_loaders()
 
-    return model, history
+    # ---------------------------------------------------------------------
+    # public api
+    # ---------------------------------------------------------------------
+    def fit(self) -> Tuple[float, float]:
+        best_val_acc = 0.0
+        for epoch in range(1, self.epochs + 1):
+            self._train_one_epoch(epoch)
+            val_loss, val_acc = self._evaluate(self.val_loader)
+            best_val_acc = max(best_val_acc, val_acc)
+            print(f"Epoch {epoch:02d}/{self.epochs} – val_loss: {val_loss:.4f} – val_acc: {val_acc:.3%}")
+        return best_val_acc, val_loss
+
+    # ------------------------------------------------------------------
+    # internal helpers
+    # ------------------------------------------------------------------
+    def _build_loaders(self):
+        smoke = bool(self.cfg.get("smoke_test", False))
+        if smoke:
+            train_ds = _RandomFallbackDataset()
+            val_ds = _RandomFallbackDataset()
+        else:
+            train_ds, val_ds = build_datasets(self.cfg)
+
+        train_loader = DataLoader(
+            train_ds,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+            pin_memory=True,
+        )
+        val_loader = DataLoader(
+            val_ds,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            pin_memory=True,
+        )
+        return train_loader, val_loader
+
+    def _train_one_epoch(self, epoch: int):
+        self.model.train()
+        for images, labels in self.train_loader:
+            images = images.to(self.device, non_blocking=True)
+            labels = labels.to(self.device, non_blocking=True)
+            self.optimizer.zero_grad(set_to_none=True)
+            outputs = self.model(images)
+            loss = self.criterion(outputs, labels)
+            loss.backward()
+            self.optimizer.step()
+
+    @torch.no_grad()
+    def _evaluate(self, loader):
+        self.model.eval()
+        total, correct, running_loss = 0, 0, 0.0
+        for images, labels in loader:
+            images = images.to(self.device, non_blocking=True)
+            labels = labels.to(self.device, non_blocking=True)
+            outputs = self.model(images)
+            running_loss += self.criterion(outputs, labels).item() * images.size(0)
+            preds = outputs.argmax(dim=1)
+            correct += (preds == labels).sum().item()
+            total += labels.size(0)
+        avg_loss = running_loss / max(total, 1)
+        acc = correct / max(total, 1)
+        return avg_loss, acc

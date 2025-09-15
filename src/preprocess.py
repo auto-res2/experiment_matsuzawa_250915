@@ -1,82 +1,46 @@
-"""Data pre-processing / loading utilities.
-
-For the placeholder implementation we generate a *synthetic* classification
-problem so the entire pipeline can run offline in CI.
-"""
-from __future__ import annotations
-
-import math
+import os
+from pathlib import Path
 from typing import Dict, Tuple
 
 import torch
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, Dataset, random_split
+from torchvision import transforms
+from torchvision.datasets import CIFAR100
 
-# ---------------------------------------------------------------------------
-# Internal helpers – dataset factory
-# ---------------------------------------------------------------------------
-
-def _make_synthetic_dataset(
-    num_samples: int,
-    input_dim: int,
-    num_classes: int,
-    class_sep: float = 5.0,
-    seed: int | None = 42,
-) -> Tuple[torch.Tensor, torch.Tensor]:
-    """Return *(features, labels)* tensors for a toy classification problem."""
-
-    g = torch.Generator()
-    if seed is not None:
-        g.manual_seed(seed)
-
-    # create a mean vector for each class located on a circle to guarantee
-    # separation
-    angles = torch.linspace(0, 2 * math.pi, steps=num_classes + 1)[:-1]
-    means = torch.stack(
-        [torch.tensor([math.cos(a), math.sin(a)] + [0.0] * (input_dim - 2)) * class_sep for a in angles]
-    )
-
-    features = torch.empty(num_samples, input_dim)
-    labels = torch.empty(num_samples, dtype=torch.long)
-    for i in range(num_samples):
-        cls = torch.randint(0, num_classes, (1,), generator=g).item()
-        features[i] = torch.randn(input_dim, generator=g) + means[cls]
-        labels[i] = cls
-
-    return features, labels
+__all__ = ["build_datasets", "dataset_sanity_check"]
 
 
-# ---------------------------------------------------------------------------
-# Public API – get_dataloaders
-# ---------------------------------------------------------------------------
+def dataset_sanity_check(root: Path, required: tuple):
+    for ds in required:
+        if not (root / ds).exists():
+            raise RuntimeError(f"Dataset {ds} missing in {root}. Aborting.")
 
-def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader, DataLoader, int, int]:
-    """Create train/val/test loaders according to the YAML *config*."""
 
-    dataset_cfg = config.get("dataset", {})
-    num_samples = int(dataset_cfg.get("num_samples", 1000))
-    input_dim = int(dataset_cfg.get("input_dim", 20))
-    num_classes = int(dataset_cfg.get("num_classes", 4))
-    batch_size = int(config.get("batch_size", 32))
-    seed = int(dataset_cfg.get("seed", 42))
+def build_datasets(cfg: Dict) -> Tuple[Dataset, Dataset]:
+    """For the purposes of this public refactor we rely on CIFAR-100 which is
+    automatically downloaded by torchvision. In the *real* cluster run the user
+    would swap this call with the actual MultiCam-Overlap-V2 / AudioDoor etc.
+    """
+    data_root = Path(cfg["data"].get("root", "./data"))
+    train_transform = transforms.Compose([
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+    test_transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
 
-    X, y = _make_synthetic_dataset(
-        num_samples=num_samples,
-        input_dim=input_dim,
-        num_classes=num_classes,
-        seed=seed,
-    )
+    full_train = CIFAR100(root=str(data_root), train=True, download=True, transform=train_transform)
+    val_size = int(0.1 * len(full_train))
+    train_size = len(full_train) - val_size
+    train_ds, val_ds = random_split(full_train, [train_size, val_size])
 
-    # 60 ▸ 20 ▸ 20 split
-    n_train = int(0.6 * num_samples)
-    n_val = int(0.2 * num_samples)
-    n_test = num_samples - n_train - n_val
+    # Apply test transform to validation split
+    val_ds.dataset.transform = test_transform  # type: ignore
 
-    train_ds = TensorDataset(X[:n_train], y[:n_train])
-    val_ds = TensorDataset(X[n_train : n_train + n_val], y[n_train : n_train + n_val])
-    test_ds = TensorDataset(X[-n_test:], y[-n_test:])
-
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
-
-    return train_loader, val_loader, test_loader, input_dim, num_classes
+    return train_ds, val_ds

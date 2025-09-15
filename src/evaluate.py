@@ -1,35 +1,39 @@
-"""Evaluation helpers.
-
-The real COSMIC-X evaluation is far more involved. For CI we expose only a
-single helper that computes the *Top-1 accuracy* on a given DataLoader so the
-pipeline has numerical output.
-"""
-from __future__ import annotations
-
+import json
+import os
+from pathlib import Path
 from typing import Dict
 
 import torch
-from torch import nn
-from torch.utils.data import DataLoader
+from sklearn.metrics import accuracy_score
+
+from .train import Trainer
 
 
-def accuracy(
-    model: nn.Module,
-    data_loader: DataLoader,
-    device: str | torch.device = "cpu",
-) -> Dict:
-    """Return a dict with *top1* accuracy for the provided loader."""
+def evaluate(cfg: Dict, trainer: Trainer):
+    """Run evaluation and persist all relevant metrics to the research folder."""
+    val_loader = trainer.val_loader
+    device = trainer.device
+    model = trainer.model.eval()
 
-    model.eval()
-    device = torch.device(device)
-    model.to(device)
-
-    correct, total = 0, 0
+    y_true, y_pred = [], []
     with torch.no_grad():
-        for xb, yb in data_loader:
-            xb, yb = xb.to(device), yb.to(device)
-            preds = model(xb).argmax(dim=1)
-            correct += (preds == yb).sum().item()
-            total += yb.size(0)
+        for images, labels in val_loader:
+            images = images.to(device, non_blocking=True)
+            outputs = model(images)
+            preds = outputs.argmax(dim=1).cpu()
+            y_pred.extend(preds.tolist())
+            y_true.extend(labels.tolist())
 
-    return {"top1_acc": correct / total if total > 0 else 0.0}
+    acc = accuracy_score(y_true, y_pred)
+    results = {"accuracy": acc}
+
+    # Persist
+    out_dir = Path(".research/iteration4")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    run_name = cfg.get("run_name", "experiment")
+    out_path = out_dir / f"{run_name}.json"
+    with out_path.open("w") as f:
+        json.dump(results, f, indent=2)
+    print(json.dumps(results, indent=2))
+
+    return results

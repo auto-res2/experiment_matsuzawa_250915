@@ -1,12 +1,12 @@
-# Full benchmark – still toy but heavier than smoke test
-num_epochs: 5
-batch_size: 64
-learning_rate: 0.001
-device: cpu  # CI runners rarely expose GPUs; switch manually if available
-hidden_dim: 128
-
-dataset:
-  num_samples: 3000
-  input_dim: 20
-  num_classes: 5
-  seed: 2025
+run_name: full_experiment
+model:
+  name: timm/resnet18.a1_in1k
+  num_classes: 100
+training:
+  epochs: 15
+  batch_size: 256
+  lr: 0.0003
+  weight_decay: 0.0001
+  num_workers: 8
+data:
+  root: /scratch/datasets
