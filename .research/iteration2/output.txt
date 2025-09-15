@@ -1,0 +1,6 @@
+=== uv sync start Mon Sep 15 04:47:17 PM UTC 2025 ===
+=== uv install end Mon Sep 15 04:48:30 PM UTC 2025 ===
+=== [PHASE 1/2] Smoke test start Mon Sep 15 04:48:30 PM UTC 2025 ===
+Loaded configuration from config/smoke_test.yaml
+
+▶ Preparing Reddit / WhatsApp corpus …
