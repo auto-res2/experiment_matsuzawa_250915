@@ -1,0 +1,2 @@
+=== [PHASE 2/2] Full experiment start Mon Sep 15 11:35:08 AM UTC 2025 ===
+[WARN] xformers not found – continuing without `enable_xformers_memory_efficient_attention()`. Install xformers for lower GPU memory usage.
