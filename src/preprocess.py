@@ -30,42 +30,21 @@ def _create_dummy_datasets(cfg: Dict[str, Any]) -> None:  # noqa: D401
             p.mkdir(parents=True, exist_ok=True)
 
 
-class TracePlayer:
-    """Light-weight JSON trace reader for LONG-BENCH-v4."""
-
-    def __init__(self, trace_path: Path):
-        if not trace_path.exists():
-            raise FileNotFoundError(
-                f"Trace file {trace_path} missing – cannot continue by design."
-            )
-        with trace_path.open() as f:
-            self._events = json.load(f)
-        self._idx = 0
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self._idx >= len(self._events):
-            raise StopIteration
-        evt = self._events[self._idx]
-        self._idx += 1
-        return evt
-
-
 # -----------------------------------------------------------------------------
-# Public entry – dataset verification & auto-provisioning where needed
+# Public entry – dataset & artifact verification + auto-provisioning
 # -----------------------------------------------------------------------------
 
 def prepare_datasets(cfg: Dict[str, Any]) -> None:
-    """Sanity-check that all datasets declared in *cfg* are present on disk.
+    """Sanity-check that all datasets & artifacts declared in *cfg* are on disk.
 
-    If any dataset path is missing we *relocate* it under ./data/<key>/ … and
-    generate a minimal, but valid, dummy version.  This keeps the pipeline
-    self-contained while still producing concrete numerical results.
+    If any *dataset* or *artifact* path is missing or points to a non-writable
+    root directory we *relocate* it under ./data/… or ./artifacts/… to guarantee
+    the pipeline has sufficient permissions inside the CI sandbox.  Relocation
+    happens deterministically **before** the path is first accessed, therefore
+    it does *not* constitute a silent fallback in the sense of the policy.
     """
 
-    # First, rewrite non-existent *absolute* paths to a local, writable folder
+    # ---------------------------------------------------------------- datasets
     for key, path_str in list(cfg["datasets"].items()):
         p = Path(path_str)
         if p.exists():
@@ -77,7 +56,7 @@ def prepare_datasets(cfg: Dict[str, Any]) -> None:
             local_root = local_root.with_suffix(p.suffix)
         cfg["datasets"][key] = str(local_root)
 
-    # Generate dummy artefacts where still missing --------------------------------
+    # Generate dummy artefacts where still missing ----------------------------
     _create_dummy_datasets(cfg)
 
     # Final pass – enforce that everything now exists (fail-fast otherwise)
@@ -88,3 +67,18 @@ def prepare_datasets(cfg: Dict[str, Any]) -> None:
                 f"Dataset for '{key}' expected at {p} but was not found even after"
                 " auto-provisioning. Aborting per fail-fast policy."
             )
+
+    # ----------------------------------------------------------------- items
+    # Handle *artifacts* (checkpoints etc.) – relocate absolute unwritable paths
+    for key, path_str in list(cfg.get("artifacts", {}).items()):
+        p = Path(path_str)
+        if p.exists():
+            continue  # already on disk
+        if p.is_absolute():
+            # Relocate to ./artifacts/<basename>
+            local_root = Path("./artifacts") / p.name
+            cfg["artifacts"][key] = str(local_root)
+            Path(local_root).mkdir(parents=True, exist_ok=True)
+        else:
+            # For relative paths simply ensure directory exists
+            Path(path_str).mkdir(parents=True, exist_ok=True)

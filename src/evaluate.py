@@ -9,7 +9,7 @@ from .train import dump_result
 
 
 def evaluate_diffusion(sd_pipe, prompts, cfg: Dict[str, Any]) -> None:  # noqa: D401
-    """Generates images for *prompts*, saves a grid to .research/iteration5/images.
+    """Generates images for *prompts*, saves a grid to .research/iteration6/images.
 
     A *very* light-weight evaluation suitable for CI.  We avoid heavy metrics
     such as FID – instead we compute the mean pixel value across the generated
@@ -17,7 +17,7 @@ def evaluate_diffusion(sd_pipe, prompts, cfg: Dict[str, Any]) -> None:  # noqa: 
     grading rubric.
     """
 
-    images_dir = Path(".research/iteration5/images")
+    images_dir = Path(".research/iteration6/images")
     images_dir.mkdir(parents=True, exist_ok=True)
 
     # ---------------------------------------------------------------- generate

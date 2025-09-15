@@ -215,8 +215,8 @@ def train_tinyformer(cfg: Dict[str, Any]) -> Path:  # noqa: D401
 
 
 def dump_result(payload: Dict[str, Any], cfg_name: str) -> None:
-    """Saves *payload* under .research/iteration5/ and prints to stdout."""
-    out_dir = Path(".research/iteration5")
+    """Saves *payload* under .research/iteration6/ and prints to stdout."""
+    out_dir = Path(".research/iteration6")
     out_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
     out_file = out_dir / f"result_{cfg_name}_{ts}.json"
