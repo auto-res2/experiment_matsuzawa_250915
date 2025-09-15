@@ -1,0 +1,15 @@
+warning: No `requires-python` value found in the workspace. Defaulting to `>=3.11`.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/src/main.py", line 108, in <module>
+    main()
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/src/main.py", line 90, in main
+    results = _run_experiment(cfg)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/src/main.py", line 46, in _run_experiment
+    data = preprocess(cfg)
+           ^^^^^^^^^^^^^^^
+  File "/home/toma/t-80-8-b-01/_work/experiment_matsuzawa_250915/experiment_matsuzawa_250915/src/preprocess.py", line 25, in preprocess
+    raise FileNotFoundError("Dataset not found — experiment terminated as per NO-FALLBACK constraint")
+FileNotFoundError: Dataset not found — experiment terminated as per NO-FALLBACK constraint
