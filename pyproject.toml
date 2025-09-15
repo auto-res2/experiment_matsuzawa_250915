@@ -12,8 +12,8 @@ dependencies = [
     # core ML stack
     "torch>=2.2.0",
     "torchdata>=0.7.1",
-    # DGL – CPU build (supports Py3.11; linux wheel available)
-    "dgl==2.2.0+cpu",
+    # DGL – CPU build (PyPI wheel includes cpu in filename)
+    "dgl==2.2.0.post2",
     "ogb>=1.3.6",
     # experiment utilities
     "optuna>=3.4.0",
@@ -27,6 +27,6 @@ dependencies = [
     "psutil",
     "fvcore",
     "networkx>=3.3",
-    # Graph Ricci curvature – correct PyPI name; latest available version is 0.5.x
+    # Graph Ricci curvature – correct PyPI name
     "GraphRicciCurvature>=0.5.3",
 ]

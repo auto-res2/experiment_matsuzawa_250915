@@ -50,7 +50,9 @@ def _extract_zst(zst_file: Path, out_dir: Path) -> None:
 # Dataset loaders
 # ---------------------------------------------------------------------------
 
-def load_ogbn_papers400m(root: str, use_subset: bool) -> Tuple[dgl.DGLGraph, Dict[str, torch.Tensor]]:
+def load_ogbn_papers400m(
+    root: str, use_subset: bool
+) -> Tuple[dgl.DGLGraph, Dict[str, torch.Tensor]]:
     dataset = DglNodePropPredDataset("ogbn-papers400m", root)
     g, labels = dataset[0]
     g.ndata["label"] = labels.squeeze()

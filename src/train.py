@@ -54,7 +54,9 @@ def _set_seed(seed: int) -> None:
 
 def _build_model(cfg: Dict[str, Any], in_dim: int, num_classes: int) -> torch.nn.Module:
     if cfg["model"]["arch"].lower() != "craft":
-        raise ValueError("Only 'craft' architecture is supported in this reference implementation.")
+        raise ValueError(
+            "Only 'craft' architecture is supported in this reference implementation."
+        )
     return CraftGNN(
         in_dim=in_dim,
         hid_dim=cfg["model"]["hid_dim"],
@@ -171,7 +173,9 @@ class Trainer:
 
 def _run_hyperopt(cfg: Dict[str, Any]) -> Dict[str, Any]:
     if optuna is None:
-        raise RuntimeError("Optuna is not installed – cannot run hyper-parameter optimisation.")
+        raise RuntimeError(
+            "Optuna is not installed – cannot run hyper-parameter optimisation."
+        )
 
     def _objective(trial: optuna.trial.Trial):  # type: ignore
         new_cfg = yaml.safe_load(yaml.dump(cfg))  # deep copy via YAML round-trip
@@ -230,7 +234,9 @@ def run_hardware_eval(cfg_path: str) -> None:  # noqa: C901 – large but self-c
         import tvm  # type: ignore
         from tvm import relay  # type: ignore
     except ModuleNotFoundError:
-        raise RuntimeError("TVM is required for hardware evaluation but is not installed.")
+        raise RuntimeError(
+            "TVM is required for hardware evaluation but is not installed."
+        )
 
     results: Dict[str, Any] = {}
 
@@ -273,7 +279,10 @@ def run_hardware_eval(cfg_path: str) -> None:  # noqa: C901 – large but self-c
             )
             results[f"{tgt}_{kb}KB"] = res
 
-    out_path = Path(cfg.get("save_dir", ".research/iteration6/results")) / "hardware_energy.json"
+    out_path = (
+        Path(cfg.get("save_dir", ".research/iteration7/results"))
+        / "hardware_energy.json"
+    )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     json.dump(results, open(out_path, "w"), indent=2)
     print("[HARDWARE] results saved to", out_path)
@@ -291,7 +300,7 @@ def run(cfg_file: str) -> None:
     if cfg.get("hyperopt") and optuna is not None:
         cfg = _run_hyperopt(cfg)
 
-    base_out = Path(cfg.get("save_dir", ".research/iteration6"))
+    base_out = Path(cfg.get("save_dir", ".research/iteration7"))
     base_out.mkdir(parents=True, exist_ok=True)
 
     for seed in cfg["seeds"]:
@@ -312,7 +321,7 @@ def run(cfg_file: str) -> None:
 
         # ------------------ quick plots -----------------------------------
         if plt is not None and sns is not None:
-            images_dir = Path(".research/iteration6/images")
+            images_dir = Path(".research/iteration7/images")
             images_dir.mkdir(parents=True, exist_ok=True)
             epochs = [h["epoch"] for h in history]
             accs = [h["acc"] for h in history]
