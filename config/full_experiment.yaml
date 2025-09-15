@@ -27,7 +27,7 @@ hyperopt:
   trials: 50
   parallel: 3
 eval_every: 5
-save_dir: .research/iteration4/results/full
+save_dir: .research/iteration5/results/full
 hardware_eval:
   orin:
     cache_kb: [64, 16]

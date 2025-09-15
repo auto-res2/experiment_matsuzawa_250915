@@ -38,7 +38,7 @@ def _print_and_plot(stats: Dict[str, Tuple[float, float]], n_runs: int) -> None:
         print(f"{k}: {m:.4f} ± {ci:.4f}")
 
     # ---------- bar plot --------------------------------------------------
-    images_dir = Path(".research/iteration4/images")
+    images_dir = Path(".research/iteration5/images")
     images_dir.mkdir(parents=True, exist_ok=True)
 
     sns.set()
