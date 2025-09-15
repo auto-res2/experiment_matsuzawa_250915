@@ -1,11 +1,1 @@
-# Lightweight configuration for CI smoke tests
-experiment_name: astral_smoke
-preprocess: {}
-train:
-  num_samples: 128
-  epochs: 2
-  learning_rate: 0.2
-  noise_std: 0.1
-evaluate:
-  num_val_samples: 64
-  noise_std: 0.1
+# Cannot create smoke_test.yaml because the original experiment code was not provided.
