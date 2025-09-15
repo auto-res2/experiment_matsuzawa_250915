@@ -30,6 +30,6 @@ dependencies = [
     # It is intentionally omitted from the core requirements to keep installation
     # lightweight and compatible with Python 3.11 on the provided CI runner.
     "networkx>=3.3",
-    # Graph Ricci curvature – correct PyPI name
-    "GraphRicciCurvature>=0.6.3",
+    # Graph Ricci curvature – correct PyPI name; latest available version is 0.5.x
+    "GraphRicciCurvature>=0.5.3",
 ]

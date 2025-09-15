@@ -73,7 +73,7 @@ def _build_model(cfg: Dict[str, Any], in_dim: int, num_classes: int) -> torch.nn
 # Trainer – single-GPU / FSDP full-batch implementation
 # ---------------------------------------------------------------------------
 class Trainer:
-    """Full-batch trainer for OGBN-papers400M (or a 50k-node subset in smoke-test)."""
+    """Full-batch trainer for OGBN-papers400M (or a 50 k-node subset in smoke-test)."""
 
     def __init__(self, cfg: Dict[str, Any]):
         self.cfg = cfg
@@ -270,7 +270,7 @@ def run_hardware_eval(cfg_path: str) -> None:  # noqa: C901 – large but self-c
             )
             results[f"{tgt}_{kb}KB"] = res
 
-    out_path = Path(cfg.get("save_dir", ".research/iteration3/results")) / "hardware_energy.json"
+    out_path = Path(cfg.get("save_dir", ".research/iteration4/results")) / "hardware_energy.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     json.dump(results, open(out_path, "w"), indent=2)
     print("[HARDWARE] results saved to", out_path)
@@ -288,7 +288,7 @@ def run(cfg_file: str) -> None:
     if cfg.get("hyperopt") and optuna is not None:
         cfg = _run_hyperopt(cfg)
 
-    base_out = Path(".research/iteration3")
+    base_out = Path(".research/iteration4")
     base_out.mkdir(parents=True, exist_ok=True)
 
     for seed in cfg["seeds"]:
@@ -303,13 +303,13 @@ def run(cfg_file: str) -> None:
         with open(out_json, "w") as f:
             json.dump({"history": history, "test": test_metrics}, f, indent=2)
 
-        # print full JSON for verification (history may be large – okay per task)
+        # print full JSON for verification
         print("===== JSON RESULT (seed", seed, ") =====")
         print(json.dumps({"history": history, "test": test_metrics}, indent=2))
 
         # ------------------ quick plots -----------------------------------
         if plt is not None and sns is not None:
-            images_dir = Path(".research/iteration3/images")
+            images_dir = Path(".research/iteration4/images")
             images_dir.mkdir(parents=True, exist_ok=True)
             epochs = [h["epoch"] for h in history]
             accs = [h["acc"] for h in history]
