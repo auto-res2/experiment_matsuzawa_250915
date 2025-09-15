@@ -550,7 +550,1218 @@
     }
   ],
   "new_method": {
-    "method": "Open Problems: 1. Present sketch‐based replay does not consider higher–order relations among samples (e.g., events spanning several seconds, co-occurring audio-visual patterns). As a result, redundant but semantically crucial groups (birthdays, falls, alarms) are broken apart and cannot be replayed as coherent context.\n2. Devices must comply simultaneously with (i) local energy / memory caps, (ii) per-class fairness & privacy, (iii) user-level opt-out, and (iv) carbon–aware operation. Existing methods address these axes separately; no unified policy trades them off on-line.\n3. Today’s predictive relinking reacts only to backbone drift. It ignores upcoming *environmental* drift (light change, day–night, background noise) that can be forecast from the sensor stream itself.\n4. Fleet-level sharing is still heuristic (BLE gossip). We lack provable convergence guarantees and incentive mechanisms that prevent free-riding devices from consuming sketches without contributing.\n5. Current evaluations stop at accuracy / F1. Societal metrics such as demographic parity after forgetting requests and device CO₂ budget over weeks remain unreported.\nMethods: We propose GARDEN – Graph-Aware Relational Delta ENcoding memory, extending SPROUT with five novel components.\nA. Event-graph Delta Coding\n  • Incoming samples are first clustered into micro-events via an on-device contrastive transformer. A directed temporal graph G_t is maintained where nodes carry SPROUT deltas and edges store 1-byte relation tags (precede, co-occur, cause). Group deletion or replay now operates on connected sub-graphs, preserving context while achieving further 6× I/O reduction.\nB. Multi-objective Carbon-Fair Scheduler\n  • We cast memory update as a constrained Pareto front: minimise (energy, carbon-intensity·energy, Δε_priv, minority_loss) subject to 16 MB RAM. A tiny neuromorphic controller learns the Pareto weights online with a two-timescale bandit, guaranteeing ≤3 % regret against an oracle that sees future device states.\nC. Environment-adaptive Relinking\n  • A lightweight vision-audio ViT predicts not only backbone drift but also upcoming illumination / noise shifts 30 s ahead. GARDEN pre-warms alternative projection heads and swaps them seamlessly, eliminating 95 % of accuracy dips during dawn/dusk or party scenes.\nD. Credited Federated Sketch Exchange\n  • We model the fleet as a repeated game. Each 32-B sketch is stamped with a zero-knowledge proof of origin; devices earn cryptographic ‘seed’ credits when others replay their sketches. A credit-weighted Push-Sum protocol guarantees parameter consensus within O(log N) rounds while discouraging free riders.\nE. Societal Evaluation Suite\n  • We add Right-to-Forget stress-tests (1 k deletions/hour), Demographic Parity Gap (DPG), and Device-Week CO₂ scores (using real grid-intensity traces). New public dataset Home-Events-Carbon (10 houses, smart-meter + sensor streams) is released under CC-BY-NC.\nExperimental Setup: Datasets\n 1. Ego4D-Stream (video)  2 M frames\n 2. VoxSelf-Audio (audio) 1.5 M clips\n 3. PPG-Sensors-24 h (wearables)\n 4. NEW: Home-Events-Carbon – 12 TB multimodal + per-minute grid-carbon & deletion logs\nBackbones   MobileViT-S, Whisper-Tiny, TinyFormer\nBudgets     16 MB RAM, 1 mJ/step, ≤200 KB/day comm, ≤30 g CO₂/day\nBaselines   ACORN, SPROUT, LEMONADE, NISPA-Replay, Fed-ER\nMetrics     Avg Acc, Minority-F1, CO₂/day, DPG, Forget-Latency, credit-sketch ratio\nAblations   –event-graph, –carbon scheduler, –env-relink, –credit Fed, –graph+Δ\nExpected Result: • GARDEN attains 73.0 ± 0.3 % Avg Acc on Home-Events-Carbon vs 69.2 % SPROUT at identical memory.\n• Minority-class F1 improves by +12 pp; DPG reduced from 0.11 (SPROUT) to 0.04.\n• I/O reads drop additional 6× over SPROUT; CO₂ budget cut by 38 % through carbon-aware scheduling.\n• 99.7 % of deletion requests served in <150 ms; no measurable accuracy drop after 5 k deletions.\n• Fleet Push-Sum converges in ≤8 rounds; free-rider devices lose 92 % of replay benefit.\n• Day-night relinking removes latency spikes, keeping accuracy dips <0.3 pp at dawn vs 2 pp in SPROUT.\nExpected Conclusion: By integrating graph-level memory, carbon-aware multi-objective control, environment-adaptive relinking, and credit-backed federated exchange, GARDEN turns compressed replay into a socially responsible, provably efficient ecosystem. It not only pushes the academic frontier of memory-efficient continual learning but also meets real-world mandates on energy, carbon, privacy, fairness and user deletion rights, paving the way for trustable lifelong AI on commodity edge devices."
+    "method": "Open Problems: 1. Present sketch‐based replay does not consider higher–order relations among samples (e.g., events spanning several seconds, co-occurring audio-visual patterns). As a result, redundant but semantically crucial groups (birthdays, falls, alarms) are broken apart and cannot be replayed as coherent context.\n2. Devices must comply simultaneously with (i) local energy / memory caps, (ii) per-class fairness & privacy, (iii) user-level opt-out, and (iv) carbon–aware operation. Existing methods address these axes separately; no unified policy trades them off on-line.\n3. Today’s predictive relinking reacts only to backbone drift. It ignores upcoming *environmental* drift (light change, day–night, background noise) that can be forecast from the sensor stream itself.\n4. Fleet-level sharing is still heuristic (BLE gossip). We lack provable convergence guarantees and incentive mechanisms that prevent free-riding devices from consuming sketches without contributing.\n5. Current evaluations stop at accuracy / F1. Societal metrics such as demographic parity after forgetting requests and device CO₂ budget over weeks remain unreported.\nMethods: We propose GARDEN – Graph-Aware Relational Delta ENcoding memory, extending SPROUT with five novel components.\nA. Event-graph Delta Coding\n  • Incoming samples are first clustered into micro-events via an on-device contrastive transformer. A directed temporal graph G_t is maintained where nodes carry SPROUT deltas and edges store 1-byte relation tags (precede, co-occur, cause). Group deletion or replay now operates on connected sub-graphs, preserving context while achieving further 6× I/O reduction.\nB. Multi-objective Carbon-Fair Scheduler\n  • We cast memory update as a constrained Pareto front: minimise (energy, carbon-intensity·energy, Δε_priv, minority_loss) subject to 16 MB RAM. A tiny neuromorphic controller learns the Pareto weights online with a two-timescale bandit, guaranteeing ≤3 % regret against an oracle that sees future device states.\nC. Environment-adaptive Relinking\n  • A lightweight vision-audio ViT predicts not only backbone drift but also upcoming illumination / noise shifts 30 s ahead. GARDEN pre-warms alternative projection heads and swaps them seamlessly, eliminating 95 % of accuracy dips during dawn/dusk or party scenes.\nD. Credited Federated Sketch Exchange\n  • We model the fleet as a repeated game. Each 32-B sketch is stamped with a zero-knowledge proof of origin; devices earn cryptographic ‘seed’ credits when others replay their sketches. A credit-weighted Push-Sum protocol guarantees parameter consensus within O(log N) rounds while discouraging free riders.\nE. Societal Evaluation Suite\n  • We add Right-to-Forget stress-tests (1 k deletions/hour), Demographic Parity Gap (DPG), and Device-Week CO₂ scores (using real grid-intensity traces). New public dataset Home-Events-Carbon (10 houses, smart-meter + sensor streams) is released under CC-BY-NC.\nExperimental Setup: Datasets\n 1. Ego4D-Stream (video)  2 M frames\n 2. VoxSelf-Audio (audio) 1.5 M clips\n 3. PPG-Sensors-24 h (wearables)\n 4. NEW: Home-Events-Carbon – 12 TB multimodal + per-minute grid-carbon & deletion logs\nBackbones   MobileViT-S, Whisper-Tiny, TinyFormer\nBudgets     16 MB RAM, 1 mJ/step, ≤200 KB/day comm, ≤30 g CO₂/day\nBaselines   ACORN, SPROUT, LEMONADE, NISPA-Replay, Fed-ER\nMetrics     Avg Acc, Minority-F1, CO₂/day, DPG, Forget-Latency, credit-sketch ratio\nAblations   –event-graph, –carbon scheduler, –env-relink, –credit Fed, –graph+Δ\nExpected Result: • GARDEN attains 73.0 ± 0.3 % Avg Acc on Home-Events-Carbon vs 69.2 % SPROUT at identical memory.\n• Minority-class F1 improves by +12 pp; DPG reduced from 0.11 (SPROUT) to 0.04.\n• I/O reads drop additional 6× over SPROUT; CO₂ budget cut by 38 % through carbon-aware scheduling.\n• 99.7 % of deletion requests served in <150 ms; no measurable accuracy drop after 5 k deletions.\n• Fleet Push-Sum converges in ≤8 rounds; free-rider devices lose 92 % of replay benefit.\n• Day-night relinking removes latency spikes, keeping accuracy dips <0.3 pp at dawn vs 2 pp in SPROUT.\nExpected Conclusion: By integrating graph-level memory, carbon-aware multi-objective control, environment-adaptive relinking, and credit-backed federated exchange, GARDEN turns compressed replay into a socially responsible, provably efficient ecosystem. It not only pushes the academic frontier of memory-efficient continual learning but also meets real-world mandates on energy, carbon, privacy, fairness and user deletion rights, paving the way for trustable lifelong AI on commodity edge devices.",
+    "experimental_design": {
+      "experiment_strategy": "====================================================\nEXPERIMENT 1 –  Single-device Continual Learning Stress-Test\n----------------------------------------------------\nGoal:  Verify that Event-Graph Delta Coding (A) + GARDEN’s replay logic improve predictive quality, minority fairness and I/O efficiency under tight on-device limits.\n\nSetup\n1. Hardware emulation:  Launch 32 Docker containers, each capped at 16 MB RAM and 1 mJ/step on one A100 (CUDA MPS + power-draw limiter) to mimic embedded chips while keeping training time practical.\n2. Data stream:  Concatenate Ego4D-Stream → VoxSelf-Audio → PPG-Sensors-24h → Home-Events-Carbon (≈15 M multimodal samples).  Inject 1 k random “forget” requests per hour.\n3. Methods:  GARDEN, SPROUT, ACORN (+ five ablations: –event-graph, –graph+Δ, reservoir replay, FIFO, no replay).\n4. Metrics (logged every 10 k samples):  AvgAcc, Minority-F1, DPG, Read-I/O MB, Forget-Latency, RAM-footprint.\n\nSuccess Criteria / Expected Outcome\n• GARDEN keeps accuracy ≥73 % (+4 pp over SPROUT) while reading ≤17 % of the bytes SPROUT needs (≈6× cut).  \n• Minority-F1 rises ≥12 pp; DPG ≤0.05 (half of baselines).  \n• 99 % of deletions served <150 ms, no post-forget accuracy loss.  \nDemonstrates: Graph-aware replay simultaneously preserves long-range semantics, fairness and memory/IO economy on a single constrained device.\n\n====================================================\nEXPERIMENT 2 –  Carbon-Aware & Environment-Adaptive Control\n----------------------------------------------------\nGoal:  Show that components (B) & (C) jointly minimise real-world energy/CO₂ and shield accuracy during environmental drift.\n\nSetup\n1. Environmental script:  Re-order Home-Events-Carbon to follow a 48-h \"day-night-party-dawn\" pattern repeated 14×; pair it with actual 2023 CAISO grid-intensity traces.\n2. Deploy GARDEN and (i) GARDEN-w/o-carbon-scheduler, (ii) GARDEN-w/o-env-relink, (iii) SPROUT on one A100 (full resources, no emulation) for fast iteration.\n3. The neuromorphic controller receives live carbon-intensity and battery SOC signals; ViT listens to frames + audio to predict illumination/noise 30 s ahead.\n4. Metrics:  CO₂-g/day, Energy-mJ, Accuracy-over-time, Dip-magnitude @ illumination shifts, Scheduler regret.\n\nSuccess Criteria / Expected Outcome\n• GARDEN emits ≤18 g CO₂/day (≈38 % less than SPROUT) while spending ≤3 % more compute.  \n• Accuracy dips at dawn/dusk ≤0.3 pp vs ≥2 pp for SPROUT; dip area under curve reduced 95 %.  \n• Online bandit regret ≤3 % of oracle.  \nDemonstrates: Real-time Pareto scheduling and proactive relinking translate directly into lower carbon footprint AND more robust predictions when the sensor context changes.\n\n====================================================\nEXPERIMENT 3 –  1 000-device Federated Simulation with Free-Riders\n----------------------------------------------------\nGoal:  Validate (D) Credited Federated Sketch Exchange and its game-theoretic guarantees at fleet scale.\n\nSetup\n1. Spawn 1 000 Ray actors across the 8×A100s; each actor holds its own 16 MB memory, stream sampler and credit ledger. 20 % are flagged as strategic free-riders who request sketches but never upload any.\n2. Communication topology:  Random 8-neighbour BLE-style graph; Push-Sum with credit weights every 30 min.\n3. Treatments:  (a) GARDEN-credit, (b) GARDEN-no-credit (plain gossip), (c) Fed-ER.\n4. Tracked over 10 simulated days:  Global accuracy, Convergence (ℓ2 norm), Avg credits earned/spent, Utility of free-riders, Net uplink bytes, Minority-F1.\n\nSuccess Criteria / Expected Outcome\n• Credit-Push-Sum converges in ≤8 rounds (vs ≈25 for gossip).  \n• Free-riders’ accuracy benefit drops ≥90 % compared with honest peers, pressing them to contribute after day-3.  \n• Total uplink ≤180 KB/day/device, meeting budget.  \n• Fleet-wide Minority-F1 +8 pp over Fed-ER thanks to better sketch diversity.  \nDemonstrates: Economic incentives + cryptographic proofs enforce cooperative behaviour, guarantee rapid consensus and enhance fairness without exceeding strict communication caps.\n\n====================================================\nCombined Insight\nTogether, the three experiments examine GARDEN from (1) edge-device efficiency & fairness, (2) sustainability & robustness, and (3) federated scalability & incentive alignment.  Success across all fronts would substantiate the claim that GARDEN offers a comprehensive, socially responsible solution to lifelong learning under real-world constraints.",
+      "experiment_details": "====================================================\nEXPERIMENT 1  –  Single-Device Continual Learning Stress-Test\n====================================================\n1. Models\n   • GARDEN (ours)  – backbone stack:\n       – MobileViT-S (224², 5.6 M params) for RGB frames.\n       – Whisper-Tiny (39 M params) for 16-kHz audio clips.\n       – TinyFormer-XS (5-layer, 9 M params) for 64-Hz wearable channels.\n       – 128-d multimodal mixing transformer (2 M params).\n   • Baselines  – identical backbones, differing only in memory/replay logic:\n       – SPROUT, ACORN, reservoir replay, FIFO, no-replay.\n   • Ablations:  –event-graph, –graph+Δ (graph w/o delta coding).\n\n2. Data & Pre-processing\n   Datasets: Ego4D-Stream → VoxSelf-Audio → PPG-Sensors-24h → Home-Events-Carbon (chronological concat ≈ 15 M samples).\n   Video: resize→224², 8-frame clip/step, RandAug-Lite.\n   Audio: resample 16 kHz, loudness normalise, 1 s segments.\n   Wearable: z-score per channel, 4-s windows.\n   All modalities timestamp-aligned; ‘forget’ events injected, indices stored in a non-erasable audit log.\n\n3. Train/Test Protocol\n   • Streaming evaluation: every 256 steps, push latest model to eval thread that runs on a held-out sliding 50 k sample buffer (unseen, kept in RAM ≪ 16 MB count).  No leakage because buffer is never replayed.\n   • Five random seeds (PyTorch, NumPy, CUDA).  Report mean± 95 % CI.\n   • Online early-stopping not applicable; we log both “last” and “best-val” (max AvgAcc) checkpoints.\n\n4. Metrics\n   Primary:  AvgAcc, Minority-F1.\n   Secondary:  DPG, Read-I/O (MB), Forget-Latency (ms), RAM footprint (peak), ECE (calibration).\n\n5. Hyper-parameter Grid\n   Memory budget {8, 16, 32 MB} per device, graph-cluster τ {0.3, 0.5, 0.7}, replay-ratio r {0.05, 0.1, 0.2}, LR {1e-4, 3e-4}, temperature T {0.05, 0.1} for contrastive loss.  Latin-Hypercube 24 points, best-val used for tables, full grid in appendix.\n\n6. Robustness Checks\n   • Noise injection: Gaussian σ = 0.1 in sensor space for 5 % of samples.\n   • OOD:  swap night frames into day period.\n   • Adversarial: FGSM ϵ = 0.002 on RGB only.\n\n7. Compute/Cost Logging\n   • FLOPs/step via fvcore; aggregated.\n   • Wall-clock and energy read from nvidia-smi –query-gpu power.\n\n8. Expected Resource Use\n   32 Docker/MPS containers on 1 × A100; 1.1 days per seed (≈ 4.5 GPU-days total).\n\n9. Example Code (excerpt)\n   ```python\n   import torch, garden\n   from garden.memory import EventGraphBuffer\n   from garden.backbones import MobileViT_S, WhisperTiny, TinyFormerXS\n\n   model = garden.GardenSystem(\n       vision=MobileViT_S(),\n       audio=WhisperTiny(),\n       bio=TinyFormerXS(),\n       memory=EventGraphBuffer(mem_bytes=16*2**20, cluster_tau=0.5)\n   ).cuda()\n   for sample in stream_loader:\n       loss = model.update(sample)\n       if step%256==0:\n           eval_metrics = evaluator(model)\n   ```\n\n====================================================\nEXPERIMENT 2  –  Carbon-Aware & Environment-Adaptive Control\n====================================================\n1. Models\n   • GARDEN (full) – adds\n       – Spiking-MLP Pareto Controller (512 neurons, 32-bit weight mem < 40 kB).\n       – Light Vision–Audio ViT-XS predictor (3.2 M params).\n   • Variants:  GARDEN-w/o-carbon (controller deactivated), GARDEN-w/o-env (predictor frozen), SPROUT.\n\n2. Data & Script\n   Home-Events-Carbon arranged into 48-h pattern ×14 (≈ 1.2 M steps).  CAISO 2023 carbon-intensity csv aligned per minute.\n\n3. Training & Logging\n   • Same seed protocol (5).\n   • Scheduler receives (power_price, carbon_g/kWh, battery_soc).  Actions: defer, compress, run.\n\n4. Metrics\n   Primary: CO₂-g/day.\n   Secondary: Energy-mJ, AvgAcc, Dip-Magnitude (ΔAcc), Cumulative Regret.\n\n5. Hyper-parameters Monitored\n   • Carbon weight λ_C ∈ {0.2, 0.5, 1.0}.\n   • Minority weight λ_F ∈ {0.3, 0.6}.\n   • Predictor horizon h ∈ {15, 30, 60 s}.\n\n6. Robustness Tests\n   • Randomly shuffle grid-carbon 10 % of the time.\n   • Blackout: force energy budget to 0 for 2 h window.\n\n7. Compute Budget\n   Full A100 (no emulation).  < 9 h per seed; 2.2 GPU-days overall.\n\n8. Code Snippet\n   ```python\n   controller = garden.ParetoController(mem=40_960,\n       objectives=['energy','carbon','privacy','fairness'])\n   predictor = garden.LightVAViT(horizon=30)\n   garden_sys = garden.GardenSystem(..., controller=controller,\n                                    env_predictor=predictor)\n   ```\n\n====================================================\nEXPERIMENT 3  –  1 000-Device Federated Simulation with Free-Riders\n====================================================\n1. Models\n   • GARDEN-credit (ours) – ZK-stamped sketches + Credit-Push-Sum.\n   • GARDEN-no-credit (plain gossip Push-Sum).\n   • Fed-ER (replay-based baseline).\n\n2. Simulation\n   • 1 000 Ray actors on 8 × A100; each 2 G RAM, 1 CPU core.\n   • 20 % actors flagged as free-riders (policy: never upload, always request).\n   • BLE graph: random 8-degree, re-wired hourly.\n\n3. Data\n   Each actor streams from a random permutation of the four datasets (same pre-processing as Exp-1) – total 50 k samples/device over 10 days.\n\n4. Evaluation Windows\n   • Global snapshot every 4 h (aggregate model evaluated on central test buffer of 100 k unseen samples).\n   • Seeds: 3 (simulation heavy).\n\n5. Metrics\n   Primary: Convergence (‖θ_t−θ_*‖₂), Utility gap of free-riders.\n   Secondary: Global AvgAcc, Minority-F1, Uplink KB/day, Credit ledger stats.\n\n6. Hyper-param Study\n   • Push-Sum damping α ∈ {0.5, 0.7, 0.9}.\n   • Credit decay γ ∈ {0, 0.01}.\n   • Fraud-tolerance ε ∈ {0, 1} ZK-proof failure/sim.\n\n7. Robustness\n   • 5 % packet-loss network.\n   • 50 ms latency Gaussian jitter.\n\n8. Compute Footprint\n   ≈ 6.5 GPU-days (actors mostly CPU; GPUs handle occasional gradient merge).\n\n9. Code Sketch\n   ```python\n   @ray.remote\n   class Device:\n       def __init__(self, cfg):\n           self.sys = garden.GardenSystem(..., credit=cfg.credit)\n       def step(self):\n           sample = next(self.stream)\n           self.sys.update(sample)\n           if time_to_sync():\n               self.sys.exchange(peers)\n   ```\n\n====================================================\nCOMMON IMPLEMENTATION NOTES\n====================================================\n• All experiments built on PyTorch 2.1 + CUDA 12.2; mixed-precision (fp16).\n• WandB tracking; runs tagged exp1-seed1 … exp3-seed3.\n• Exact conda env.yml attached (Python 3.10, fvcore, fv3-sampler, open-spdm 0.3).\n• FLOPs, memory, inference-time computed with ptflops 0.7.*  – measured on one forward pass with batch-size = 1.\n• Any deviation from original SPROUT/ACORN hyper-params is foot-noted in appendix (e.g., LR lowered from 1e-3→3e-4 to prevent FP16 overflow).\n• NO-FALLBACK:  if datasets are not mounted at runtime the loader raises IOError and experiment terminates.\n",
+      "expected_models": [
+        "MobileViT-S",
+        "Whisper-Tiny",
+        "TinyFormer-XS",
+        "Multimodal Mixing Transformer",
+        "Spiking-MLP Pareto Controller",
+        "Light Vision-Audio ViT-XS",
+        "GARDEN",
+        "SPROUT",
+        "ACORN",
+        "Fed-ER"
+      ],
+      "expected_datasets": [
+        "Ego4D-Stream",
+        "VoxSelf-Audio",
+        "PPG-Sensors-24h",
+        "Home-Events-Carbon"
+      ],
+      "external_resources": {
+        "hugging_face": {
+          "models": [
+            {
+              "id": "apple/mobilevit-small",
+              "author": "apple",
+              "sha": "6c8612545dc98676d27bc518fa521d9e9af23e34",
+              "created_at": "2022-05-30T12:43:23+00:00",
+              "last_modified": "2025-02-24T21:25:21+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 1416157,
+              "likes": 80,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "LICENSE"
+                },
+                {
+                  "rfilename": "MobileViT.mlpackage/Data/com.apple.CoreML/model.mlmodel"
+                },
+                {
+                  "rfilename": "MobileViT.mlpackage/Data/com.apple.CoreML/weights/weight.bin"
+                },
+                {
+                  "rfilename": "MobileViT.mlpackage/Manifest.json"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "preprocessor_config.json"
+                },
+                {
+                  "rfilename": "pytorch_model.bin"
+                },
+                {
+                  "rfilename": "tf_model.h5"
+                }
+              ],
+              "card_data": {
+                "license": "other",
+                "language": [],
+                "tags": [
+                  "vision",
+                  "image-classification"
+                ],
+                "datasets": [
+                  "imagenet-1k"
+                ],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": [
+                  {
+                    "src": "https://huggingface.co/datasets/mishig/sample_images/resolve/main/tiger.jpg",
+                    "example_title": "Tiger"
+                  },
+                  {
+                    "src": "https://huggingface.co/datasets/mishig/sample_images/resolve/main/teapot.jpg",
+                    "example_title": "Teapot"
+                  },
+                  {
+                    "src": "https://huggingface.co/datasets/mishig/sample_images/resolve/main/palace.jpg",
+                    "example_title": "Palace"
+                  }
+                ]
+              },
+              "tags": [
+                "transformers",
+                "pytorch",
+                "tf",
+                "coreml",
+                "mobilevit",
+                "image-classification",
+                "vision",
+                "dataset:imagenet-1k",
+                "arxiv:2110.02178",
+                "license:other",
+                "autotrain_compatible",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "image-classification",
+              "library_name": "transformers",
+              "readme": "---\nlicense: other\ntags:\n- vision\n- image-classification\ndatasets:\n- imagenet-1k\nwidget:\n- src: https://huggingface.co/datasets/mishig/sample_images/resolve/main/tiger.jpg\n  example_title: Tiger\n- src: https://huggingface.co/datasets/mishig/sample_images/resolve/main/teapot.jpg\n  example_title: Teapot\n- src: https://huggingface.co/datasets/mishig/sample_images/resolve/main/palace.jpg\n  example_title: Palace\n---\n\n# MobileViT (small-sized model)\n\nMobileViT model pre-trained on ImageNet-1k at resolution 256x256. It was introduced in [MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer](https://arxiv.org/abs/2110.02178) by Sachin Mehta and Mohammad Rastegari, and first released in [this repository](https://github.com/apple/ml-cvnets). The license used is [Apple sample code license](https://github.com/apple/ml-cvnets/blob/main/LICENSE).\n\nDisclaimer: The team releasing MobileViT did not write a model card for this model so this model card has been written by the Hugging Face team.\n\n## Model description\n\nMobileViT is a light-weight, low latency convolutional neural network that combines MobileNetV2-style layers with a new block that replaces local processing in convolutions with global processing using transformers. As with ViT (Vision Transformer), the image data is converted into flattened patches before it is processed by the transformer layers. Afterwards, the patches are \"unflattened\" back into feature maps. This allows the MobileViT-block to be placed anywhere inside a CNN. MobileViT does not require any positional embeddings.\n\n## Intended uses & limitations\n\nYou can use the raw model for image classification. See the [model hub](https://huggingface.co/models?search=mobilevit) to look for fine-tuned versions on a task that interests you.\n\n### How to use\n\nHere is how to use this model to classify an image of the COCO 2017 dataset into one of the 1,000 ImageNet classes:\n\n```python\nfrom transformers import MobileViTFeatureExtractor, MobileViTForImageClassification\nfrom PIL import Image\nimport requests\n\nurl = \"http://images.cocodataset.org/val2017/000000039769.jpg\"\nimage = Image.open(requests.get(url, stream=True).raw)\n\nfeature_extractor = MobileViTFeatureExtractor.from_pretrained(\"apple/mobilevit-small\")\nmodel = MobileViTForImageClassification.from_pretrained(\"apple/mobilevit-small\")\n\ninputs = feature_extractor(images=image, return_tensors=\"pt\")\n\noutputs = model(**inputs)\nlogits = outputs.logits\n\n# model predicts one of the 1000 ImageNet classes\npredicted_class_idx = logits.argmax(-1).item()\nprint(\"Predicted class:\", model.config.id2label[predicted_class_idx])\n```\n\nCurrently, both the feature extractor and model support PyTorch.\n\n## Training data\n\nThe MobileViT model was pretrained on [ImageNet-1k](https://huggingface.co/datasets/imagenet-1k), a dataset consisting of 1 million images and 1,000 classes. \n\n## Training procedure\n\n### Preprocessing\n\nTraining requires only basic data augmentation, i.e. random resized cropping and horizontal flipping. \n\nTo learn multi-scale representations without requiring fine-tuning, a multi-scale sampler was used during training, with image sizes randomly sampled from: (160, 160), (192, 192), (256, 256), (288, 288), (320, 320).\n\nAt inference time, images are resized/rescaled to the same resolution (288x288), and center-cropped at 256x256.\n\nPixels are normalized to the range [0, 1]. Images are expected to be in BGR pixel order, not RGB.\n\n### Pretraining\n\nThe MobileViT networks are trained from scratch for 300 epochs on ImageNet-1k on 8 NVIDIA GPUs with an effective batch size of 1024 and learning rate warmup for 3k steps, followed by cosine annealing. Also used were label smoothing cross-entropy loss and L2 weight decay. Training resolution varies from 160x160 to 320x320, using multi-scale sampling.\n\n## Evaluation results\n\n| Model            | ImageNet top-1 accuracy | ImageNet top-5 accuracy | # params  | URL                                             |\n|------------------|-------------------------|-------------------------|-----------|-------------------------------------------------|\n| MobileViT-XXS    | 69.0                    | 88.9                    | 1.3 M     | https://huggingface.co/apple/mobilevit-xx-small |\n| MobileViT-XS     | 74.8                    | 92.3                    | 2.3 M     | https://huggingface.co/apple/mobilevit-x-small  |\n| **MobileViT-S**  | **78.4**                | **94.1**                | **5.6 M** | https://huggingface.co/apple/mobilevit-small    |\n\n### BibTeX entry and citation info\n\n```bibtex\n@inproceedings{vision-transformer,\ntitle = {MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer},\nauthor = {Sachin Mehta and Mohammad Rastegari},\nyear = {2022},\nURL = {https://arxiv.org/abs/2110.02178}\n}\n```\n"
+            },
+            {
+              "id": "apple/mobilevit-xx-small",
+              "author": "apple",
+              "sha": "6703997f9e940e312a04b8b7c26463d631c0d1f8",
+              "created_at": "2022-05-30T12:46:35+00:00",
+              "last_modified": "2025-02-24T21:25:58+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 5489,
+              "likes": 18,
+              "siblings": [
+                {
+                  "rfilename": ".DS_Store"
+                },
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "LICENSE"
+                },
+                {
+                  "rfilename": "MobileViT.mlpackage/Data/com.apple.CoreML/model.mlmodel"
+                },
+                {
+                  "rfilename": "MobileViT.mlpackage/Data/com.apple.CoreML/weights/weight.bin"
+                },
+                {
+                  "rfilename": "MobileViT.mlpackage/Manifest.json"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "preprocessor_config.json"
+                },
+                {
+                  "rfilename": "pytorch_model.bin"
+                }
+              ],
+              "card_data": {
+                "license": "other",
+                "language": [],
+                "tags": [
+                  "vision",
+                  "image-classification"
+                ],
+                "datasets": [
+                  "imagenet-1k"
+                ],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": [
+                  {
+                    "src": "https://huggingface.co/datasets/mishig/sample_images/resolve/main/tiger.jpg",
+                    "example_title": "Tiger"
+                  },
+                  {
+                    "src": "https://huggingface.co/datasets/mishig/sample_images/resolve/main/teapot.jpg",
+                    "example_title": "Teapot"
+                  },
+                  {
+                    "src": "https://huggingface.co/datasets/mishig/sample_images/resolve/main/palace.jpg",
+                    "example_title": "Palace"
+                  }
+                ]
+              },
+              "tags": [
+                "transformers",
+                "pytorch",
+                "tf",
+                "coreml",
+                "mobilevit",
+                "image-classification",
+                "vision",
+                "dataset:imagenet-1k",
+                "arxiv:2110.02178",
+                "license:other",
+                "autotrain_compatible",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "image-classification",
+              "library_name": "transformers",
+              "readme": "---\nlicense: other\ntags:\n- vision\n- image-classification\ndatasets:\n- imagenet-1k\nwidget:\n- src: https://huggingface.co/datasets/mishig/sample_images/resolve/main/tiger.jpg\n  example_title: Tiger\n- src: https://huggingface.co/datasets/mishig/sample_images/resolve/main/teapot.jpg\n  example_title: Teapot\n- src: https://huggingface.co/datasets/mishig/sample_images/resolve/main/palace.jpg\n  example_title: Palace\n---\n\n# MobileViT (extra extra small-sized model)\n\nMobileViT model pre-trained on ImageNet-1k at resolution 256x256. It was introduced in [MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer](https://arxiv.org/abs/2110.02178) by Sachin Mehta and Mohammad Rastegari, and first released in [this repository](https://github.com/apple/ml-cvnets). The license used is [Apple sample code license](https://github.com/apple/ml-cvnets/blob/main/LICENSE).\n\nDisclaimer: The team releasing MobileViT did not write a model card for this model so this model card has been written by the Hugging Face team.\n\n## Model description\n\nMobileViT is a light-weight, low latency convolutional neural network that combines MobileNetV2-style layers with a new block that replaces local processing in convolutions with global processing using transformers. As with ViT (Vision Transformer), the image data is converted into flattened patches before it is processed by the transformer layers. Afterwards, the patches are \"unflattened\" back into feature maps. This allows the MobileViT-block to be placed anywhere inside a CNN. MobileViT does not require any positional embeddings.\n\n## Intended uses & limitations\n\nYou can use the raw model for image classification. See the [model hub](https://huggingface.co/models?search=mobilevit) to look for fine-tuned versions on a task that interests you.\n\n### How to use\n\nHere is how to use this model to classify an image of the COCO 2017 dataset into one of the 1,000 ImageNet classes:\n\n```python\nfrom transformers import MobileViTFeatureExtractor, MobileViTForImageClassification\nfrom PIL import Image\nimport requests\n\nurl = \"http://images.cocodataset.org/val2017/000000039769.jpg\"\nimage = Image.open(requests.get(url, stream=True).raw)\n\nfeature_extractor = MobileViTFeatureExtractor.from_pretrained(\"apple/mobilevit-xx-small\")\nmodel = MobileViTForImageClassification.from_pretrained(\"apple/mobilevit-xx-small\")\n\ninputs = feature_extractor(images=image, return_tensors=\"pt\")\n\noutputs = model(**inputs)\nlogits = outputs.logits\n\n# model predicts one of the 1000 ImageNet classes\npredicted_class_idx = logits.argmax(-1).item()\nprint(\"Predicted class:\", model.config.id2label[predicted_class_idx])\n```\n\nCurrently, both the feature extractor and model support PyTorch.\n\n## Training data\n\nThe MobileViT model was pretrained on [ImageNet-1k](https://huggingface.co/datasets/imagenet-1k), a dataset consisting of 1 million images and 1,000 classes. \n\n## Training procedure\n\n### Preprocessing\n\nTraining requires only basic data augmentation, i.e. random resized cropping and horizontal flipping. \n\nTo learn multi-scale representations without requiring fine-tuning, a multi-scale sampler was used during training, with image sizes randomly sampled from: (160, 160), (192, 192), (256, 256), (288, 288), (320, 320).\n\nAt inference time, images are resized/rescaled to the same resolution (288x288), and center-cropped at 256x256.\n\nPixels are normalized to the range [0, 1]. Images are expected to be in BGR pixel order, not RGB.\n\n### Pretraining\n\nThe MobileViT networks are trained from scratch for 300 epochs on ImageNet-1k on 8 NVIDIA GPUs with an effective batch size of 1024 and learning rate warmup for 3k steps, followed by cosine annealing. Also used were label smoothing cross-entropy loss and L2 weight decay. Training resolution varies from 160x160 to 320x320, using multi-scale sampling.\n\n## Evaluation results\n\n| Model             | ImageNet top-1 accuracy | ImageNet top-5 accuracy | # params  | URL                                             |\n|-------------------|-------------------------|-------------------------|-----------|-------------------------------------------------|\n| **MobileViT-XXS** | **69.0**                | **88.9**                | **1.3 M** | https://huggingface.co/apple/mobilevit-xx-small |\n| MobileViT-XS      | 74.8                    | 92.3                    | 2.3 M     | https://huggingface.co/apple/mobilevit-x-small  |\n| MobileViT-S       | 78.4                    | 94.1                    | 5.6 M     | https://huggingface.co/apple/mobilevit-small    |\n\n### BibTeX entry and citation info\n\n```bibtex\n@inproceedings{vision-transformer,\ntitle = {MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer},\nauthor = {Sachin Mehta and Mohammad Rastegari},\nyear = {2022},\nURL = {https://arxiv.org/abs/2110.02178}\n}\n```\n"
+            },
+            {
+              "id": "apple/mobilevit-x-small",
+              "author": "apple",
+              "sha": "0f4f298e136829c566224228d82066548a9082de",
+              "created_at": "2022-05-30T12:45:19+00:00",
+              "last_modified": "2025-02-24T21:25:36+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 1773,
+              "likes": 6,
+              "siblings": [
+                {
+                  "rfilename": ".DS_Store"
+                },
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "LICENSE"
+                },
+                {
+                  "rfilename": "MobileViT.mlpackage/Data/com.apple.CoreML/model.mlmodel"
+                },
+                {
+                  "rfilename": "MobileViT.mlpackage/Data/com.apple.CoreML/weights/weight.bin"
+                },
+                {
+                  "rfilename": "MobileViT.mlpackage/Manifest.json"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "preprocessor_config.json"
+                },
+                {
+                  "rfilename": "pytorch_model.bin"
+                }
+              ],
+              "card_data": {
+                "license": "other",
+                "language": [],
+                "tags": [
+                  "vision",
+                  "image-classification"
+                ],
+                "datasets": [
+                  "imagenet-1k"
+                ],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": [
+                  {
+                    "src": "https://huggingface.co/datasets/mishig/sample_images/resolve/main/tiger.jpg",
+                    "example_title": "Tiger"
+                  },
+                  {
+                    "src": "https://huggingface.co/datasets/mishig/sample_images/resolve/main/teapot.jpg",
+                    "example_title": "Teapot"
+                  },
+                  {
+                    "src": "https://huggingface.co/datasets/mishig/sample_images/resolve/main/palace.jpg",
+                    "example_title": "Palace"
+                  }
+                ]
+              },
+              "tags": [
+                "transformers",
+                "pytorch",
+                "tf",
+                "coreml",
+                "mobilevit",
+                "image-classification",
+                "vision",
+                "dataset:imagenet-1k",
+                "arxiv:2110.02178",
+                "license:other",
+                "autotrain_compatible",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "image-classification",
+              "library_name": "transformers",
+              "readme": "---\nlicense: other\ntags:\n- vision\n- image-classification\ndatasets:\n- imagenet-1k\nwidget:\n- src: https://huggingface.co/datasets/mishig/sample_images/resolve/main/tiger.jpg\n  example_title: Tiger\n- src: https://huggingface.co/datasets/mishig/sample_images/resolve/main/teapot.jpg\n  example_title: Teapot\n- src: https://huggingface.co/datasets/mishig/sample_images/resolve/main/palace.jpg\n  example_title: Palace\n---\n\n# MobileViT (extra small-sized model)\n\nMobileViT model pre-trained on ImageNet-1k at resolution 256x256. It was introduced in [MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer](https://arxiv.org/abs/2110.02178) by Sachin Mehta and Mohammad Rastegari, and first released in [this repository](https://github.com/apple/ml-cvnets). The license used is [Apple sample code license](https://github.com/apple/ml-cvnets/blob/main/LICENSE).\n\nDisclaimer: The team releasing MobileViT did not write a model card for this model so this model card has been written by the Hugging Face team.\n\n## Model description\n\nMobileViT is a light-weight, low latency convolutional neural network that combines MobileNetV2-style layers with a new block that replaces local processing in convolutions with global processing using transformers. As with ViT (Vision Transformer), the image data is converted into flattened patches before it is processed by the transformer layers. Afterwards, the patches are \"unflattened\" back into feature maps. This allows the MobileViT-block to be placed anywhere inside a CNN. MobileViT does not require any positional embeddings.\n\n## Intended uses & limitations\n\nYou can use the raw model for image classification. See the [model hub](https://huggingface.co/models?search=mobilevit) to look for fine-tuned versions on a task that interests you.\n\n### How to use\n\nHere is how to use this model to classify an image of the COCO 2017 dataset into one of the 1,000 ImageNet classes:\n\n```python\nfrom transformers import MobileViTFeatureExtractor, MobileViTForImageClassification\nfrom PIL import Image\nimport requests\n\nurl = \"http://images.cocodataset.org/val2017/000000039769.jpg\"\nimage = Image.open(requests.get(url, stream=True).raw)\n\nfeature_extractor = MobileViTFeatureExtractor.from_pretrained(\"apple/mobilevit-x-small\")\nmodel = MobileViTForImageClassification.from_pretrained(\"apple/mobilevit-x-small\")\n\ninputs = feature_extractor(images=image, return_tensors=\"pt\")\n\noutputs = model(**inputs)\nlogits = outputs.logits\n\n# model predicts one of the 1000 ImageNet classes\npredicted_class_idx = logits.argmax(-1).item()\nprint(\"Predicted class:\", model.config.id2label[predicted_class_idx])\n```\n\nCurrently, both the feature extractor and model support PyTorch.\n\n## Training data\n\nThe MobileViT model was pretrained on [ImageNet-1k](https://huggingface.co/datasets/imagenet-1k), a dataset consisting of 1 million images and 1,000 classes. \n\n## Training procedure\n\n### Preprocessing\n\nTraining requires only basic data augmentation, i.e. random resized cropping and horizontal flipping. \n\nTo learn multi-scale representations without requiring fine-tuning, a multi-scale sampler was used during training, with image sizes randomly sampled from: (160, 160), (192, 192), (256, 256), (288, 288), (320, 320).\n\nAt inference time, images are resized/rescaled to the same resolution (288x288), and center-cropped at 256x256.\n\nPixels are normalized to the range [0, 1]. Images are expected to be in BGR pixel order, not RGB.\n\n### Pretraining\n\nThe MobileViT networks are trained from scratch for 300 epochs on ImageNet-1k on 8 NVIDIA GPUs with an effective batch size of 1024 and learning rate warmup for 3k steps, followed by cosine annealing. Also used were label smoothing cross-entropy loss and L2 weight decay. Training resolution varies from 160x160 to 320x320, using multi-scale sampling.\n\n## Evaluation results\n\n| Model            | ImageNet top-1 accuracy | ImageNet top-5 accuracy | # params  | URL                                             |\n|------------------|-------------------------|-------------------------|-----------|-------------------------------------------------|\n| MobileViT-XXS    | 69.0                    | 88.9                    | 1.3 M     | https://huggingface.co/apple/mobilevit-xx-small |\n| **MobileViT-XS** | **74.8**                | **92.3**                | **2.3 M** | https://huggingface.co/apple/mobilevit-x-small  |\n| MobileViT-S      | 78.4                    | 94.1                    |   5.6 M   | https://huggingface.co/apple/mobilevit-small    |\n\n### BibTeX entry and citation info\n\n```bibtex\n@inproceedings{vision-transformer,\ntitle = {MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer},\nauthor = {Sachin Mehta and Mohammad Rastegari},\nyear = {2022},\nURL = {https://arxiv.org/abs/2110.02178}\n}\n```\n"
+            },
+            {
+              "id": "rhasspy/faster-whisper-tiny-int8",
+              "author": "rhasspy",
+              "sha": "5b6382e0f4ac867ce9ff24aaa249400a7c6c73d9",
+              "created_at": "2024-03-10T18:22:26+00:00",
+              "last_modified": "2024-03-10T18:24:17+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 1180428,
+              "likes": 3,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "model.bin"
+                },
+                {
+                  "rfilename": "vocabulary.txt"
+                }
+              ],
+              "card_data": {
+                "license": "mit",
+                "language": [],
+                "tags": [],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "license:mit",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "library_name": "transformers",
+              "readme": "---\nlicense: mit\n---\n"
+            },
+            {
+              "id": "openai/whisper-tiny",
+              "author": "openai",
+              "sha": "169d4a4341b33bc18d8881c4b69c2e104e1cc0af",
+              "created_at": "2022-09-26T06:50:30+00:00",
+              "last_modified": "2024-02-29T10:57:33+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 446650,
+              "likes": 362,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "added_tokens.json"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "flax_model.msgpack"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "merges.txt"
+                },
+                {
+                  "rfilename": "model.safetensors"
+                },
+                {
+                  "rfilename": "normalizer.json"
+                },
+                {
+                  "rfilename": "preprocessor_config.json"
+                }
+              ],
+              "card_data": {
+                "license": "apache-2.0",
+                "language": [
+                  "en",
+                  "zh",
+                  "de",
+                  "es",
+                  "ru",
+                  "ko",
+                  "fr",
+                  "ja",
+                  "pt",
+                  "tr",
+                  "pl",
+                  "ca",
+                  "nl",
+                  "ar",
+                  "sv",
+                  "it",
+                  "id",
+                  "hi",
+                  "fi",
+                  "vi",
+                  "he",
+                  "uk",
+                  "el",
+                  "ms",
+                  "cs",
+                  "ro",
+                  "da",
+                  "hu",
+                  "ta",
+                  "no",
+                  "th",
+                  "ur",
+                  "hr",
+                  "bg",
+                  "lt",
+                  "la",
+                  "mi",
+                  "ml",
+                  "cy",
+                  "sk",
+                  "te",
+                  "fa",
+                  "lv",
+                  "bn",
+                  "sr",
+                  "az",
+                  "sl",
+                  "kn",
+                  "et",
+                  "mk",
+                  "br",
+                  "eu",
+                  "is",
+                  "hy",
+                  "ne",
+                  "mn",
+                  "bs",
+                  "kk",
+                  "sq",
+                  "sw",
+                  "gl",
+                  "mr",
+                  "pa",
+                  "si",
+                  "km",
+                  "sn",
+                  "yo",
+                  "so",
+                  "af",
+                  "oc",
+                  "ka",
+                  "be",
+                  "tg",
+                  "sd",
+                  "gu",
+                  "am",
+                  "yi",
+                  "lo",
+                  "uz",
+                  "fo",
+                  "ht",
+                  "ps",
+                  "tk",
+                  "nn",
+                  "mt",
+                  "sa",
+                  "lb",
+                  "my",
+                  "bo",
+                  "tl",
+                  "mg",
+                  "as",
+                  "tt",
+                  "haw",
+                  "ln",
+                  "ha",
+                  "ba",
+                  "jw",
+                  "su"
+                ],
+                "pipeline_tag": "automatic-speech-recognition",
+                "tags": [
+                  "audio",
+                  "automatic-speech-recognition",
+                  "hf-asr-leaderboard"
+                ],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": [
+                  {
+                    "example_title": "Librispeech sample 1",
+                    "src": "https://cdn-media.huggingface.co/speech_samples/sample1.flac"
+                  },
+                  {
+                    "example_title": "Librispeech sample 2",
+                    "src": "https://cdn-media.huggingface.co/speech_samples/sample2.flac"
+                  }
+                ]
+              },
+              "tags": [
+                "transformers",
+                "pytorch",
+                "tf",
+                "jax",
+                "safetensors",
+                "whisper",
+                "automatic-speech-recognition",
+                "audio",
+                "hf-asr-leaderboard",
+                "en",
+                "zh",
+                "de",
+                "es",
+                "ru",
+                "ko",
+                "fr",
+                "ja",
+                "pt",
+                "tr",
+                "pl",
+                "ca",
+                "nl",
+                "ar",
+                "sv",
+                "it",
+                "id",
+                "hi",
+                "fi",
+                "vi",
+                "he",
+                "uk",
+                "el",
+                "ms",
+                "cs",
+                "ro",
+                "da",
+                "hu",
+                "ta",
+                "no",
+                "th",
+                "ur",
+                "hr",
+                "bg",
+                "lt",
+                "la",
+                "mi",
+                "ml",
+                "cy",
+                "sk",
+                "te",
+                "fa",
+                "lv",
+                "bn",
+                "sr",
+                "az",
+                "sl",
+                "kn",
+                "et",
+                "mk",
+                "br",
+                "eu",
+                "is",
+                "hy",
+                "ne",
+                "mn",
+                "bs",
+                "kk",
+                "sq",
+                "sw",
+                "gl",
+                "mr",
+                "pa",
+                "si",
+                "km",
+                "sn",
+                "yo",
+                "so",
+                "af",
+                "oc",
+                "ka",
+                "be",
+                "tg",
+                "sd",
+                "gu",
+                "am",
+                "yi",
+                "lo",
+                "uz",
+                "fo",
+                "ht",
+                "ps",
+                "tk",
+                "nn",
+                "mt",
+                "sa",
+                "lb",
+                "my",
+                "bo",
+                "tl",
+                "mg",
+                "as",
+                "tt",
+                "haw",
+                "ln",
+                "ha",
+                "ba",
+                "jw",
+                "su",
+                "arxiv:2212.04356",
+                "license:apache-2.0",
+                "model-index",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "automatic-speech-recognition",
+              "library_name": "transformers",
+              "readme": "---\nlanguage: \n- en\n- zh\n- de\n- es\n- ru\n- ko\n- fr\n- ja\n- pt\n- tr\n- pl\n- ca\n- nl\n- ar\n- sv\n- it\n- id\n- hi\n- fi\n- vi\n- he\n- uk\n- el\n- ms\n- cs\n- ro\n- da\n- hu\n- ta\n- no\n- th\n- ur\n- hr\n- bg\n- lt\n- la\n- mi\n- ml\n- cy\n- sk\n- te\n- fa\n- lv\n- bn\n- sr\n- az\n- sl\n- kn\n- et\n- mk\n- br\n- eu\n- is\n- hy\n- ne\n- mn\n- bs\n- kk\n- sq\n- sw\n- gl\n- mr\n- pa\n- si\n- km\n- sn\n- yo\n- so\n- af\n- oc\n- ka\n- be\n- tg\n- sd\n- gu\n- am\n- yi\n- lo\n- uz\n- fo\n- ht\n- ps\n- tk\n- nn\n- mt\n- sa\n- lb\n- my\n- bo\n- tl\n- mg\n- as\n- tt\n- haw\n- ln\n- ha\n- ba\n- jw\n- su\ntags:\n- audio\n- automatic-speech-recognition\n- hf-asr-leaderboard\nwidget:\n- example_title: Librispeech sample 1\n  src: https://cdn-media.huggingface.co/speech_samples/sample1.flac\n- example_title: Librispeech sample 2\n  src: https://cdn-media.huggingface.co/speech_samples/sample2.flac\nmodel-index:\n- name: whisper-tiny\n  results:\n  - task:\n      name: Automatic Speech Recognition\n      type: automatic-speech-recognition\n    dataset:\n      name: LibriSpeech (clean)\n      type: librispeech_asr\n      config: clean\n      split: test\n      args: \n        language: en\n    metrics:\n    - name: Test WER\n      type: wer\n      value: 7.54\n  - task:\n      name: Automatic Speech Recognition\n      type: automatic-speech-recognition\n    dataset:\n      name: LibriSpeech (other)\n      type: librispeech_asr\n      config: other\n      split: test\n      args: \n        language: en\n    metrics:\n    - name: Test WER\n      type: wer\n      value:  17.15\n  - task:\n      name: Automatic Speech Recognition\n      type: automatic-speech-recognition\n    dataset:\n      name: Common Voice 11.0\n      type: mozilla-foundation/common_voice_11_0\n      config: hi\n      split: test\n      args:\n        language: hi\n    metrics:\n    - name: Test WER\n      type: wer\n      value: 141\npipeline_tag: automatic-speech-recognition\nlicense: apache-2.0\n---\n\n# Whisper\n\nWhisper is a pre-trained model for automatic speech recognition (ASR) and speech translation. Trained on 680k hours \nof labelled data, Whisper models demonstrate a strong ability to generalise to many datasets and domains **without** the need \nfor fine-tuning.\n\nWhisper was proposed in the paper [Robust Speech Recognition via Large-Scale Weak Supervision](https://arxiv.org/abs/2212.04356) \nby Alec Radford et al from OpenAI. The original code repository can be found [here](https://github.com/openai/whisper).\n\n**Disclaimer**: Content for this model card has partly been written by the Hugging Face team, and parts of it were \ncopied and pasted from the original model card.\n\n## Model details\n\nWhisper is a Transformer based encoder-decoder model, also referred to as a _sequence-to-sequence_ model. \nIt was trained on 680k hours of labelled speech data annotated using large-scale weak supervision. \n\nThe models were trained on either English-only data or multilingual data. The English-only models were trained \non the task of speech recognition. The multilingual models were trained on both speech recognition and speech \ntranslation. For speech recognition, the model predicts transcriptions in the *same* language as the audio. \nFor speech translation, the model predicts transcriptions to a *different* language to the audio.\n\nWhisper checkpoints come in five configurations of varying model sizes.\nThe smallest four are trained on either English-only or multilingual data.\nThe largest checkpoints are multilingual only. All ten of the pre-trained checkpoints \nare available on the [Hugging Face Hub](https://huggingface.co/models?search=openai/whisper). The \ncheckpoints are summarised in the following table with links to the models on the Hub:\n\n| Size     | Parameters | English-only                                         | Multilingual                                        |\n|----------|------------|------------------------------------------------------|-----------------------------------------------------|\n| tiny     | 39 M       | [✓](https://huggingface.co/openai/whisper-tiny.en)   | [✓](https://huggingface.co/openai/whisper-tiny)     |\n| base     | 74 M       | [✓](https://huggingface.co/openai/whisper-base.en)   | [✓](https://huggingface.co/openai/whisper-base)     |\n| small    | 244 M      | [✓](https://huggingface.co/openai/whisper-small.en)  | [✓](https://huggingface.co/openai/whisper-small)    |\n| medium   | 769 M      | [✓](https://huggingface.co/openai/whisper-medium.en) | [✓](https://huggingface.co/openai/whisper-medium)   |\n| large    | 1550 M     | x                                                    | [✓](https://huggingface.co/openai/whisper-large)    |\n| large-v2 | 1550 M     | x                                                    | [✓](https://huggingface.co/openai/whisper-large-v2) |\n\n# Usage\n\nTo transcribe audio samples, the model has to be used alongside a [`WhisperProcessor`](https://huggingface.co/docs/transformers/model_doc/whisper#transformers.WhisperProcessor).\n\nThe `WhisperProcessor` is used to:\n1. Pre-process the audio inputs (converting them to log-Mel spectrograms for the model)\n2. Post-process the model outputs (converting them from tokens to text)\n\nThe model is informed of which task to perform (transcription or translation) by passing the appropriate \"context tokens\". These context tokens \nare a sequence of tokens that are given to the decoder at the start of the decoding process, and take the following order:\n1. The transcription always starts with the `<|startoftranscript|>` token\n2. The second token is the language token (e.g. `<|en|>` for English)\n3. The third token is the \"task token\". It can take one of two values: `<|transcribe|>` for speech recognition or `<|translate|>` for speech translation\n4. In addition, a `<|notimestamps|>` token is added if the model should not include timestamp prediction\n\nThus, a typical sequence of context tokens might look as follows:\n```\n<|startoftranscript|> <|en|> <|transcribe|> <|notimestamps|>\n```\nWhich tells the model to decode in English, under the task of speech recognition, and not to predict timestamps.\n\nThese tokens can either be forced or un-forced. If they are forced, the model is made to predict each token at \neach position. This allows one to control the output language and task for the Whisper model. If they are un-forced, \nthe Whisper model will automatically predict the output langauge and task itself.\n\nThe context tokens can be set accordingly:\n\n```python\nmodel.config.forced_decoder_ids = WhisperProcessor.get_decoder_prompt_ids(language=\"english\", task=\"transcribe\")\n```\n\nWhich forces the model to predict in English under the task of speech recognition.\n\n## Transcription\n\n### English to English \nIn this example, the context tokens are 'unforced', meaning the model automatically predicts the output language\n(English) and task (transcribe).\n\n```python\n>>> from transformers import WhisperProcessor, WhisperForConditionalGeneration\n>>> from datasets import load_dataset\n\n>>> # load model and processor\n>>> processor = WhisperProcessor.from_pretrained(\"openai/whisper-tiny\")\n>>> model = WhisperForConditionalGeneration.from_pretrained(\"openai/whisper-tiny\")\n>>> model.config.forced_decoder_ids = None\n\n>>> # load dummy dataset and read audio files\n>>> ds = load_dataset(\"hf-internal-testing/librispeech_asr_dummy\", \"clean\", split=\"validation\")\n>>> sample = ds[0][\"audio\"]\n>>> input_features = processor(sample[\"array\"], sampling_rate=sample[\"sampling_rate\"], return_tensors=\"pt\").input_features \n\n>>> # generate token ids\n>>> predicted_ids = model.generate(input_features)\n>>> # decode token ids to text\n>>> transcription = processor.batch_decode(predicted_ids, skip_special_tokens=False)\n['<|startoftranscript|><|en|><|transcribe|><|notimestamps|> Mr. Quilter is the apostle of the middle classes and we are glad to welcome his gospel.<|endoftext|>']\n\n>>> transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)\n[' Mr. Quilter is the apostle of the middle classes and we are glad to welcome his gospel.']\n```\nThe context tokens can be removed from the start of the transcription by setting `skip_special_tokens=True`.\n\n### French to French \nThe following example demonstrates French to French transcription by setting the decoder ids appropriately. \n\n```python\n>>> from transformers import WhisperProcessor, WhisperForConditionalGeneration\n>>> from datasets import Audio, load_dataset\n\n>>> # load model and processor\n>>> processor = WhisperProcessor.from_pretrained(\"openai/whisper-tiny\")\n>>> model = WhisperForConditionalGeneration.from_pretrained(\"openai/whisper-tiny\")\n>>> forced_decoder_ids = processor.get_decoder_prompt_ids(language=\"french\", task=\"transcribe\")\n\n>>> # load streaming dataset and read first audio sample\n>>> ds = load_dataset(\"common_voice\", \"fr\", split=\"test\", streaming=True)\n>>> ds = ds.cast_column(\"audio\", Audio(sampling_rate=16_000))\n>>> input_speech = next(iter(ds))[\"audio\"]\n>>> input_features = processor(input_speech[\"array\"], sampling_rate=input_speech[\"sampling_rate\"], return_tensors=\"pt\").input_features\n\n>>> # generate token ids\n>>> predicted_ids = model.generate(input_features, forced_decoder_ids=forced_decoder_ids)\n>>> # decode token ids to text\n>>> transcription = processor.batch_decode(predicted_ids)\n['<|startoftranscript|><|fr|><|transcribe|><|notimestamps|> Un vrai travail intéressant va enfin être mené sur ce sujet.<|endoftext|>']\n\n>>> transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)\n[' Un vrai travail intéressant va enfin être mené sur ce sujet.']\n```\n\n## Translation \nSetting the task to \"translate\" forces the Whisper model to perform speech translation.\n\n### French to English\n\n```python\n>>> from transformers import WhisperProcessor, WhisperForConditionalGeneration\n>>> from datasets import Audio, load_dataset\n\n>>> # load model and processor\n>>> processor = WhisperProcessor.from_pretrained(\"openai/whisper-tiny\")\n>>> model = WhisperForConditionalGeneration.from_pretrained(\"openai/whisper-tiny\")\n>>> forced_decoder_ids = processor.get_decoder_prompt_ids(language=\"french\", task=\"translate\")\n\n>>> # load streaming dataset and read first audio sample\n>>> ds = load_dataset(\"common_voice\", \"fr\", split=\"test\", streaming=True)\n>>> ds = ds.cast_column(\"audio\", Audio(sampling_rate=16_000))\n>>> input_speech = next(iter(ds))[\"audio\"]\n>>> input_features = processor(input_speech[\"array\"], sampling_rate=input_speech[\"sampling_rate\"], return_tensors=\"pt\").input_features\n\n>>> # generate token ids\n>>> predicted_ids = model.generate(input_features, forced_decoder_ids=forced_decoder_ids)\n>>> # decode token ids to text\n>>> transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)\n[' A very interesting work, we will finally be given on this subject.']\n```\n\n## Evaluation\n\nThis code snippet shows how to evaluate Whisper Tiny on [LibriSpeech test-clean](https://huggingface.co/datasets/librispeech_asr):\n \n```python\n>>> from datasets import load_dataset\n>>> from transformers import WhisperForConditionalGeneration, WhisperProcessor\n>>> import torch\n>>> from evaluate import load\n\n>>> librispeech_test_clean = load_dataset(\"librispeech_asr\", \"clean\", split=\"test\")\n\n>>> processor = WhisperProcessor.from_pretrained(\"openai/whisper-tiny\")\n>>> model = WhisperForConditionalGeneration.from_pretrained(\"openai/whisper-tiny\").to(\"cuda\")\n\n>>> def map_to_pred(batch):\n>>>     audio = batch[\"audio\"]\n>>>     input_features = processor(audio[\"array\"], sampling_rate=audio[\"sampling_rate\"], return_tensors=\"pt\").input_features\n>>>     batch[\"reference\"] = processor.tokenizer._normalize(batch['text'])\n>>> \n>>>     with torch.no_grad():\n>>>         predicted_ids = model.generate(input_features.to(\"cuda\"))[0]\n>>>     transcription = processor.decode(predicted_ids)\n>>>     batch[\"prediction\"] = processor.tokenizer._normalize(transcription)\n>>>     return batch\n\n>>> result = librispeech_test_clean.map(map_to_pred)\n\n>>> wer = load(\"wer\")\n>>> print(100 * wer.compute(references=result[\"reference\"], predictions=result[\"prediction\"]))\n7.547098647858638\n```\n\n## Long-Form Transcription\n\nThe Whisper model is intrinsically designed to work on audio samples of up to 30s in duration. However, by using a chunking \nalgorithm, it can be used to transcribe audio samples of up to arbitrary length. This is possible through Transformers \n[`pipeline`](https://huggingface.co/docs/transformers/main_classes/pipelines#transformers.AutomaticSpeechRecognitionPipeline) \nmethod. Chunking is enabled by setting `chunk_length_s=30` when instantiating the pipeline. With chunking enabled, the pipeline \ncan be run with batched inference. It can also be extended to predict sequence level timestamps by passing `return_timestamps=True`:\n\n```python\n>>> import torch\n>>> from transformers import pipeline\n>>> from datasets import load_dataset\n\n>>> device = \"cuda:0\" if torch.cuda.is_available() else \"cpu\"\n\n>>> pipe = pipeline(\n>>>   \"automatic-speech-recognition\",\n>>>   model=\"openai/whisper-tiny\",\n>>>   chunk_length_s=30,\n>>>   device=device,\n>>> )\n\n>>> ds = load_dataset(\"hf-internal-testing/librispeech_asr_dummy\", \"clean\", split=\"validation\")\n>>> sample = ds[0][\"audio\"]\n\n>>> prediction = pipe(sample.copy(), batch_size=8)[\"text\"]\n\" Mr. Quilter is the apostle of the middle classes, and we are glad to welcome his gospel.\"\n\n>>> # we can also return timestamps for the predictions\n>>> prediction = pipe(sample.copy(), batch_size=8, return_timestamps=True)[\"chunks\"]\n[{'text': ' Mr. Quilter is the apostle of the middle classes and we are glad to welcome his gospel.',\n  'timestamp': (0.0, 5.44)}]\n```\n\nRefer to the blog post [ASR Chunking](https://huggingface.co/blog/asr-chunking) for more details on the chunking algorithm.\n\n## Fine-Tuning\n\nThe pre-trained Whisper model demonstrates a strong ability to generalise to different datasets and domains. However, \nits predictive capabilities can be improved further for certain languages and tasks through *fine-tuning*. The blog \npost [Fine-Tune Whisper with 🤗 Transformers](https://huggingface.co/blog/fine-tune-whisper) provides a step-by-step \nguide to fine-tuning the Whisper model with as little as 5 hours of labelled data.\n\n### Evaluated Use\n\nThe primary intended users of these models are AI researchers studying robustness, generalization, capabilities, biases, and constraints of the current model. However, Whisper is also potentially quite useful as an ASR solution for developers, especially for English speech recognition. We recognize that once models are released, it is impossible to restrict access to only “intended” uses or to draw reasonable guidelines around what is or is not research.\n\nThe models are primarily trained and evaluated on ASR and speech translation to English tasks. They show strong ASR results in ~10 languages. They may exhibit additional capabilities, particularly if fine-tuned on certain tasks like voice activity detection, speaker classification, or speaker diarization but have not been robustly evaluated in these areas. We strongly recommend that users perform robust evaluations of the models in a particular context and domain before deploying them.\n\nIn particular, we caution against using Whisper models to transcribe recordings of individuals taken without their consent or purporting to use these models for any kind of subjective classification. We recommend against use in high-risk domains like decision-making contexts, where flaws in accuracy can lead to pronounced flaws in outcomes. The models are intended to transcribe and translate speech, use of the model for classification is not only not evaluated but also not appropriate, particularly to infer human attributes.\n\n\n## Training Data\n\nThe models are trained on 680,000 hours of audio and the corresponding transcripts collected from the internet. 65% of this data (or 438,000 hours) represents English-language audio and matched English transcripts, roughly 18% (or 126,000 hours) represents non-English audio and English transcripts, while the final 17% (or 117,000 hours) represents non-English audio and the corresponding transcript. This non-English data represents 98 different languages. \n\nAs discussed in [the accompanying paper](https://cdn.openai.com/papers/whisper.pdf), we see that performance on transcription in a given language is directly correlated with the amount of training data we employ in that language.\n\n\n## Performance and Limitations\n\nOur studies show that, over many existing ASR systems, the models exhibit improved robustness to accents, background noise, technical language, as well as zero shot translation from multiple languages into English; and that accuracy on speech recognition and translation is near the state-of-the-art level. \n\nHowever, because the models are trained in a weakly supervised manner using large-scale noisy data, the predictions may include texts that are not actually spoken in the audio input (i.e. hallucination). We hypothesize that this happens because, given their general knowledge of language, the models combine trying to predict the next word in audio with trying to transcribe the audio itself.\n\nOur models perform unevenly across languages, and we observe lower accuracy on low-resource and/or low-discoverability languages or languages where we have less training data. The models also exhibit disparate performance on different accents and dialects of particular languages, which may include higher word error rate across speakers of different genders, races, ages, or other demographic criteria. Our full evaluation results are presented in [the paper accompanying this release](https://cdn.openai.com/papers/whisper.pdf). \n\nIn addition, the sequence-to-sequence architecture of the model makes it prone to generating repetitive texts, which can be mitigated to some degree by beam search and temperature scheduling but not perfectly. Further analysis on these limitations are provided in [the paper](https://cdn.openai.com/papers/whisper.pdf). It is likely that this behavior and hallucinations may be worse on lower-resource and/or lower-discoverability languages.\n\n\n## Broader Implications\n\nWe anticipate that Whisper models’ transcription capabilities may be used for improving accessibility tools. While Whisper models cannot be used for real-time transcription out of the box – their speed and size suggest that others may be able to build applications on top of them that allow for near-real-time speech recognition and translation. The real value of beneficial applications built on top of Whisper models suggests that the disparate performance of these models may have real economic implications.\n\nThere are also potential dual use concerns that come with releasing Whisper. While we hope the technology will be used primarily for beneficial purposes, making ASR technology more accessible could enable more actors to build capable surveillance technologies or scale up existing surveillance efforts, as the speed and accuracy allow for affordable automatic transcription and translation of large volumes of audio communication. Moreover, these models may have some capabilities to recognize specific individuals out of the box, which in turn presents safety concerns related both to dual use and disparate performance. In practice, we expect that the cost of transcription is not the limiting factor of scaling up surveillance projects.\n\n\n### BibTeX entry and citation info\n```bibtex\n@misc{radford2022whisper,\n  doi = {10.48550/ARXIV.2212.04356},\n  url = {https://arxiv.org/abs/2212.04356},\n  author = {Radford, Alec and Kim, Jong Wook and Xu, Tao and Brockman, Greg and McLeavey, Christine and Sutskever, Ilya},\n  title = {Robust Speech Recognition via Large-Scale Weak Supervision},\n  publisher = {arXiv},\n  year = {2022},\n  copyright = {arXiv.org perpetual, non-exclusive license}\n}\n```\n"
+            },
+            {
+              "id": "Systran/faster-whisper-tiny",
+              "author": "Systran",
+              "sha": "d90ca5fe260221311c53c58e660288d3deb8d356",
+              "created_at": "2023-11-23T09:53:30+00:00",
+              "last_modified": "2023-11-23T10:42:55+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 350310,
+              "likes": 15,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "model.bin"
+                },
+                {
+                  "rfilename": "tokenizer.json"
+                },
+                {
+                  "rfilename": "vocabulary.txt"
+                }
+              ],
+              "card_data": {
+                "license": "mit",
+                "language": [
+                  "en",
+                  "zh",
+                  "de",
+                  "es",
+                  "ru",
+                  "ko",
+                  "fr",
+                  "ja",
+                  "pt",
+                  "tr",
+                  "pl",
+                  "ca",
+                  "nl",
+                  "ar",
+                  "sv",
+                  "it",
+                  "id",
+                  "hi",
+                  "fi",
+                  "vi",
+                  "he",
+                  "uk",
+                  "el",
+                  "ms",
+                  "cs",
+                  "ro",
+                  "da",
+                  "hu",
+                  "ta",
+                  "no",
+                  "th",
+                  "ur",
+                  "hr",
+                  "bg",
+                  "lt",
+                  "la",
+                  "mi",
+                  "ml",
+                  "cy",
+                  "sk",
+                  "te",
+                  "fa",
+                  "lv",
+                  "bn",
+                  "sr",
+                  "az",
+                  "sl",
+                  "kn",
+                  "et",
+                  "mk",
+                  "br",
+                  "eu",
+                  "is",
+                  "hy",
+                  "ne",
+                  "mn",
+                  "bs",
+                  "kk",
+                  "sq",
+                  "sw",
+                  "gl",
+                  "mr",
+                  "pa",
+                  "si",
+                  "km",
+                  "sn",
+                  "yo",
+                  "so",
+                  "af",
+                  "oc",
+                  "ka",
+                  "be",
+                  "tg",
+                  "sd",
+                  "gu",
+                  "am",
+                  "yi",
+                  "lo",
+                  "uz",
+                  "fo",
+                  "ht",
+                  "ps",
+                  "tk",
+                  "nn",
+                  "mt",
+                  "sa",
+                  "lb",
+                  "my",
+                  "bo",
+                  "tl",
+                  "mg",
+                  "as",
+                  "tt",
+                  "haw",
+                  "ln",
+                  "ha",
+                  "ba",
+                  "jw",
+                  "su"
+                ],
+                "library_name": "ctranslate2",
+                "tags": [
+                  "audio",
+                  "automatic-speech-recognition"
+                ],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "ctranslate2",
+                "audio",
+                "automatic-speech-recognition",
+                "en",
+                "zh",
+                "de",
+                "es",
+                "ru",
+                "ko",
+                "fr",
+                "ja",
+                "pt",
+                "tr",
+                "pl",
+                "ca",
+                "nl",
+                "ar",
+                "sv",
+                "it",
+                "id",
+                "hi",
+                "fi",
+                "vi",
+                "he",
+                "uk",
+                "el",
+                "ms",
+                "cs",
+                "ro",
+                "da",
+                "hu",
+                "ta",
+                "no",
+                "th",
+                "ur",
+                "hr",
+                "bg",
+                "lt",
+                "la",
+                "mi",
+                "ml",
+                "cy",
+                "sk",
+                "te",
+                "fa",
+                "lv",
+                "bn",
+                "sr",
+                "az",
+                "sl",
+                "kn",
+                "et",
+                "mk",
+                "br",
+                "eu",
+                "is",
+                "hy",
+                "ne",
+                "mn",
+                "bs",
+                "kk",
+                "sq",
+                "sw",
+                "gl",
+                "mr",
+                "pa",
+                "si",
+                "km",
+                "sn",
+                "yo",
+                "so",
+                "af",
+                "oc",
+                "ka",
+                "be",
+                "tg",
+                "sd",
+                "gu",
+                "am",
+                "yi",
+                "lo",
+                "uz",
+                "fo",
+                "ht",
+                "ps",
+                "tk",
+                "nn",
+                "mt",
+                "sa",
+                "lb",
+                "my",
+                "bo",
+                "tl",
+                "mg",
+                "as",
+                "tt",
+                "haw",
+                "ln",
+                "ha",
+                "ba",
+                "jw",
+                "su",
+                "license:mit",
+                "region:us"
+              ],
+              "pipeline_tag": "automatic-speech-recognition",
+              "library_name": "ctranslate2",
+              "readme": "---\nlanguage:\n  - en\n  - zh\n  - de\n  - es\n  - ru\n  - ko\n  - fr\n  - ja\n  - pt\n  - tr\n  - pl\n  - ca\n  - nl\n  - ar\n  - sv\n  - it\n  - id\n  - hi\n  - fi\n  - vi\n  - he\n  - uk\n  - el\n  - ms\n  - cs\n  - ro\n  - da\n  - hu\n  - ta\n  - 'no'\n  - th\n  - ur\n  - hr\n  - bg\n  - lt\n  - la\n  - mi\n  - ml\n  - cy\n  - sk\n  - te\n  - fa\n  - lv\n  - bn\n  - sr\n  - az\n  - sl\n  - kn\n  - et\n  - mk\n  - br\n  - eu\n  - is\n  - hy\n  - ne\n  - mn\n  - bs\n  - kk\n  - sq\n  - sw\n  - gl\n  - mr\n  - pa\n  - si\n  - km\n  - sn\n  - yo\n  - so\n  - af\n  - oc\n  - ka\n  - be\n  - tg\n  - sd\n  - gu\n  - am\n  - yi\n  - lo\n  - uz\n  - fo\n  - ht\n  - ps\n  - tk\n  - nn\n  - mt\n  - sa\n  - lb\n  - my\n  - bo\n  - tl\n  - mg\n  - as\n  - tt\n  - haw\n  - ln\n  - ha\n  - ba\n  - jw\n  - su\ntags:\n  - audio\n  - automatic-speech-recognition\nlicense: mit\nlibrary_name: ctranslate2\n---\n\n# Whisper tiny model for CTranslate2\n\nThis repository contains the conversion of [openai/whisper-tiny](https://huggingface.co/openai/whisper-tiny) to the [CTranslate2](https://github.com/OpenNMT/CTranslate2) model format.\n\nThis model can be used in CTranslate2 or projects based on CTranslate2 such as [faster-whisper](https://github.com/systran/faster-whisper).\n\n## Example\n\n```python\nfrom faster_whisper import WhisperModel\n\nmodel = WhisperModel(\"tiny\")\n\nsegments, info = model.transcribe(\"audio.mp3\")\nfor segment in segments:\n    print(\"[%.2fs -> %.2fs] %s\" % (segment.start, segment.end, segment.text))\n```\n\n## Conversion details\n\nThe original model was converted with the following command:\n\n```\nct2-transformers-converter --model openai/whisper-tiny --output_dir faster-whisper-tiny \\\n    --copy_files tokenizer.json --quantization float16\n```\n\nNote that the model weights are saved in FP16. This type can be changed when the model is loaded using the [`compute_type` option in CTranslate2](https://opennmt.net/CTranslate2/quantization.html).\n\n## More information\n\n**For more information about the original model, see its [model card](https://huggingface.co/openai/whisper-tiny).**\n"
+            },
+            {
+              "id": "openai/whisper-tiny.en",
+              "author": "openai",
+              "sha": "87c7102498dcde7456f24cfd30239ca606ed9063",
+              "created_at": "2022-09-26T06:57:49+00:00",
+              "last_modified": "2024-01-22T17:55:12+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 90191,
+              "likes": 108,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "added_tokens.json"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "flax_model.msgpack"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "merges.txt"
+                },
+                {
+                  "rfilename": "model.safetensors"
+                },
+                {
+                  "rfilename": "normalizer.json"
+                },
+                {
+                  "rfilename": "preprocessor_config.json"
+                }
+              ],
+              "card_data": {
+                "license": "apache-2.0",
+                "language": [
+                  "en"
+                ],
+                "pipeline_tag": "automatic-speech-recognition",
+                "tags": [
+                  "audio",
+                  "automatic-speech-recognition",
+                  "hf-asr-leaderboard"
+                ],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": [
+                  {
+                    "example_title": "Librispeech sample 1",
+                    "src": "https://cdn-media.huggingface.co/speech_samples/sample1.flac"
+                  },
+                  {
+                    "example_title": "Librispeech sample 2",
+                    "src": "https://cdn-media.huggingface.co/speech_samples/sample2.flac"
+                  }
+                ]
+              },
+              "tags": [
+                "transformers",
+                "pytorch",
+                "tf",
+                "jax",
+                "safetensors",
+                "whisper",
+                "automatic-speech-recognition",
+                "audio",
+                "hf-asr-leaderboard",
+                "en",
+                "arxiv:2212.04356",
+                "license:apache-2.0",
+                "model-index",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "automatic-speech-recognition",
+              "library_name": "transformers",
+              "readme": "---\nlanguage: \n- en\ntags:\n- audio\n- automatic-speech-recognition\n- hf-asr-leaderboard\nwidget:\n- example_title: Librispeech sample 1\n  src: https://cdn-media.huggingface.co/speech_samples/sample1.flac\n- example_title: Librispeech sample 2\n  src: https://cdn-media.huggingface.co/speech_samples/sample2.flac\nmodel-index:\n- name: whisper-tiny.en\n  results:\n  - task:\n      name: Automatic Speech Recognition\n      type: automatic-speech-recognition\n    dataset:\n      name: LibriSpeech (clean)\n      type: librispeech_asr\n      config: clean\n      split: test\n      args: \n        language: en\n    metrics:\n    - name: Test WER\n      type: wer\n      value: 8.4372112320138\n  - task:\n      name: Automatic Speech Recognition\n      type: automatic-speech-recognition\n    dataset:\n      name: LibriSpeech (other)\n      type: librispeech_asr\n      config: other\n      split: test\n      args: \n        language: en\n    metrics:\n    - name: Test WER\n      type: wer\n      value: 14.857607503498355\npipeline_tag: automatic-speech-recognition\nlicense: apache-2.0\n---\n\n# Whisper\n\nWhisper is a pre-trained model for automatic speech recognition (ASR) and speech translation. Trained on 680k hours \nof labelled data, Whisper models demonstrate a strong ability to generalise to many datasets and domains **without** the need \nfor fine-tuning.\n\nWhisper was proposed in the paper [Robust Speech Recognition via Large-Scale Weak Supervision](https://arxiv.org/abs/2212.04356) \nby Alec Radford et al. from OpenAI. The original code repository can be found [here](https://github.com/openai/whisper).\n\n**Disclaimer**: Content for this model card has partly been written by the Hugging Face team, and parts of it were \ncopied and pasted from the original model card.\n\n## Model details\n\nWhisper is a Transformer based encoder-decoder model, also referred to as a _sequence-to-sequence_ model. \nIt was trained on 680k hours of labelled speech data annotated using large-scale weak supervision. \n\nThe models were trained on either English-only data or multilingual data. The English-only models were trained \non the task of speech recognition. The multilingual models were trained on both speech recognition and speech \ntranslation. For speech recognition, the model predicts transcriptions in the *same* language as the audio. \nFor speech translation, the model predicts transcriptions to a *different* language to the audio.\n\nWhisper checkpoints come in five configurations of varying model sizes.\nThe smallest four are trained on either English-only or multilingual data.\nThe largest checkpoints are multilingual only. All ten of the pre-trained checkpoints \nare available on the [Hugging Face Hub](https://huggingface.co/models?search=openai/whisper). The \ncheckpoints are summarised in the following table with links to the models on the Hub:\n\n| Size     | Parameters | English-only                                         | Multilingual                                        |\n|----------|------------|------------------------------------------------------|-----------------------------------------------------|\n| tiny     | 39 M       | [✓](https://huggingface.co/openai/whisper-tiny.en)   | [✓](https://huggingface.co/openai/whisper-tiny)     |\n| base     | 74 M       | [✓](https://huggingface.co/openai/whisper-base.en)   | [✓](https://huggingface.co/openai/whisper-base)     |\n| small    | 244 M      | [✓](https://huggingface.co/openai/whisper-small.en)  | [✓](https://huggingface.co/openai/whisper-small)    |\n| medium   | 769 M      | [✓](https://huggingface.co/openai/whisper-medium.en) | [✓](https://huggingface.co/openai/whisper-medium)   |\n| large    | 1550 M     | x                                                    | [✓](https://huggingface.co/openai/whisper-large)    |\n| large-v2 | 1550 M     | x                                                    | [✓](https://huggingface.co/openai/whisper-large-v2) |\n\n# Usage\n\nThis checkpoint is an *English-only* model, meaning it can be used for English speech recognition. Multilingual speech \nrecognition or speech translation is possible through use of a multilingual checkpoint.\n\nTo transcribe audio samples, the model has to be used alongside a [`WhisperProcessor`](https://huggingface.co/docs/transformers/model_doc/whisper#transformers.WhisperProcessor).\n\nThe `WhisperProcessor` is used to:\n1. Pre-process the audio inputs (converting them to log-Mel spectrograms for the model)\n2. Post-process the model outputs (converting them from tokens to text)\n\n## Transcription\n\n```python\n>>> from transformers import WhisperProcessor, WhisperForConditionalGeneration\n>>> from datasets import load_dataset\n\n>>> # load model and processor\n>>> processor = WhisperProcessor.from_pretrained(\"openai/whisper-tiny.en\")\n>>> model = WhisperForConditionalGeneration.from_pretrained(\"openai/whisper-tiny.en\")\n\n>>> # load dummy dataset and read audio files\n>>> ds = load_dataset(\"hf-internal-testing/librispeech_asr_dummy\", \"clean\", split=\"validation\")\n>>> sample = ds[0][\"audio\"]\n>>> input_features = processor(sample[\"array\"], sampling_rate=sample[\"sampling_rate\"], return_tensors=\"pt\").input_features \n\n>>> # generate token ids\n>>> predicted_ids = model.generate(input_features)\n>>> # decode token ids to text\n>>> transcription = processor.batch_decode(predicted_ids, skip_special_tokens=False)\n['<|startoftranscript|><|notimestamps|> Mr. Quilter is the apostle of the middle classes, and we are glad to welcome his gospel.<|endoftext|>']\n\n>>> transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)\n[' Mr. Quilter is the apostle of the middle classes and we are glad to welcome his gospel.']\n```\nThe context tokens can be removed from the start of the transcription by setting `skip_special_tokens=True`.\n\n## Evaluation\n\nThis code snippet shows how to evaluate Whisper tiny.en on [LibriSpeech test-clean](https://huggingface.co/datasets/librispeech_asr):\n \n```python\n>>> from datasets import load_dataset\n>>> from transformers import WhisperForConditionalGeneration, WhisperProcessor\n>>> import torch\n>>> from evaluate import load\n\n>>> librispeech_test_clean = load_dataset(\"librispeech_asr\", \"clean\", split=\"test\")\n\n>>> processor = WhisperProcessor.from_pretrained(\"openai/whisper-tiny.en\")\n>>> model = WhisperForConditionalGeneration.from_pretrained(\"openai/whisper-tiny.en\").to(\"cuda\")\n\n>>> def map_to_pred(batch):\n>>>     audio = batch[\"audio\"]\n>>>     input_features = processor(audio[\"array\"], sampling_rate=audio[\"sampling_rate\"], return_tensors=\"pt\").input_features\n>>>     batch[\"reference\"] = processor.tokenizer._normalize(batch['text'])\n>>> \n>>>     with torch.no_grad():\n>>>         predicted_ids = model.generate(input_features.to(\"cuda\"))[0]\n>>>     transcription = processor.decode(predicted_ids)\n>>>     batch[\"prediction\"] = processor.tokenizer._normalize(transcription)\n>>>     return batch\n\n>>> result = librispeech_test_clean.map(map_to_pred)\n\n>>> wer = load(\"wer\")\n>>> print(100 * wer.compute(references=result[\"reference\"], predictions=result[\"prediction\"]))\n5.655609406528749\n```\n\n## Long-Form Transcription\n\nThe Whisper model is intrinsically designed to work on audio samples of up to 30s in duration. However, by using a chunking \nalgorithm, it can be used to transcribe audio samples of up to arbitrary length. This is possible through Transformers \n[`pipeline`](https://huggingface.co/docs/transformers/main_classes/pipelines#transformers.AutomaticSpeechRecognitionPipeline) \nmethod. Chunking is enabled by setting `chunk_length_s=30` when instantiating the pipeline. With chunking enabled, the pipeline \ncan be run with batched inference. It can also be extended to predict sequence level timestamps by passing `return_timestamps=True`:\n\n```python\n>>> import torch\n>>> from transformers import pipeline\n>>> from datasets import load_dataset\n\n>>> device = \"cuda:0\" if torch.cuda.is_available() else \"cpu\"\n\n>>> pipe = pipeline(\n>>>   \"automatic-speech-recognition\",\n>>>   model=\"openai/whisper-tiny.en\",\n>>>   chunk_length_s=30,\n>>>   device=device,\n>>> )\n\n>>> ds = load_dataset(\"hf-internal-testing/librispeech_asr_dummy\", \"clean\", split=\"validation\")\n>>> sample = ds[0][\"audio\"]\n\n>>> prediction = pipe(sample.copy(), batch_size=8)[\"text\"]\n\" Mr. Quilter is the apostle of the middle classes, and we are glad to welcome his gospel.\"\n\n>>> # we can also return timestamps for the predictions\n>>> prediction = pipe(sample.copy(), batch_size=8, return_timestamps=True)[\"chunks\"]\n[{'text': ' Mr. Quilter is the apostle of the middle classes and we are glad to welcome his gospel.',\n  'timestamp': (0.0, 5.44)}]\n```\n\nRefer to the blog post [ASR Chunking](https://huggingface.co/blog/asr-chunking) for more details on the chunking algorithm.\n\n## Fine-Tuning\n\nThe pre-trained Whisper model demonstrates a strong ability to generalise to different datasets and domains. However, \nits predictive capabilities can be improved further for certain languages and tasks through *fine-tuning*. The blog \npost [Fine-Tune Whisper with 🤗 Transformers](https://huggingface.co/blog/fine-tune-whisper) provides a step-by-step \nguide to fine-tuning the Whisper model with as little as 5 hours of labelled data.\n\n### Evaluated Use\n\nThe primary intended users of these models are AI researchers studying robustness, generalization, capabilities, biases, and constraints of the current model. However, Whisper is also potentially quite useful as an ASR solution for developers, especially for English speech recognition. We recognize that once models are released, it is impossible to restrict access to only “intended” uses or to draw reasonable guidelines around what is or is not research.\n\nThe models are primarily trained and evaluated on ASR and speech translation to English tasks. They show strong ASR results in ~10 languages. They may exhibit additional capabilities, particularly if fine-tuned on certain tasks like voice activity detection, speaker classification, or speaker diarization but have not been robustly evaluated in these areas. We strongly recommend that users perform robust evaluations of the models in a particular context and domain before deploying them.\n\nIn particular, we caution against using Whisper models to transcribe recordings of individuals taken without their consent or purporting to use these models for any kind of subjective classification. We recommend against use in high-risk domains like decision-making contexts, where flaws in accuracy can lead to pronounced flaws in outcomes. The models are intended to transcribe and translate speech, use of the model for classification is not only not evaluated but also not appropriate, particularly to infer human attributes.\n\n\n## Training Data\n\nThe models are trained on 680,000 hours of audio and the corresponding transcripts collected from the internet. 65% of this data (or 438,000 hours) represents English-language audio and matched English transcripts, roughly 18% (or 126,000 hours) represents non-English audio and English transcripts, while the final 17% (or 117,000 hours) represents non-English audio and the corresponding transcript. This non-English data represents 98 different languages. \n\nAs discussed in [the accompanying paper](https://cdn.openai.com/papers/whisper.pdf), we see that performance on transcription in a given language is directly correlated with the amount of training data we employ in that language.\n\n\n## Performance and Limitations\n\nOur studies show that, over many existing ASR systems, the models exhibit improved robustness to accents, background noise, technical language, as well as zero shot translation from multiple languages into English; and that accuracy on speech recognition and translation is near the state-of-the-art level. \n\nHowever, because the models are trained in a weakly supervised manner using large-scale noisy data, the predictions may include texts that are not actually spoken in the audio input (i.e. hallucination). We hypothesize that this happens because, given their general knowledge of language, the models combine trying to predict the next word in audio with trying to transcribe the audio itself.\n\nOur models perform unevenly across languages, and we observe lower accuracy on low-resource and/or low-discoverability languages or languages where we have less training data. The models also exhibit disparate performance on different accents and dialects of particular languages, which may include higher word error rate across speakers of different genders, races, ages, or other demographic criteria. Our full evaluation results are presented in [the paper accompanying this release](https://cdn.openai.com/papers/whisper.pdf). \n\nIn addition, the sequence-to-sequence architecture of the model makes it prone to generating repetitive texts, which can be mitigated to some degree by beam search and temperature scheduling but not perfectly. Further analysis on these limitations are provided in [the paper](https://cdn.openai.com/papers/whisper.pdf). It is likely that this behavior and hallucinations may be worse on lower-resource and/or lower-discoverability languages.\n\n\n## Broader Implications\n\nWe anticipate that Whisper models’ transcription capabilities may be used for improving accessibility tools. While Whisper models cannot be used for real-time transcription out of the box – their speed and size suggest that others may be able to build applications on top of them that allow for near-real-time speech recognition and translation. The real value of beneficial applications built on top of Whisper models suggests that the disparate performance of these models may have real economic implications.\n\nThere are also potential dual use concerns that come with releasing Whisper. While we hope the technology will be used primarily for beneficial purposes, making ASR technology more accessible could enable more actors to build capable surveillance technologies or scale up existing surveillance efforts, as the speed and accuracy allow for affordable automatic transcription and translation of large volumes of audio communication. Moreover, these models may have some capabilities to recognize specific individuals out of the box, which in turn presents safety concerns related both to dual use and disparate performance. In practice, we expect that the cost of transcription is not the limiting factor of scaling up surveillance projects.\n\n\n### BibTeX entry and citation info\n```bibtex\n@misc{radford2022whisper,\n  doi = {10.48550/ARXIV.2212.04356},\n  url = {https://arxiv.org/abs/2212.04356},\n  author = {Radford, Alec and Kim, Jong Wook and Xu, Tao and Brockman, Greg and McLeavey, Christine and Sutskever, Ilya},\n  title = {Robust Speech Recognition via Large-Scale Weak Supervision},\n  publisher = {arXiv},\n  year = {2022},\n  copyright = {arXiv.org perpetual, non-exclusive license}\n}\n```\n"
+            },
+            {
+              "id": "SproutsAI/embedding-model",
+              "author": "SproutsAI",
+              "sha": "4fc6d1a2f95255382fa09e6b5aaf818371f1fa03",
+              "created_at": "2024-09-11T04:13:31+00:00",
+              "last_modified": "2024-09-11T04:41:39+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 12,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "config_sentence_transformers.json"
+                },
+                {
+                  "rfilename": "modules.json"
+                },
+                {
+                  "rfilename": "pytorch_model.bin"
+                },
+                {
+                  "rfilename": "sentence_bert_config.json"
+                },
+                {
+                  "rfilename": "special_tokens_map.json"
+                },
+                {
+                  "rfilename": "tokenizer.json"
+                },
+                {
+                  "rfilename": "vocab.txt"
+                }
+              ],
+              "card_data": {
+                "language": [],
+                "pipeline_tag": "sentence-similarity",
+                "tags": [
+                  "sentence-transformers",
+                  "feature-extraction",
+                  "sentence-similarity",
+                  "transformers"
+                ],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "sentence-transformers",
+                "pytorch",
+                "bert",
+                "feature-extraction",
+                "sentence-similarity",
+                "transformers",
+                "autotrain_compatible",
+                "text-embeddings-inference",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "sentence-similarity",
+              "library_name": "sentence-transformers",
+              "readme": "---\npipeline_tag: sentence-similarity\ntags:\n- sentence-transformers\n- feature-extraction\n- sentence-similarity\n- transformers\n\n---\n\n# SproutsAI/embedding-model\n\nThis is a [sentence-transformers](https://www.SBERT.net) model: It maps sentences & paragraphs to a 384 dimensional dense vector space and can be used for tasks like clustering or semantic search.\n\n<!--- Describe your model here -->\n\n## Usage (Sentence-Transformers)\n\nUsing this model becomes easy when you have [sentence-transformers](https://www.SBERT.net) installed:\n\n```\npip install -U sentence-transformers\n```\n\nThen you can use the model like this:\n\n```python\nfrom sentence_transformers import SentenceTransformer\nsentences = [\"This is an example sentence\", \"Each sentence is converted\"]\n\nmodel = SentenceTransformer('SproutsAI/embedding-model')\nembeddings = model.encode(sentences)\nprint(embeddings)\n```\n\n\n\n## Usage (HuggingFace Transformers)\nWithout [sentence-transformers](https://www.SBERT.net), you can use the model like this: First, you pass your input through the transformer model, then you have to apply the right pooling-operation on-top of the contextualized word embeddings.\n\n```python\nfrom transformers import AutoTokenizer, AutoModel\nimport torch\n\n\ndef cls_pooling(model_output, attention_mask):\n    return model_output[0][:,0]\n\n\n# Sentences we want sentence embeddings for\nsentences = ['This is an example sentence', 'Each sentence is converted']\n\n# Load model from HuggingFace Hub\ntokenizer = AutoTokenizer.from_pretrained('SproutsAI/embedding-model')\nmodel = AutoModel.from_pretrained('SproutsAI/embedding-model')\n\n# Tokenize sentences\nencoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')\n\n# Compute token embeddings\nwith torch.no_grad():\n    model_output = model(**encoded_input)\n\n# Perform pooling. In this case, cls pooling.\nsentence_embeddings = cls_pooling(model_output, encoded_input['attention_mask'])\n\nprint(\"Sentence embeddings:\")\nprint(sentence_embeddings)\n```\n\n\n\n## Evaluation Results\n\n<!--- Describe how your model was evaluated -->\n\nFor an automated evaluation of this model, see the *Sentence Embeddings Benchmark*: [https://seb.sbert.net](https://seb.sbert.net?model_name={MODEL_NAME})\n\n\n## Training\nThe model was trained with the parameters:\n\n**DataLoader**:\n\n`torch.utils.data.dataloader.DataLoader` of length 1370 with parameters:\n```\n{'batch_size': 8, 'sampler': 'torch.utils.data.sampler.SequentialSampler', 'batch_sampler': 'torch.utils.data.sampler.BatchSampler'}\n```\n\n**Loss**:\n\n`sentence_transformers.losses.MultipleNegativesRankingLoss.MultipleNegativesRankingLoss` with parameters:\n  ```\n  {'scale': 20.0, 'similarity_fct': 'cos_sim'}\n  ```\n\nParameters of the fit()-Method:\n```\n{\n    \"epochs\": 5,\n    \"evaluation_steps\": 50,\n    \"evaluator\": \"sentence_transformers.evaluation.InformationRetrievalEvaluator.InformationRetrievalEvaluator\",\n    \"max_grad_norm\": 1,\n    \"optimizer_class\": \"<class 'torch.optim.adamw.AdamW'>\",\n    \"optimizer_params\": {\n        \"lr\": 2e-05\n    },\n    \"scheduler\": \"WarmupLinear\",\n    \"steps_per_epoch\": null,\n    \"warmup_steps\": 685,\n    \"weight_decay\": 0.01\n}\n```\n\n\n## Full Model Architecture\n```\nSentenceTransformer(\n  (0): Transformer({'max_seq_length': 512, 'do_lower_case': True}) with Transformer model: BertModel \n  (1): Pooling({'word_embedding_dimension': 384, 'pooling_mode_cls_token': True, 'pooling_mode_mean_tokens': False, 'pooling_mode_max_tokens': False, 'pooling_mode_mean_sqrt_len_tokens': False})\n)\n```\n\n### Authors\n- **Sourav Kumar Khan** - *Initial work* - [LinkedIn](https://www.linkedin.com/in/sourav-kumar-khan-91639b1a1/)\n\n<!--- Describe where people can find more information -->"
+            },
+            {
+              "id": "the-acorn-ai/spiral-octothinker-8b-multi-step00032",
+              "author": "the-acorn-ai",
+              "sha": "b00e0a597f6ffbe3859abe4fd2b4ce0fb4b5556c",
+              "created_at": "2025-08-28T01:20:35+00:00",
+              "last_modified": "2025-09-08T02:11:45+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 115,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "chat_template.jinja"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "model-00001-of-00004.safetensors"
+                },
+                {
+                  "rfilename": "model-00002-of-00004.safetensors"
+                },
+                {
+                  "rfilename": "model-00003-of-00004.safetensors"
+                },
+                {
+                  "rfilename": "model-00004-of-00004.safetensors"
+                },
+                {
+                  "rfilename": "model.safetensors.index.json"
+                }
+              ],
+              "card_data": {
+                "license": "apache-2.0",
+                "language": [
+                  "en"
+                ],
+                "library_name": "transformers",
+                "pipeline_tag": "text-generation",
+                "tags": [
+                  "spiral",
+                  "self-play",
+                  "reinforcement-learning",
+                  "octothinker",
+                  "multi-agent"
+                ],
+                "datasets": [],
+                "base_model": "OctoAI/OctoThinker-3B",
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "safetensors",
+                "llama",
+                "text-generation",
+                "spiral",
+                "self-play",
+                "reinforcement-learning",
+                "octothinker",
+                "multi-agent",
+                "conversational",
+                "en",
+                "license:apache-2.0",
+                "autotrain_compatible",
+                "text-generation-inference",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "text-generation",
+              "library_name": "transformers",
+              "readme": "---\nbase_model: OctoAI/OctoThinker-3B\nlicense: apache-2.0\nlanguage:\n- en\nlibrary_name: transformers\npipeline_tag: text-generation\ntags:\n- spiral\n- self-play\n- reinforcement-learning\n- octothinker\n- multi-agent\n---\n\n# SPIRAL OctoThinker-3B Multi-Agent Model\n\nThis model was trained using the SPIRAL (Self-Play Iterative Reinforcement learning for Adaptation and Learning) framework.\n\n## Model Details\n\n- **Base Model**: OctoAI/OctoThinker-3B\n- **Training Framework**: SPIRAL\n- **Checkpoint**: step_00032\n- **Model Size**: 3B parameters\n- **Training Date**: 2025-09-07\n\n## Training Configuration\n\nThe model was trained with self-play on multiple environments:\n- KuhnPoker-v1\n- TicTacToe-v0  \n- SimpleNegotiation-v1\n\n### Training Parameters\n```json\n{\n  \"learning_rate\": \"1e-6\",\n  \"train_batch_size\": 128,\n  \"num_ppo_epochs\": 2,\n  \"temperature\": 1.0,\n  \"max_model_len\": 16384,\n  \"environments\": [\n    \"KuhnPoker-v1\",\n    \"TicTacToe-v0\",\n    \"SimpleNegotiation-v1\"\n  ],\n  \"base_model\": \"OctoAI/OctoThinker-3B\",\n  \"framework\": \"SPIRAL\"\n}\n```\n\n## Usage\n\n```python\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\nimport torch\n\ntokenizer = AutoTokenizer.from_pretrained(\"the-acorn-ai/spiral-octothinker-8b-multi-step00032\")\nmodel = AutoModelForCausalLM.from_pretrained(\n    \"the-acorn-ai/spiral-octothinker-8b-multi-step00032\",\n    torch_dtype=torch.bfloat16,\n    device_map=\"auto\"\n)\n\n# Generate text\ninputs = tokenizer(\"Your prompt here\", return_tensors=\"pt\")\noutputs = model.generate(**inputs, max_length=100)\nresponse = tokenizer.decode(outputs[0], skip_special_tokens=True)\n```\n\n## License\n\nThis model is licensed under the Apache License 2.0.\n"
+            },
+            {
+              "id": "ARG-NCTU/detr-resnet-50-finetuned-federated-masked-TW_Marine_2cls_dataset",
+              "author": "ARG-NCTU",
+              "sha": "510b355da6af1e743377b327bd7013cbe16d9cdd",
+              "created_at": "2025-08-06T07:58:54+00:00",
+              "last_modified": "2025-08-18T23:23:23+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 49,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "model.safetensors"
+                },
+                {
+                  "rfilename": "preprocessor_config.json"
+                },
+                {
+                  "rfilename": "runs/Aug06_07-58-54_285efbe27f86/events.out.tfevents.1754467135.285efbe27f86.7.0"
+                },
+                {
+                  "rfilename": "runs/Aug06_07-58-54_285efbe27f86/events.out.tfevents.1754467421.285efbe27f86.7.1"
+                },
+                {
+                  "rfilename": "runs/Aug06_08-04-06_285efbe27f86/events.out.tfevents.1754467517.285efbe27f86.7.2"
+                },
+                {
+                  "rfilename": "runs/Aug06_08-05-28_285efbe27f86/events.out.tfevents.1754467528.285efbe27f86.7.3"
+                },
+                {
+                  "rfilename": "runs/Aug06_09-57-35_a01ed72de425/events.out.tfevents.1754474256.a01ed72de425.7.0"
+                }
+              ],
+              "card_data": {
+                "license": "apache-2.0",
+                "language": [],
+                "library_name": "transformers",
+                "tags": [
+                  "generated_from_trainer"
+                ],
+                "datasets": [],
+                "base_model": "facebook/detr-resnet-50",
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "tensorboard",
+                "safetensors",
+                "detr",
+                "object-detection",
+                "generated_from_trainer",
+                "base_model:facebook/detr-resnet-50",
+                "base_model:finetune:facebook/detr-resnet-50",
+                "license:apache-2.0",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "object-detection",
+              "library_name": "transformers",
+              "readme": "---\nlibrary_name: transformers\nlicense: apache-2.0\nbase_model: facebook/detr-resnet-50\ntags:\n- generated_from_trainer\nmodel-index:\n- name: detr-resnet-50-finetuned-federated-fedprox-masked-3-clients-3-datasets\n  results: []\n---\n\n<!-- This model card has been generated automatically according to the information the Trainer had access to. You\nshould probably proofread and complete it, then remove this comment. -->\n\n# detr-resnet-50-finetuned-federated-fedprox-masked-3-clients-3-datasets\n\nThis model is a fine-tuned version of [facebook/detr-resnet-50](https://huggingface.co/facebook/detr-resnet-50) on an unknown dataset.\n\n## Model description\n\nMore information needed\n\n## Intended uses & limitations\n\nMore information needed\n\n## Training and evaluation data\n\nMore information needed\n\n## Training procedure\n\n### Training hyperparameters\n\nThe following hyperparameters were used during training:\n- learning_rate: 1e-05\n- train_batch_size: 8\n- eval_batch_size: 8\n- seed: 42\n- optimizer: Use OptimizerNames.ADAMW_TORCH with betas=(0.9,0.999) and epsilon=1e-08 and optimizer_args=No additional optimizer arguments\n- lr_scheduler_type: linear\n- num_epochs: 40\n\n### Framework versions\n\n- Transformers 4.52.4\n- Pytorch 2.7.1+cu128\n- Datasets 3.1.0\n- Tokenizers 0.21.4\n"
+            }
+          ],
+          "datasets": []
+        }
+      }
+    }
   },
   "idea_info_history": [
     {
