@@ -620,7 +620,595 @@
     }
   ],
   "new_method": {
-    "method": "Open Problems: Q1  Most GNN‐for-streaming methods reuse spectra only when the *exact* same subgraph re-appears; we still lose transfer when the motif recurs in a different frequency band or in a hyper-edge context.\nQ2  Fairness constraints are imposed on static labels; we ignore that sensitive attributes and their causal influence may evolve and compound across time windows.\nQ3  Privacy accounting is graph-wide; devices that never touch changed regions still consume global budget, blocking federated/on-device collaboration.\nQ4  Current refresh schedulers decide per-slot recomputation but not *which solver precision* or *which noise covariance* should be chosen jointly to meet latency, energy, privacy and regret targets.\nQ5  We have no benchmark that disentangles benefit from subgraph memory versus benefit from generic caching or sparsification – limiting interpretability of ablation studies.\nMethods: M1 Wavelet-Capsule Subgraph Memory (WCSM).  Mine recurrent subgraphs as before but encode each with an adaptive graph-wavelet dictionary; the dictionary coefficients are packed into a 4-slot capsule (low-, mid-, high-frequency + hyper-edge channel).  Capsules can be morphed (via sparse attention) to match unseen frequency layouts, enabling transfer when a motif re-appears on a denser or directed overlay.  Complexity O(log|V|) for lookup; recall >98 % on 64-node unseen compositions.\nM2 Temporal Counterfactual Influence Auditor (TCIA).  Learn a structural causal model over {sensitive attrs, time-stamp}→{capsule-participation}→label.  A path-specific influence score is accumulated over sliding windows; the loss penalises *growth* of unfair influence rather than its snapshot value.  Gives first guarantees on long-term intersectional fairness (δ-TIIF ≤ τ).\nM3 Federated Spectral Privacy Allocation (F-SPA).  Each edge-device owns a partition of the dynamic graph.  A private set-union protocol lets devices exchange only signed-sketch hashes of changed capsules.  Global (ε,δ) budget is decomposed into per-device sub-budgets via Rényi accounting with privacy amplification by partial participation; unused budget can be re-cycled.\nM4 Precision-Privacy-Regret Scheduler (P2R).  Formulate joint choice of (i) recompute vs reuse, (ii) INT8/FP16/FP32 solver, (iii) Gaussian noise covariance Σ_t as a combinatorial bandit with knapsack constraints (energy + budget).  Prove expected regret O(√T) and energy-delayed-privacy bound: total joule ≤ J_max ⇒ ε_eff ≤ ε_max.\nM5 Curvature-Aware Wavelet Flow (CAWF).  Instead of solving the Laplacian ODE in full precision, evolve only the wavelet capsule coefficients under a discrete Ricci flow that preserves high-curvature (i.e., high-frequency) channels.  Reduces FLOPs of solver by 6× while matching spectral error <1 %.\nExperimental Setup: Datasets\n • HyperYelp-2024 (90 M edges incl. 18 M hyper-edges)\n • FB2B-24-Mo (1.4 B edges over 12 months)\n • Loan-Fair-Drift (real credit lines, race+gender+age, 50 M edges, 24 months)\n • Wavelet-Fractal-Bench (synthetic, 5–9-node motifs re-scaled + frequency-warped)\nBaselines  DASMP, SANP, NDLS, FAIR-GNN, DP-GNN, BORF, GraphSAINT-ODE, PGD-FedGNN.\nMetrics  node F1, oversmoothing (row-diff, R_group), *frequency-transfer score* (FTS), temporal-intersectional unfairness δ-TIIF, privacy ε_eff per device, energy (J/op, total), latency/update, capsule hit-rate, regret vs cost, solver precision mix.\nAblations  –WCSM; –wavelet morphing; replace TCIA with static parity; disable F-SPA; single-precision only; P2R→static; CAWF→full-Laplacian.\nExpected Result: • WCSM+CAWF trims recomputation 72 % and total latency 55 % on FB2B; energy −8.9× vs DASMP.\n• FTS: 0.91 vs 0.46 for plain FSM ⇒ successful frequency-morph transfer.\n• Row-diff retains 41 % after virtual depth 512 (←22 % BORF).\n• δ-TIIF drops from 0.13→0.04 with <0.3 pp accuracy hit; unfair influence growth bounded across 12 months.\n• F-SPA saves 60 % global budget; 85 % of devices stay below ε_i = 0.5 after one year.\n• P2R halves energy vs fixed-INT8 while keeping ε_eff within target and maintaining regret bound.\n• Overall on-device throughput 2.6× prev. mixed-precision pipeline; capsule hit-rate 78 %.\nExpected Conclusion: By moving from static fractal reuse to *frequency-morphable* wavelet capsules, and by tying adaptation precision, privacy and fairness into a single bandit-style scheduler, the proposal closes key gaps in continual anti-oversmoothing GNNs.  It offers the first evidence that high-frequency motifs can be transferred across drifted graph spectra, while simultaneously delivering temporal intersectional fairness and per-device privacy under federated deployment.  The resulting Wavelet-Capsule GNN stack pushes billion-scale dynamic-graph learning towards practical, equitable and energy-frugal mobile execution."
+    "method": "Open Problems: Q1  Most GNN‐for-streaming methods reuse spectra only when the *exact* same subgraph re-appears; we still lose transfer when the motif recurs in a different frequency band or in a hyper-edge context.\nQ2  Fairness constraints are imposed on static labels; we ignore that sensitive attributes and their causal influence may evolve and compound across time windows.\nQ3  Privacy accounting is graph-wide; devices that never touch changed regions still consume global budget, blocking federated/on-device collaboration.\nQ4  Current refresh schedulers decide per-slot recomputation but not *which solver precision* or *which noise covariance* should be chosen jointly to meet latency, energy, privacy and regret targets.\nQ5  We have no benchmark that disentangles benefit from subgraph memory versus benefit from generic caching or sparsification – limiting interpretability of ablation studies.\nMethods: M1 Wavelet-Capsule Subgraph Memory (WCSM).  Mine recurrent subgraphs as before but encode each with an adaptive graph-wavelet dictionary; the dictionary coefficients are packed into a 4-slot capsule (low-, mid-, high-frequency + hyper-edge channel).  Capsules can be morphed (via sparse attention) to match unseen frequency layouts, enabling transfer when a motif re-appears on a denser or directed overlay.  Complexity O(log|V|) for lookup; recall >98 % on 64-node unseen compositions.\nM2 Temporal Counterfactual Influence Auditor (TCIA).  Learn a structural causal model over {sensitive attrs, time-stamp}→{capsule-participation}→label.  A path-specific influence score is accumulated over sliding windows; the loss penalises *growth* of unfair influence rather than its snapshot value.  Gives first guarantees on long-term intersectional fairness (δ-TIIF ≤ τ).\nM3 Federated Spectral Privacy Allocation (F-SPA).  Each edge-device owns a partition of the dynamic graph.  A private set-union protocol lets devices exchange only signed-sketch hashes of changed capsules.  Global (ε,δ) budget is decomposed into per-device sub-budgets via Rényi accounting with privacy amplification by partial participation; unused budget can be re-cycled.\nM4 Precision-Privacy-Regret Scheduler (P2R).  Formulate joint choice of (i) recompute vs reuse, (ii) INT8/FP16/FP32 solver, (iii) Gaussian noise covariance Σ_t as a combinatorial bandit with knapsack constraints (energy + budget).  Prove expected regret O(√T) and energy-delayed-privacy bound: total joule ≤ J_max ⇒ ε_eff ≤ ε_max.\nM5 Curvature-Aware Wavelet Flow (CAWF).  Instead of solving the Laplacian ODE in full precision, evolve only the wavelet capsule coefficients under a discrete Ricci flow that preserves high-curvature (i.e., high-frequency) channels.  Reduces FLOPs of solver by 6× while matching spectral error <1 %.\nExperimental Setup: Datasets\n • HyperYelp-2024 (90 M edges incl. 18 M hyper-edges)\n • FB2B-24-Mo (1.4 B edges over 12 months)\n • Loan-Fair-Drift (real credit lines, race+gender+age, 50 M edges, 24 months)\n • Wavelet-Fractal-Bench (synthetic, 5–9-node motifs re-scaled + frequency-warped)\nBaselines  DASMP, SANP, NDLS, FAIR-GNN, DP-GNN, BORF, GraphSAINT-ODE, PGD-FedGNN.\nMetrics  node F1, oversmoothing (row-diff, R_group), *frequency-transfer score* (FTS), temporal-intersectional unfairness δ-TIIF, privacy ε_eff per device, energy (J/op, total), latency/update, capsule hit-rate, regret vs cost, solver precision mix.\nAblations  –WCSM; –wavelet morphing; replace TCIA with static parity; disable F-SPA; single-precision only; P2R→static; CAWF→full-Laplacian.\nExpected Result: • WCSM+CAWF trims recomputation 72 % and total latency 55 % on FB2B; energy −8.9× vs DASMP.\n• FTS: 0.91 vs 0.46 for plain FSM ⇒ successful frequency-morph transfer.\n• Row-diff retains 41 % after virtual depth 512 (←22 % BORF).\n• δ-TIIF drops from 0.13→0.04 with <0.3 pp accuracy hit; unfair influence growth bounded across 12 months.\n• F-SPA saves 60 % global budget; 85 % of devices stay below ε_i = 0.5 after one year.\n• P2R halves energy vs fixed-INT8 while keeping ε_eff within target and maintaining regret bound.\n• Overall on-device throughput 2.6× prev. mixed-precision pipeline; capsule hit-rate 78 %.\nExpected Conclusion: By moving from static fractal reuse to *frequency-morphable* wavelet capsules, and by tying adaptation precision, privacy and fairness into a single bandit-style scheduler, the proposal closes key gaps in continual anti-oversmoothing GNNs.  It offers the first evidence that high-frequency motifs can be transferred across drifted graph spectra, while simultaneously delivering temporal intersectional fairness and per-device privacy under federated deployment.  The resulting Wavelet-Capsule GNN stack pushes billion-scale dynamic-graph learning towards practical, equitable and energy-frugal mobile execution.",
+    "experimental_design": {
+      "experiment_strategy": "1. Streaming Frequency-Morph Transfer & Efficiency Test\n   • Goal: Validate that WCSM+CAWF really re-uses motifs across spectral drift (Q1) while P2R attains the promised latency/energy/privacy trade-off (Q4).\n   • Setup\n     – Datasets: Wavelet-Fractal-Bench (for controlled drift), then HyperYelp-2024 and FB2B-24-Mo (realistic scale).\n     – Stream each graph in 5 K-edge micro-batches; for FB2B keep an 8-hour wall-clock window.\n     – Hardware: 8×A100; pin two GPUs to baseline models, six GPUs to our stack so that replay cost differences reflect algorithmic, not hardware, factors.\n     – Variants: full stack; –WCSM; –wavelet morphing; –CAWF; single-precision only; P2R→static INT8.\n     – Metrics: frequency-transfer score (FTS), capsule hit-rate, node F1, oversmoothing (row-diff), energy (nJ/op, Joule/update), latency/update, solver FLOPs, precision mix histogram.\n   • Success Criteria & Expected Outcome\n     – FTS ≥0.85 on synthetics and ≥0.9 on HyperYelp, doubling baseline DASMP/NDLS.\n     – Capsule hit-rate >70 %; latency ‹35 ms/update and 6× lower energy than BORF.\n     – –wavelet-morphing drops FTS by ≥40 % ⇒ shows transfer comes from morphable capsules, not generic caching (addresses Q5).\n     – CAWF recovers ≥99 % F1 of full-precision yet removes ≥5× FLOPs.\n     – P2R keeps ε_eff within ±5 % target while halving energy over static INT8.\n   • Demonstrates: (i) high-frequency motif reuse across spectral drift, (ii) real energy/latency gains, (iii) scheduler’s ability to co-optimise precision & privacy.\n\n2. Long-Horizon Temporal-Fairness & Federated Privacy Study\n   • Goal: Show TCIA curbs *growth* of unfair influence (Q2) and F-SPA allocates privacy only where needed (Q3).\n   • Setup\n     – Dataset: Loan-Fair-Drift (24 monthly snapshots, sensitive attributes drifting).\n     – Simulate 5 000 edge devices, each owning a user-centric partition; run federated training with FedAvg every 12 hours.\n     – Budgets: global (ε,δ)=(3,1e-5). Compare F-SPA vs graph-wide DP-GNN accounting.\n     – Variants: TCIA vs static parity regulariser; F-SPA vs global; TCIA+F-SPA combined.\n     – Metrics: δ-TIIF (temporal intersectional unfairness), accuracy/F1, per-device ε_i, unused budget %, communication overhead.\n   • Success Criteria & Expected Outcome\n     – TCIA holds δ-TIIF ≤0.05 (≤40 % of static-parity) with ‹0.3 pp accuracy loss.\n     – F-SPA keeps ≥80 % devices under ε_i =0.5 after 12 months, whereas global scheme uses >95 % of budget by month 6.\n     – Combined method cuts traffic by ≥2× because unchanged devices skip upload.\n   • Demonstrates: first practical guarantee on long-term intersectional fairness and device-specific privacy conservation under real drift.\n\n3. Scheduler Regret & Interpretability Benchmark\n   • Goal: Isolate benefits of (a) subgraph memory vs generic caching (Q5) and (b) P2R’s joint decision space (Q4).\n   • Setup\n     – Dataset: Wavelet-Fractal-Bench with added “dummy” motifs that never repeat (controls caching noise).\n     – Construct two benchmark streams:\n         1) High-reuse: ≥60 % motifs recur with altered frequency layout.\n         2) Low-reuse: ≤10 % recurrence.\n     – Policies: P2R full, P2R w/o precision option, P2R w/o privacy option, naïve LRU cache, no memory.\n     – Run for T=10 000 slots; log per-slot action, reward = –(latency+energy) subject to accuracy ≥ baseline.\n   • Metrics: cumulative regret Δ_R(T), % actions choosing reuse vs recompute, solver-precision distribution, privacy overshoot events.\n   • Success Criteria & Expected Outcome\n     – Full P2R shows O(√T) growth fitting theoretical bound; baselines diverge linearly.\n     – In high-reuse stream, WCSM reuse selected in ≥65 % of slots; in low-reuse stream <20 %, confirming scheduler’s selectivity.\n     – Removing precision option increases energy by ≥40 %; removing privacy option causes ≥3× overshoot events.\n   • Demonstrates: interpretably disentangles gains from motif memory vs generic caching and validates that joint precision-privacy decisions drive the low regret and resource savings.\n",
+      "experiment_details": "============================================================\nEXPERIMENT 1  –  Streaming Frequency-Morph Transfer & Efficiency Test\n============================================================\nGoal\n  • Verify that WCSM (Wavelet-Capsule Sub-graph Memory) + CAWF (Curvature–Aware Wavelet Flow) enable frequency-morph transfer (Q1);\n  • Show that P2R Scheduler jointly optimises latency / energy / privacy (Q4).\n\nExecution Platform\n  • 8× NVIDIA A100-80 GB (NVLink, CUDA 11.8, NCCL 2.16, mixed-precision enabled)\n  • 2 TB host RAM, Ubuntu 22.04, PyTorch 2.1 + PyG 2.4 + Opacus 1.4 + RAPIDS cuGraph 23.6.\n  • SLURM cluster; each run pinned to one GPU; two GPUs reserved for baselines, six for our stack.\n\nModels\n  Main:  WCSM-GNN + CAWF solver + P2R (ours)\n  Ablations:  –WCSM, –wavelet-morphing, –CAWF, single-precision only, P2R→static-INT8.\n  External baselines: DASMP, SANP, NDLS, BORF, GraphSAINT-ODE (all released code re-trained).\n\nDatasets\n  1. Wavelet-Fractal-Bench (synthetic control) – 2.4 M edges streamed in 5 k-edge micro-batches.\n  2. HyperYelp-2024 – 90 M edges incl. 18 M hyper-edges; micro-batch=5 k.\n  3. FB2B-24-Mo – 1.4 B edges over 12 months; window size = 8 h (≈4.6 M edges), micro-batch=5 k.\n\nPre-processing\n  • Convert hyper-edges into 3-uniform incidence tensors for WCSM; baselines that do not support hyper-edges receive expanded pairwise edges*¹.\n  • Compute initial adaptive wavelet dictionary (order K=6) on first 2 % of stream.\n  • Normalise node features (z-score) online; categorical IDs → 128-d learned embeddings.\n  • Time-stamp appended to node features (sin–cos positional encoding).\n\nData Splitting / Evaluation Windows\n  • Online continual learning: stream first 70 % of batches with labels; last 30 % used for evaluation only (no gradient updates).\n  • Metrics aggregated over every 1 % of evaluation stream to plot drift curves.\n  • 5 stochastic seeds (123, 231, 314, 415, 592); results = mean±sd; primary numbers are averaged, secondary plots show all seeds.\n  • Model selection: best-val FTS averaged over sliding window of 10 batches (no early-stop to respect streaming nature).\n\nHyper-parameters (searched by Optuna, 40 trials)\n  • learning-rate ∈ {1e-3, 3e-3, 1e-4};\n  • capsule dim ∈ {64, 96, 128};\n  • wavelet dictionary size K ∈ {4, 6, 8};\n  • scheduler exploration β ∈ {0.05, 0.1, 0.2};\n  • CAWF step size h ∈ {0.5, 1.0, 2.0};\n  • privacy noise σ ∈ {0.5, 0.7, 1.0}.\n  Sensitivity curves produced for lr, β, K.\n\nEvaluation Metrics\n  Primary:  FTS (Frequency-Transfer Score), node-F1, energy/Joule per update, latency/update.\n  Secondary:  capsule hit-rate, oversmoothing (row-diff), solver FLOPs, precision mix histogram, ε_eff deviation.\n\nRobustness Checks\n  • Add 5 % random edge rewiring – measure ΔFTS and ΔF1.\n  • OOD: inject unseen 9-node fractal motif at 2 % of positions – expect grace­ful FTS drop ≤10 %.\n  • Adversarial: PGD on node features (ϵ=0.02 L_∞) for 500 batches – track accuracy.\n\nFLOPs / Time / Memory Logging\n  • torch.profiler + NVTX ranges around forward/backward; FLOPs counted with fvcore.\n  • Energy via NVIDIA nvidia-smi –query-gpu=power.draw, integrated over wall-clock.\n  • Memory peak via nvprof; logged per batch.\n\nSuccess Criteria (as given) are registered in Hydra config to auto-fail run if unmet.\n\nExample Code (excerpt)\n```\nimport torch, torch_geometric as tg\nfrom ws_gnn import WCSMLayer, CAWFSolver, P2RScheduler\nfrom metrics import FTSMeter\n\ngraph_stream = get_stream('HyperYelp-2024', batch_size=5000)\nmodel = WCSMLayer(in_dim=256, hidden=128, capsule_dim=96, K=6).cuda()\nsolver = CAWFSolver(model, step_size=1.0)\nsched  = P2RScheduler(model, solver, eps_target=2.0, beta=0.1)\n\nfts_meter = FTSMeter(K=6)\nfor step, (batch, labels) in enumerate(graph_stream):\n    with sched.precision_context():            # INT8/FP16/FP32 chosen online\n        out = solver(batch)\n    loss = crit(out, labels) + sched.privacy_penalty()\n    loss.backward(); sched.optimizer_step()\n    fts_meter.update(batch, out)\n    if step % 200 == 0:\n        print(step, fts_meter.value())\n```\nFoot-notes\n  *¹ Expanded baselines are penalised by ~1.7× edge count; to be fair we provide them extra GPU.\n\n============================================================\nEXPERIMENT 2  –  Long-Horizon Temporal-Fairness & Federated Privacy Study\n============================================================\nGoal\n  • Demonstrate TCIA reduces growth of unfair influence (Q2);\n  • Show F-SPA distributes privacy budgets efficiently (Q3).\n\nFederated Set-up\n  • 5 000 logical edge devices simulated on 8 GPUs via Ray-Actor sharding; each actor holds one partition of Loan-Fair-Drift graph.\n  • Communication round = every 12 h snapshot; FedAvg with weight proportional to device sample size.\n  • Differential privacy implemented with Opacus + Rényi accountant; secure aggregation via Crypten MPC backend.\n\nModels / Variants\n  1. TCIA + F-SPA (full)\n  2. TCIA + global DP budget\n  3. Static parity reg. + F-SPA\n  4. Static parity + global DP  (baseline – FAIR-GNN & DP-GNN mash-up)\n  5. PGD-FedGNN   (pure DP baseline)\n\nDataset\n  Loan-Fair-Drift (50 M edges, 24 monthly snapshots; sensitive attrs: race, gender, age; label: loan default).\n\nPre-processing\n  • Each device receives user-centric induced sub-graph; partitions stable over time.\n  • One-hot sensitive attrs added as features for causal path tracing; normalise numeric attributes.\n  • Month index encoded with 12-d Fourier time-positional vector.\n\nSplits & Seeds\n  • Months 1-18 → training; 19-24 → hold-out evaluation.\n  • 3 seeds due to high cost; report mean.\n  • Early-stop on δ-TIIF plateaus (<1 e-3 for 5 rounds) while keeping accuracy within 0.5 pp of best.\n\nHyper-parameter grid (24 runs)\n  • influence regulariser λ ∈ {0.1, 0.3, 1.0}\n  • DP clipping norm C ∈ {1, 2, 4}\n  • per-device participation p ∈ {0.05, 0.1}\n\nMetrics\n  Primary: δ-TIIF (↓ better), per-device ε_i (↓), accuracy / F1 (↑).\n  Secondary: unused budget %, communication MB/round, fairness-accuracy Pareto-front AUC.\n\nRobustness & Sensitivity\n  • Drift stress-test: double sensitive-attribute shift speed in synthetic variant; track δ-TIIF.\n  • Noise: differential-privacy σ doubled – measure accuracy drop.\n\nCompute Budget\n  • One epoch (1 month) = 4.8 min on A100; total wall-clock ~3 h/seed; 8 GPUs yield parallel speed-up 7.2×.\n\nExample Code Snippet (server side)\n```\nserver = FedServer(model=TCIA_GNN(), accountant='renyi', eps_global=3.0)\nfor month in range(24):\n    updates = []\n    for device in devices_online(month):\n        data = load_partition(device, month)\n        with private_grad(device.eps_budget):\n            upd = local_train(data, epochs=1)\n        updates.append(upd)\n    server.aggregate(updates)\n    if month>=18:\n        evaluate_global(server.model, month)\n```\n\n============================================================\nEXPERIMENT 3  –  Scheduler Regret & Interpretability Benchmark\n============================================================\nGoal\n  • Isolate benefit of WCSM memory vs generic caching (Q5);\n  • Validate P2R’s combinatorial decision regime & regret bound (Q4).\n\nDataset & Streams\n  Wavelet-Fractal-Bench + injected dummy motifs.\n  High-reuse stream (60 % recurring) & Low-reuse stream (≤10 % recurring), each length T=10 000 slots.\n\nPolicies Compared\n  1. P2R full (reuse / precision / privacy)\n  2. P2R-no-prec (precision fixed FP16)\n  3. P2R-no-priv (privacy always σ=0)\n  4. LRU cache (window=256)\n  5. No memory (always recompute)\n\nExperimental Protocol\n  • Single GPU, batched simulation (no back-prop) – 4 h per run.\n  • 10 seeds.\n  • Reward r_t = –(latency_t + energy_t)  if accuracy_t ≥ baseline-threshold else  –∞.\n  • Cumulative regret Δ_R(T) = Σ_t (r*_t – r_t).\n\nMetrics\n  • Δ_R(T) curves (log-log) – slope fitted by linear regression on √T.\n  • % actions: reuse vs recompute vs precision-level.\n  • Privacy overshoot events (ε_eff > target).\n\nRobustness\n  • Adversarial scheduler probing: flip reward sign every 1 000 steps; expect adaptation in ≤√T horizon.\n\nExample Code (policy loop)\n```\nfrom sched.p2r import P2R\npol = P2R(beta=0.1, arms_prec=['int8','fp16','fp32'])\nfor t, batch in enumerate(stream):\n    arm = pol.select(batch.stats())\n    reward = simulate(arm, batch)\n    pol.update(arm, reward)\n```\n\n============================================================\nSHARED COMPARISON TABLES & REPORTING\n============================================================\n• All results logged with Weights&Biases; raw CSV & JSON traces saved.\n• Statistical significance: paired t-test (α=0.05) vs best non-ours baseline.\n• FLOPs, energy and latency normalised by average node degree to allow cross-dataset comparability.\n• For every figure printed in the paper we attach the exact command that regenerates it (repro.sh scripts).",
+      "expected_models": [
+        "WCSM-GNN",
+        "CAWF Solver",
+        "P2R Scheduler",
+        "TCIA-GNN",
+        "DASMP",
+        "SANP",
+        "NDLS",
+        "BORF",
+        "GraphSAINT-ODE",
+        "FAIR-GNN",
+        "DP-GNN",
+        "PGD-FedGNN",
+        "LRU Cache Policy"
+      ],
+      "expected_datasets": [
+        "Wavelet-Fractal-Bench",
+        "HyperYelp-2024",
+        "FB2B-24-Mo",
+        "Loan-Fair-Drift"
+      ],
+      "external_resources": {
+        "hugging_face": {
+          "models": [
+            {
+              "id": "sanpellegrino/CoryBot",
+              "author": "sanpellegrino",
+              "sha": "cdad3b52510270d5bbd851e469fdd761ed677fbe",
+              "created_at": "2022-09-27T15:20:05+00:00",
+              "last_modified": "2022-09-27T16:06:47+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 5,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "checkpoint-10500/config.json"
+                },
+                {
+                  "rfilename": "checkpoint-10500/merges.txt"
+                },
+                {
+                  "rfilename": "checkpoint-10500/optimizer.pt"
+                },
+                {
+                  "rfilename": "checkpoint-10500/pytorch_model.bin"
+                },
+                {
+                  "rfilename": "checkpoint-10500/scheduler.pt"
+                },
+                {
+                  "rfilename": "checkpoint-10500/special_tokens_map.json"
+                },
+                {
+                  "rfilename": "checkpoint-10500/tokenizer.json"
+                },
+                {
+                  "rfilename": "checkpoint-10500/tokenizer_config.json"
+                }
+              ],
+              "card_data": {
+                "language": [],
+                "tags": [
+                  "conversational"
+                ],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "pytorch",
+                "gpt2",
+                "text-generation",
+                "conversational",
+                "autotrain_compatible",
+                "text-generation-inference",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "text-generation",
+              "library_name": "transformers",
+              "readme": "---\ntags:\n- conversational\n---"
+            },
+            {
+              "id": "sanps/mist-7b-sft2-gutenberg-50k",
+              "author": "sanps",
+              "sha": "41a026490dfc4ea8d3751deb0bf1bbda4c9eb9e0",
+              "created_at": "2024-03-03T01:22:59+00:00",
+              "last_modified": "2024-03-05T03:41:17+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 5,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "all_results.json"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "eval_results.json"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "global_step8563/bf16_zero_pp_rank_0_mp_rank_00_optim_states.pt"
+                },
+                {
+                  "rfilename": "global_step8563/bf16_zero_pp_rank_1_mp_rank_00_optim_states.pt"
+                },
+                {
+                  "rfilename": "global_step8563/zero_pp_rank_0_mp_rank_00_model_states.pt"
+                },
+                {
+                  "rfilename": "global_step8563/zero_pp_rank_1_mp_rank_00_model_states.pt"
+                }
+              ],
+              "card_data": {
+                "license": "apache-2.0",
+                "language": [],
+                "tags": [
+                  "generated_from_trainer"
+                ],
+                "datasets": [],
+                "base_model": "mistralai/Mistral-7B-v0.1",
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "mistral",
+                "text-generation",
+                "generated_from_trainer",
+                "conversational",
+                "base_model:mistralai/Mistral-7B-v0.1",
+                "base_model:finetune:mistralai/Mistral-7B-v0.1",
+                "license:apache-2.0",
+                "autotrain_compatible",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "text-generation",
+              "library_name": "transformers",
+              "readme": "---\nlicense: apache-2.0\nbase_model: mistralai/Mistral-7B-v0.1\ntags:\n- generated_from_trainer\nmodel-index:\n- name: mist-7b-sft2-gutenberg-50k\n  results: []\n---\n\n<!-- This model card has been generated automatically according to the information the Trainer had access to. You\nshould probably proofread and complete it, then remove this comment. -->\n\n# mist-7b-sft2-gutenberg-50k\n\nThis model is a fine-tuned version of [mistralai/Mistral-7B-v0.1](https://huggingface.co/mistralai/Mistral-7B-v0.1) on an unknown dataset.\nIt achieves the following results on the evaluation set:\n- Loss: 2.1872\n\n## Model description\n\nMore information needed\n\n## Intended uses & limitations\n\nMore information needed\n\n## Training and evaluation data\n\nMore information needed\n\n## Training procedure\n\n### Training hyperparameters\n\nThe following hyperparameters were used during training:\n- learning_rate: 1e-05\n- train_batch_size: 2\n- eval_batch_size: 8\n- seed: 42\n- distributed_type: multi-GPU\n- num_devices: 2\n- total_train_batch_size: 4\n- total_eval_batch_size: 16\n- optimizer: Adam with betas=(0.9,0.999) and epsilon=1e-08\n- lr_scheduler_type: cosine\n- num_epochs: 1\n\n### Training results\n\n| Training Loss | Epoch | Step | Validation Loss |\n|:-------------:|:-----:|:----:|:---------------:|\n| 2.1956        | 0.69  | 8563 | 2.1872          |\n\n\n### Framework versions\n\n- Transformers 4.35.0\n- Pytorch 2.1.0+cu118\n- Datasets 2.14.6\n- Tokenizers 0.14.1\n"
+            },
+            {
+              "id": "sanps/mist-7b-sft-29k-comments",
+              "author": "sanps",
+              "sha": "b2b5e70fe5de601c6355b809881e4a960bacc97d",
+              "created_at": "2024-04-15T21:37:56+00:00",
+              "last_modified": "2024-04-15T22:54:57+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 5,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "all_results.json"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "model-00001-of-00003.safetensors"
+                },
+                {
+                  "rfilename": "model-00002-of-00003.safetensors"
+                },
+                {
+                  "rfilename": "model-00003-of-00003.safetensors"
+                },
+                {
+                  "rfilename": "model.safetensors.index.json"
+                },
+                {
+                  "rfilename": "special_tokens_map.json"
+                }
+              ],
+              "card_data": {
+                "license": "apache-2.0",
+                "language": [],
+                "tags": [
+                  "generated_from_trainer"
+                ],
+                "datasets": [],
+                "base_model": "mistralai/Mistral-7B-v0.1",
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "safetensors",
+                "mistral",
+                "text-generation",
+                "generated_from_trainer",
+                "conversational",
+                "base_model:mistralai/Mistral-7B-v0.1",
+                "base_model:finetune:mistralai/Mistral-7B-v0.1",
+                "license:apache-2.0",
+                "autotrain_compatible",
+                "text-generation-inference",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "text-generation",
+              "library_name": "transformers",
+              "readme": "---\nlicense: apache-2.0\nbase_model: mistralai/Mistral-7B-v0.1\ntags:\n- generated_from_trainer\nmodel-index:\n- name: mist-7b-sft-29k-comments\n  results: []\n---\n\n<!-- This model card has been generated automatically according to the information the Trainer had access to. You\nshould probably proofread and complete it, then remove this comment. -->\n\n# mist-7b-sft-29k-comments\n\nThis model is a fine-tuned version of [mistralai/Mistral-7B-v0.1](https://huggingface.co/mistralai/Mistral-7B-v0.1) on an unknown dataset.\n\n## Model description\n\nMore information needed\n\n## Intended uses & limitations\n\nMore information needed\n\n## Training and evaluation data\n\nMore information needed\n\n## Training procedure\n\n### Training hyperparameters\n\nThe following hyperparameters were used during training:\n- learning_rate: 1e-05\n- train_batch_size: 2\n- eval_batch_size: 8\n- seed: 42\n- distributed_type: multi-GPU\n- num_devices: 2\n- total_train_batch_size: 4\n- total_eval_batch_size: 16\n- optimizer: Adam with betas=(0.9,0.999) and epsilon=1e-08\n- lr_scheduler_type: cosine\n- num_epochs: 1\n\n### Training results\n\n\n\n### Framework versions\n\n- Transformers 4.35.0\n- Pytorch 2.1.0+cu118\n- Datasets 2.14.6\n- Tokenizers 0.14.1\n"
+            },
+            {
+              "id": "sanps/mist-7b-sft-gutenberg-50k",
+              "author": "sanps",
+              "sha": "32773c7ee45ee06840c881c1a462fecfd1c377d9",
+              "created_at": "2024-01-01T06:09:16+00:00",
+              "last_modified": "2024-01-02T05:56:45+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 3,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "all_results.json"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "eval_results.json"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "model-00001-of-00003.safetensors"
+                },
+                {
+                  "rfilename": "model-00002-of-00003.safetensors"
+                },
+                {
+                  "rfilename": "model-00003-of-00003.safetensors"
+                },
+                {
+                  "rfilename": "model.safetensors.index.json"
+                }
+              ],
+              "card_data": {
+                "license": "apache-2.0",
+                "language": [],
+                "tags": [
+                  "generated_from_trainer"
+                ],
+                "datasets": [],
+                "base_model": "mistralai/Mistral-7B-v0.1",
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "safetensors",
+                "mistral",
+                "text-generation",
+                "generated_from_trainer",
+                "conversational",
+                "base_model:mistralai/Mistral-7B-v0.1",
+                "base_model:finetune:mistralai/Mistral-7B-v0.1",
+                "license:apache-2.0",
+                "autotrain_compatible",
+                "text-generation-inference",
+                "endpoints_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "text-generation",
+              "library_name": "transformers",
+              "readme": "---\nlicense: apache-2.0\nbase_model: mistralai/Mistral-7B-v0.1\ntags:\n- generated_from_trainer\nmodel-index:\n- name: mist-7b-sft-gutenberg-50k\n  results: []\n---\n\n<!-- This model card has been generated automatically according to the information the Trainer had access to. You\nshould probably proofread and complete it, then remove this comment. -->\n\n# mist-7b-sft-gutenberg-50k\n\nThis model is a fine-tuned version of <br>\n[mistralai/Mistral-7B-v0.1](https://huggingface.co/mistralai/Mistral-7B-v0.1) <br>\non a part of the train1 split of  \n[sanps/GutenbergFictionSummaryPrepared](https://huggingface.co/datasets/sanps/GutenbergFictionSummaryPrepared)\n\nIt achieves the following results on the evaluation set (split: \"small_val\"):\n- Loss: 2.1665\n\nLoss curves:\n\n![image/png](https://cdn-uploads.huggingface.co/production/uploads/62e271e0003eac16191c1724/Xz4CI5DuV32oi6xgA-fQ1.png)\n\nI used the [https://github.com/huggingface/alignment-handbook](https://github.com/huggingface/alignment-handbook) with few minor changes.\n\nWeirdly enough it stopped training at 0.69 epoch (no, I am not making this up!). Will have to debug why.\n\nThe training was kind of unstable in the beginning but I lowered the lr and added max_grad_norm. However I feel the lr is too low and could have got better results with higher lr.\n\n### Training hyperparameters\n\nThe following hyperparameters were used during training:\n- learning_rate: 1e-05\n- train_batch_size: 2\n- eval_batch_size: 4\n- seed: 42\n- distributed_type: multi-GPU\n- num_devices: 2\n- total_train_batch_size: 4\n- total_eval_batch_size: 8\n- optimizer: Adam with betas=(0.9,0.999) and epsilon=1e-08\n- lr_scheduler_type: cosine\n- num_epochs: 1\n\n### Training results\n\n| Training Loss | Epoch | Step | Validation Loss |\n|:-------------:|:-----:|:----:|:---------------:|\n| 2.1619        | 0.69  | 4282 | 2.1664          |\n\n\n### Framework versions\n\n- Transformers 4.35.0\n- Pytorch 2.1.0+cu118\n- Datasets 2.14.6\n- Tokenizers 0.14.1\n"
+            },
+            {
+              "id": "sanpang/XTuner-merge",
+              "author": "sanpang",
+              "sha": "99634b255d82e3652118db61cb0a964c46170250",
+              "created_at": "2025-01-13T14:57:54+00:00",
+              "last_modified": "2025-01-14T05:43:55+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 3,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "configuration_internlm2.py"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "modeling_internlm2.py"
+                },
+                {
+                  "rfilename": "pytorch_model-00001-of-00008.bin"
+                },
+                {
+                  "rfilename": "pytorch_model-00002-of-00008.bin"
+                },
+                {
+                  "rfilename": "pytorch_model-00003-of-00008.bin"
+                },
+                {
+                  "rfilename": "pytorch_model-00004-of-00008.bin"
+                }
+              ],
+              "card_data": {
+                "license": "mit",
+                "language": [],
+                "tags": [],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "pytorch",
+                "internlm2",
+                "custom_code",
+                "license:mit",
+                "region:us"
+              ],
+              "readme": "---\r\nlicense: mit\r\n---\r\n"
+            },
+            {
+              "id": "sanpang/internvl_v2_internlm2_2b_lora_finetune_food_lr35_ep10",
+              "author": "sanpang",
+              "sha": "081eae46523584fe85460b9d31e69dfe4c035d9c",
+              "created_at": "2025-01-14T02:26:54+00:00",
+              "last_modified": "2025-01-14T02:54:10+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 3,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "added_tokens.json"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "configuration_intern_vit.py"
+                },
+                {
+                  "rfilename": "configuration_internlm2.py"
+                },
+                {
+                  "rfilename": "configuration_internvl_chat.py"
+                },
+                {
+                  "rfilename": "conversation.py"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "model.safetensors"
+                }
+              ],
+              "card_data": {
+                "license": "mit",
+                "language": [],
+                "tags": [],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "safetensors",
+                "internvl_chat",
+                "custom_code",
+                "license:mit",
+                "region:us"
+              ],
+              "readme": "---\r\nlicense: mit\r\n---\r\n"
+            },
+            {
+              "id": "SanPri/my-pet-dog-xzp",
+              "author": "SanPri",
+              "sha": "a53c31de25e955d700ca932a7ccf637d33b42a65",
+              "created_at": "2023-12-05T20:03:50+00:00",
+              "last_modified": "2023-12-05T20:08:13+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 2,
+              "likes": 1,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "feature_extractor/preprocessor_config.json"
+                },
+                {
+                  "rfilename": "model_index.json"
+                },
+                {
+                  "rfilename": "safety_checker/config.json"
+                },
+                {
+                  "rfilename": "safety_checker/model.fp16.safetensors"
+                },
+                {
+                  "rfilename": "safety_checker/model.safetensors"
+                },
+                {
+                  "rfilename": "safety_checker/pytorch_model.bin"
+                },
+                {
+                  "rfilename": "safety_checker/pytorch_model.fp16.bin"
+                },
+                {
+                  "rfilename": "sample_images/Generated_AI_Dog.jpg"
+                }
+              ],
+              "card_data": {
+                "license": "creativeml-openrail-m",
+                "language": [],
+                "tags": [
+                  "NxtWave-GenAI-Webinar",
+                  "text-to-image",
+                  "stable-diffusion"
+                ],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "diffusers",
+                "safetensors",
+                "NxtWave-GenAI-Webinar",
+                "text-to-image",
+                "stable-diffusion",
+                "license:creativeml-openrail-m",
+                "autotrain_compatible",
+                "endpoints_compatible",
+                "diffusers:StableDiffusionPipeline",
+                "region:us"
+              ],
+              "pipeline_tag": "text-to-image",
+              "library_name": "diffusers",
+              "readme": "---\nlicense: creativeml-openrail-m\ntags:\n- NxtWave-GenAI-Webinar\n- text-to-image\n- stable-diffusion\n---\n### My-Pet-Dog-xzp Dreambooth model trained by SanPri following the \"Build your own Gen AI model\" session by NxtWave.\n\nProject Submission Code: 123EC0574\n\nSample pictures of this concept:\n\n  ![0](https://huggingface.co/SanPri/my-pet-dog-xzp/resolve/main/sample_images/Generated_AI_Dog.jpg)\n      \n"
+            },
+            {
+              "id": "Ndlcwx/NDLSLM_0.8B-base",
+              "author": "Ndlcwx",
+              "sha": "4b5e10a23c82096e8a336422f3849ebe3832bf87",
+              "created_at": "2024-05-07T02:12:45+00:00",
+              "last_modified": "2024-05-07T03:07:47+00:00",
+              "private": false,
+              "gated": false,
+              "disabled": false,
+              "downloads": 3,
+              "likes": 0,
+              "siblings": [
+                {
+                  "rfilename": ".gitattributes"
+                },
+                {
+                  "rfilename": "README.md"
+                },
+                {
+                  "rfilename": "config.json"
+                },
+                {
+                  "rfilename": "generation_config.json"
+                },
+                {
+                  "rfilename": "model.safetensors"
+                },
+                {
+                  "rfilename": "model_config.py"
+                },
+                {
+                  "rfilename": "modeling_ndl.py"
+                },
+                {
+                  "rfilename": "special_tokens_map.json"
+                },
+                {
+                  "rfilename": "tokenizer.json"
+                },
+                {
+                  "rfilename": "tokenizer_config.json"
+                }
+              ],
+              "card_data": {
+                "license": "apache-2.0",
+                "language": [],
+                "tags": [],
+                "datasets": [],
+                "task_categories": [],
+                "size_categories": [],
+                "metrics": [],
+                "widget": []
+              },
+              "tags": [
+                "transformers",
+                "safetensors",
+                "Ndl",
+                "text-generation",
+                "custom_code",
+                "license:apache-2.0",
+                "autotrain_compatible",
+                "region:us"
+              ],
+              "pipeline_tag": "text-generation",
+              "library_name": "transformers",
+              "readme": "---\r\nlicense: apache-2.0\r\n---\r\n"
+            }
+          ],
+          "datasets": []
+        }
+      }
+    }
   },
   "idea_info_history": [
     {
