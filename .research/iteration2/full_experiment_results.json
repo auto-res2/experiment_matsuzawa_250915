@@ -1,0 +1,19 @@
+{
+  "config": {
+    "batch_size": 32,
+    "epochs": 5,
+    "experiment_name": "full_experiment",
+    "learning_rate": 0.0003,
+    "optimizer": "adamw",
+    "seed": 123
+  },
+  "eval_metrics": {
+    "eval_accuracy": 0.65,
+    "eval_loss": 0.2
+  },
+  "experiment_name": "full_experiment",
+  "train_metrics": {
+    "train_accuracy": 0.75,
+    "train_loss": 0.1667
+  }
+}
