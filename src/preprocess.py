@@ -1,22 +1,15 @@
 """Data pre-processing / loading utilities.
 
 For the placeholder implementation we generate a *synthetic* classification
-problem: X ∈ ℝᵈ drawn from N(μ_c, σ²I) where c is the class.  Means μ_c are set
-so that classes are linearly separable with some noise.
-
-The synthetic dataset ensures that:
-    • No network access is required ➜ smoke tests stay fast & reliable.
-    • We have complete control over size (#samples) through config.
+problem so the entire pipeline can run offline in CI.
 """
 from __future__ import annotations
 
 import math
-import os
 from typing import Dict, Tuple
 
 import torch
 from torch.utils.data import DataLoader, TensorDataset
-
 
 # ---------------------------------------------------------------------------
 # Internal helpers – dataset factory
@@ -29,7 +22,7 @@ def _make_synthetic_dataset(
     class_sep: float = 5.0,
     seed: int | None = 42,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    """Return (features, labels) tensors for a toy classification problem."""
+    """Return *(features, labels)* tensors for a toy classification problem."""
 
     g = torch.Generator()
     if seed is not None:
@@ -38,10 +31,9 @@ def _make_synthetic_dataset(
     # create a mean vector for each class located on a circle to guarantee
     # separation
     angles = torch.linspace(0, 2 * math.pi, steps=num_classes + 1)[:-1]
-    means = torch.stack([
-        torch.tensor([math.cos(a), math.sin(a)] + [0.0] * (input_dim - 2)) * class_sep
-        for a in angles
-    ])
+    means = torch.stack(
+        [torch.tensor([math.cos(a), math.sin(a)] + [0.0] * (input_dim - 2)) * class_sep for a in angles]
+    )
 
     features = torch.empty(num_samples, input_dim)
     labels = torch.empty(num_samples, dtype=torch.long)
@@ -58,12 +50,7 @@ def _make_synthetic_dataset(
 # ---------------------------------------------------------------------------
 
 def get_dataloaders(config: Dict) -> Tuple[DataLoader, DataLoader, DataLoader, int, int]:
-    """Create train/val/test loaders according to the YAML *config*.
-
-    Returns
-    -------
-    train_loader, val_loader, test_loader, input_dim, num_classes
-    """
+    """Create train/val/test loaders according to the YAML *config*."""
 
     dataset_cfg = config.get("dataset", {})
     num_samples = int(dataset_cfg.get("num_samples", 1000))

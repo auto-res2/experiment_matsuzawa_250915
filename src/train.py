@@ -6,7 +6,7 @@ public.  It intentionally keeps the logic *tiny*:
 
     • Synthetic classification dataset created on-the-fly by
       preprocess.get_dataloaders.
-    • Two-layer MLP (Linear ➞ ReLU ➞ Linear) implemented in <20 lines.
+    • Two-layer MLP (Linear → ReLU → Linear) implemented in <20 lines.
     • Standard cross-entropy objective, Adam optimiser.
 
 The goal is **not** scientific novelty; it is only to produce *concrete numeric
@@ -19,9 +19,7 @@ same.
 """
 from __future__ import annotations
 
-import os
 import time
-from pathlib import Path
 from typing import Dict, Tuple
 
 import torch
@@ -54,18 +52,7 @@ def train(
     num_classes: int,
     config: Dict,
 ) -> Tuple[nn.Module, Dict]:
-    """Run a *very* short training according to *config* and return metrics.
-
-    Parameters
-    ----------
-    train_loader, val_loader
-        PyTorch ``DataLoader`` objects coming from :pyfunc:`preprocess.get_dataloaders`.
-    input_dim, num_classes
-        Needed to build the classifier.
-    config
-        Dict loaded from YAML.  *Required keys*:
-        ``num_epochs``, ``learning_rate``, ``device``.
-    """
+    """Run a *very* short training according to *config* and return metrics."""
 
     device = torch.device(config.get("device", "cpu"))
     num_epochs: int = int(config["num_epochs"])

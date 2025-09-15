@@ -2,26 +2,24 @@
 
 Highlights
 ==========
-• CLI with *--smoke-test* and *--full-experiment* flags (exactly as required).
-• Loads YAML configs via PyYAML ➜ dict.
-• Runs: preprocess ➞ train ➞ evaluate.
-• Saves JSON artefact under .research/iteration2/ and prints it to stdout so
-  CI harness can parse numerical results.
+• CLI with *--smoke-test* (default) and *--full-experiment* flags.
+• Loads YAML configs via PyYAML → dict.
+• Runs: preprocess → train → evaluate.
+• Saves JSON artefacts under .research/iteration3/ and prints them so CI can
+  parse numerical results.
 • Strict *fail-fast* – any exception bubbles up; no silent fallbacks.
 """
 from __future__ import annotations
 
 import argparse
 import json
-import os
-import sys
 import time
 from pathlib import Path
 from typing import Dict
 
 import yaml
 
-# local imports – all reside in src/ directory so Python path is already set
+# local imports (src is on PYTHONPATH by default in this repo layout)
 from preprocess import get_dataloaders  # noqa: E402
 from train import train  # noqa: E402
 from evaluate import accuracy  # noqa: E402
@@ -29,8 +27,8 @@ from evaluate import accuracy  # noqa: E402
 # ---------------------------------------------------------------------------
 # Constants & paths (created lazily when first needed)
 # ---------------------------------------------------------------------------
-_JSON_DIR = Path(".research/iteration2")
-_IMG_DIR = Path(".research/iteration2/images")
+_JSON_DIR = Path(".research/iteration3")
+_IMG_DIR = Path(".research/iteration3/images")
 
 
 # ---------------------------------------------------------------------------
@@ -61,7 +59,7 @@ def _dump_json(result: Dict, stem: str) -> Path:
 # CLI
 # ---------------------------------------------------------------------------
 
-def parse_args() -> argparse.Namespace:  # noqa: D401 – imperative mood
+def parse_args() -> argparse.Namespace:  # noqa: D401
     p = argparse.ArgumentParser(description="Run COSMIC-X placeholder experiment")
     g = p.add_mutually_exclusive_group(required=False)
     g.add_argument("--smoke-test", action="store_true", help="run quick smoke test (default)")
@@ -73,17 +71,17 @@ def parse_args() -> argparse.Namespace:  # noqa: D401 – imperative mood
 # main
 # ---------------------------------------------------------------------------
 
-def main() -> None:  # noqa: D401 – imperative mood
+def main() -> None:  # noqa: D401
     args = parse_args()
 
     # Default to smoke-test when neither flag was given.
-    config_path = None
     if args.full_experiment:
         config_path = Path("config/full_experiment.yaml")
     else:  # smoke-test OR unspecified
         config_path = Path("config/smoke_test.yaml")
 
     cfg = _load_config(config_path)
+
     # ------------------------------------------------------------------
     # 1) Pre-processing / data loading
     # ------------------------------------------------------------------
@@ -116,7 +114,7 @@ def main() -> None:  # noqa: D401 – imperative mood
 
     # stdout for CI verification
     print(json.dumps(result, indent=2))
-    print(f"Saved results ➜ {out_file.as_posix()}")
+    print(f"Saved results → {out_file.as_posix()}")
 
 
 if __name__ == "__main__":

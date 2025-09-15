@@ -1,9 +1,8 @@
 """Evaluation helpers.
 
-The real COSMIC-X evaluation is far more involved (multi-task accuracy, radio
-energy Pareto fronts, privacy metrics, …).  For CI we expose only a *single*
-function that computes Top-1 accuracy on a given DataLoader so the pipeline has
-numerical output.
+The real COSMIC-X evaluation is far more involved. For CI we expose only a
+single helper that computes the *Top-1 accuracy* on a given DataLoader so the
+pipeline has numerical output.
 """
 from __future__ import annotations
 
@@ -14,7 +13,11 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 
-def accuracy(model: nn.Module, data_loader: DataLoader, device: str | torch.device = "cpu") -> Dict:
+def accuracy(
+    model: nn.Module,
+    data_loader: DataLoader,
+    device: str | torch.device = "cpu",
+) -> Dict:
     """Return a dict with *top1* accuracy for the provided loader."""
 
     model.eval()
