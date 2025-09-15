@@ -19,14 +19,14 @@ def _load_cfg(which: Path):
 
 
 def _run(cfg):
-    # 1) Verify dataset availability / create dummies for smoke-test
+    # 1) Verify dataset availability / create dummies when absent
     prep.prepare_datasets(cfg)
 
     # 2) Model loading / (TinyFormer) training
     sd_pipe, _ = trn.load_models(cfg)
     trn.train_tinyformer(cfg)
 
-    # 3) Minimal evaluation – generate a preview grid for smoke-test.
+    # 3) Minimal evaluation – generate a preview grid.
     if cfg.get("task", "diffusion") == "diffusion":
         prompts = cfg["prompts"]
         evl.evaluate_diffusion(sd_pipe, prompts, cfg)
