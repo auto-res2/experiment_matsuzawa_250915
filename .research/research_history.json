@@ -6,5 +6,82 @@
     "PairNorm oversmoothing",
     "DropEdge oversmoothing",
     "GNN oversmoothing skip connections"
+  ],
+  "research_study_list": [
+    {
+      "title": "Towards Deeper Graph Neural Networks with Differentiable Group Normalization"
+    },
+    {
+      "title": "A Non-Asymptotic Analysis of Oversmoothing in Graph Neural Networks"
+    },
+    {
+      "title": "PairNorm: Tackling Oversmoothing in GNNs"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "A Non-Asymptotic Analysis of Oversmoothing in Graph Neural Networks"
+    },
+    {
+      "title": "Towards Deeper Graph Neural Networks with Differentiable Group Normalization"
+    },
+    {
+      "title": "PairNorm: Tackling Oversmoothing in GNNs"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "PairNorm: Tackling Oversmoothing in GNNs"
+    },
+    {
+      "title": "ContraNorm: A Contrastive Learning Perspective on Oversmoothing and Beyond"
+    },
+    {
+      "title": "Towards Deeper Graph Neural Networks with Differentiable Group Normalization"
+    },
+    {
+      "title": "A Non-Asymptotic Analysis of Oversmoothing in Graph Neural Networks"
+    },
+    {
+      "title": "Not too little, not too much: a theoretical analysis of graph (over)smoothing"
+    },
+    {
+      "title": "DropEdge: Towards Deep Graph Convolutional Networks on Node Classification"
+    },
+    {
+      "title": "Spectral Graph Pruning Against Over-Squashing and Over-Smoothing"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "Node Dependent Local Smoothing for Scalable Graph Learning"
+    },
+    {
+      "title": "Not too little, not too much: a theoretical analysis of graph (over)smoothing"
+    },
+    {
+      "title": "Old can be Gold: Better Gradient Flow can Make Vanilla-GCNs Great Again"
+    },
+    {
+      "title": "A Non-Asymptotic Analysis of Oversmoothing in Graph Neural Networks"
+    },
+    {
+      "title": "Deep Graph Neural Networks via Posteriori-Sampling-based Node-Adaptative Residual Module"
+    },
+    {
+      "title": "PairNorm: Tackling Oversmoothing in GNNs"
+    },
+    {
+      "title": "Graph Neural Networks Do Not Always Oversmooth"
+    }
   ]
 }
