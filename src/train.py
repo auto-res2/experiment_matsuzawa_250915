@@ -1,11 +1,16 @@
 """
 Full training / rehearsal pipeline for Experiment 1 (Variable-Rate Replay vs. Baselines).
 
-The original monolithic script has been refactored and lightly debugged:
-• fixed a double-wrapped DataLoader that caused a TypeError
-• added explicit handling for feature-based (EPQ) vs. image-based (JPEG) replay buffers
-• corrected JPEG buffer utilities (missing BytesIO import, de-normalisation before encoding)
-• minor style / typing clean-ups – **no research logic changed**
+Key fixes this iteration
+────────────────────────
+1. build_backbone now *avoids* loading ImageNet weights when width_mult≠1 to prevent
+   the state-dict size-mismatch seen in the crash log.  Instead we initialise the
+   network from scratch and **dynamically derive** the output feature dimension.
+2. run_experiment_1 now honours an optional `num_workers` key but falls back to 0
+   when the value is absent (previously triggered a KeyError).
+3. build_backbone returns the correct feature dimension by probing a dummy tensor.
+4. Minor: FLOP profiling wrapped in a try/except so test runs cannot fail due to
+   THOP incompatibilities on edge runtimes.
 """
 
 from __future__ import annotations
@@ -26,9 +31,9 @@ from tqdm import tqdm
 
 from .preprocess import prepare_dataset, build_task_index
 
-# ─────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────
 #  General utilities
-# ─────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────
 
 def set_seed(seed: int):
     random.seed(seed)
@@ -38,20 +43,36 @@ def set_seed(seed: int):
     torch.backends.cudnn.deterministic = True
 
 
-# ─────────────────────────────────────────────────────────────
-#  Backbone & heads
-# ─────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────
+#  Backbone ­& heads
+# ────────────────────────────────────────────────────────────────────────────────
 
 def build_backbone(device: torch.device) -> Tuple[nn.Module, int]:
-    """MobileNet-V2-0.35 backbone (ImageNet-pre-trained). Returns net & feature dim."""
-    mnet = models.mobilenet_v2(width_mult=0.35, weights="IMAGENET1K_V1")
-    backbone = nn.Sequential(*list(mnet.features), nn.AdaptiveAvgPool2d(1), nn.Flatten())
-    backbone.eval().to(device)
+    """Return MobileNet-V2-0.35 backbone (random-init) and its feature dim.
 
-    # Measure FLOPs once for the controller (not used in Exp-1 runner but kept for completeness)
-    dummy = torch.randn(1, 3, 224, 224, device=device)
-    _ = profile(backbone, inputs=(dummy,), verbose=False)
-    return backbone, 1280  # MobileNet-V2 feature size
+    The crash arose because we requested ImageNet weights with `width_mult=0.35`,
+    which torchvision does *not* provide.  We therefore construct the network
+    **without** pretrained weights and probe the output dimension dynamically.
+    """
+
+    # NB: weights must be None when width_mult ≠ 1.0
+    mnet = models.mobilenet_v2(width_mult=0.35, weights=None)
+    backbone = nn.Sequential(*list(mnet.features), nn.AdaptiveAvgPool2d(1), nn.Flatten())
+    backbone.to(device).eval()
+
+    # Derive feature dimension automatically
+    with torch.no_grad():
+        dummy = torch.randn(1, 3, 224, 224, device=device)
+        dim = backbone(dummy).shape[1]
+
+    # FLOP profiling is informative but non-critical; wrap in try/except so unit
+    # tests cannot fail if THOP lacks an op implementation on this platform.
+    try:
+        _ = profile(backbone, inputs=(dummy,), verbose=False)
+    except Exception:
+        pass
+
+    return backbone, dim
 
 
 class CosineClassifier(nn.Module):
@@ -66,9 +87,9 @@ class CosineClassifier(nn.Module):
         return 30.0 * (x @ W.t())
 
 
-# ─────────────────────────────────────────────────────────────
-#  EPQ latent compressor & buffer
-# ─────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────
+#  EPQ latent compressor & buffers (unchanged)
+# ────────────────────────────────────────────────────────────────────────────────
 
 class EPQ(nn.Module):
     """Elastic Product Quantiser (variable or fixed depth)."""
@@ -105,8 +126,6 @@ class EPQ(nn.Module):
 
 
 class ReplayBufferBase:
-    """Abstract buffer interface."""
-
     def push(self, *args, **kwargs):
         raise NotImplementedError
 
@@ -115,31 +134,24 @@ class ReplayBufferBase:
 
 
 class EPQBuffer(ReplayBufferBase):
-    """Variable-rate (ours) or fixed-rate (R3_NoVR) depending on *force_depth*."""
-
     def __init__(self, epq: EPQ, force_depth: int | None, max_bits: int):
         self.epq, self.force_depth, self.max_bits = epq, force_depth, max_bits
         self.codes: List[Tuple[torch.Tensor, int]] = []
         self.cur_bits = 0
 
-    # ----------------------------------------
     def push(self, z: torch.Tensor):
         codes, bits_f = self.epq(z, force_depth=self.force_depth)
         bits = int(bits_f)
         if self.cur_bits + bits > self.max_bits:
-            # FIFO eviction
             while self.codes and self.cur_bits + bits > self.max_bits:
                 _, old_bits = self.codes.pop(0)
                 self.cur_bits -= old_bits
         self.codes.append((codes.cpu(), bits))
         self.cur_bits += bits
 
-    # ----------------------------------------
     def sample(self, batch_size: int) -> torch.Tensor:
         idx = np.random.choice(len(self.codes), batch_size)
         batch_codes = torch.cat([self.codes[i][0] for i in idx], dim=0).to(self.epq.codebooks.device)
-
-        # Decode
         z_rec = torch.zeros(batch_codes.size(0), self.epq.code_dim, device=batch_codes.device)
         for l in range(batch_codes.size(1)):
             z_rec += self.epq.codebooks[l][batch_codes[:, l]]
@@ -147,45 +159,36 @@ class EPQBuffer(ReplayBufferBase):
 
 
 class JPEGBuffer(ReplayBufferBase):
-    """Stores images compressed as JPEG byte blobs under a memory budget."""
-
     def __init__(self, quality: int, max_bytes: int, device: torch.device):
-        from PIL import Image  # type: ignore
-
+        from PIL import Image  # noqa: F401
         self.quality, self.max_bytes, self.device = quality, max_bytes, device
         self.buffer: List[bytes] = []
         self.cur_bytes = 0
         self._bio = BytesIO()
 
-    # ----------------------------------------
     def push(self, img: torch.Tensor):
-        """img: (C,H,W) float in [0,1] on *any* device."""
-        from torchvision.transforms.functional import to_pil_image  # type: ignore
-
+        from torchvision.transforms.functional import to_pil_image
         pil = to_pil_image(img.cpu().clamp(0, 1))
         self._bio.seek(0)
         pil.save(self._bio, format="jpeg", quality=self.quality)
         arr = self._bio.getvalue()
-
         if self.cur_bytes + len(arr) > self.max_bytes:
             while self.buffer and self.cur_bytes + len(arr) > self.max_bytes:
                 self.cur_bytes -= len(self.buffer.pop(0))
         self.buffer.append(arr)
         self.cur_bytes += len(arr)
 
-    # ----------------------------------------
     def sample(self, batch_size: int) -> torch.Tensor:
-        from PIL import Image  # type: ignore
-        from torchvision.transforms import ToTensor  # type: ignore
-
+        from PIL import Image  # noqa: F401
+        from torchvision.transforms import ToTensor
         idx = np.random.choice(len(self.buffer), batch_size)
         imgs = [ToTensor()(Image.open(BytesIO(self.buffer[i]))) for i in idx]
         return torch.stack(imgs, dim=0).to(self.device)
 
 
-# ─────────────────────────────────────────────────────────────
-#  Drift-aware translator (identity for JPEG replay)
-# ─────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────
+#  Translator & misc (unchanged)
+# ────────────────────────────────────────────────────────────────────────────────
 
 class Translator(nn.Module):
     def __init__(self, dim: int):
@@ -196,15 +199,10 @@ class Translator(nn.Module):
         return self.fc(z_old)
 
 
-# ─────────────────────────────────────────────────────────────
-#  Energy & privacy helpers (GPU power – smoke-level only)
-# ─────────────────────────────────────────────────────────────
-
 class EnergyMeter:
     def __init__(self):
         try:
             import pynvml  # type: ignore
-
             pynvml.nvmlInit()
             self.handle = pynvml.nvmlDeviceGetHandleByIndex(0)
         except Exception:
@@ -215,34 +213,30 @@ class EnergyMeter:
         if self.handle is None:
             return
         import pynvml  # type: ignore
-
         power = pynvml.nvmlDeviceGetPowerUsage(self.handle) / 1e3  # W
         self.hist.append(power)
 
     def joule_per_step(self, steps: int):
         if not self.hist:
             return None
-        return (sum(self.hist) / len(self.hist)) * steps / 1000  # J / step
+        return (sum(self.hist) / len(self.hist)) * steps / 1000
 
 
 def estimate_dp_epsilon(bits: int):
-    """Very coarse privacy ε upper bound used in the paper."""
     return 2.2 * bits / (32 * 1024)
 
 
-# ─────────────────────────────────────────────────────────────
-#  Experiment-1 runner (Variable-Rate vs. Baselines)
-# ─────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────
+#  Experiment-1 runner
+# ────────────────────────────────────────────────────────────────────────────────
 
 def _denormalise(img: torch.Tensor) -> torch.Tensor:
-    """Undo CIFAR-100 normalisation so that JPEG encoding receives [0,1] floats."""
     mean = torch.tensor([0.5071, 0.4866, 0.4409], device=img.device).view(3, 1, 1)
     std = torch.tensor([0.2673, 0.2564, 0.2761], device=img.device).view(3, 1, 1)
     return img * std + mean
 
 
 def _classes_upto(task_map: Sequence[Tuple[int, ...]], t_inclusive: int) -> List[int]:
-    """Flatten classes up to and including task t."""
     classes: List[int] = []
     for t in range(t_inclusive + 1):
         classes.extend(task_map[t])
@@ -250,7 +244,7 @@ def _classes_upto(task_map: Sequence[Tuple[int, ...]], t_inclusive: int) -> List
 
 
 def run_experiment_1(cfg: Dict, device: torch.device, results_dir: Path):
-    """Main training loop for Experiment 1 (smoke & full)."""
+    """Main training loop for Experiment 1."""
 
     print("\n[Exp-1] Preparing dataset …")
     data = prepare_dataset(cfg["dataset"])
@@ -259,10 +253,11 @@ def run_experiment_1(cfg: Dict, device: torch.device, results_dir: Path):
     backbone, dim = build_backbone(device)
     epq = EPQ(code_dim=dim, threshold=0.005).to(device)
     translator = Translator(dim).to(device)
-
     criterion = nn.CrossEntropyLoss()
 
-    # Helper --------------------------------------------------
+    # Data-loading parallelism (fallback = 0 to avoid KeyError)
+    num_workers = cfg.get("num_workers", 0)
+
     def build_buffer(name: str, memory_kb: int) -> ReplayBufferBase:
         budget_bits = memory_kb * 8 * 1024
         if name == "R3":
@@ -273,7 +268,6 @@ def run_experiment_1(cfg: Dict, device: torch.device, results_dir: Path):
             return JPEGBuffer(quality=25, max_bytes=memory_kb * 1024, device=device)
         raise ValueError(f"Unknown variant {name}")
 
-    # ---------------------------------------------------------
     for mem_kb in cfg["budgets"]["memory_kb"]:
         for variant in cfg["variants"]:
             print(f"\n[Exp-1] Variant={variant}  Memory={mem_kb} kB")
@@ -288,13 +282,12 @@ def run_experiment_1(cfg: Dict, device: torch.device, results_dir: Path):
             global_step = 0
 
             for t_idx, classes in enumerate(task_map):
-                # Dataloader for current task
                 idx = [i for i, (_, y) in enumerate(data["train"]) if y in classes]
                 loader = DataLoader(
                     Subset(data["train"], idx),
                     batch_size=64,
                     shuffle=True,
-                    num_workers=cfg["num_workers"],
+                    num_workers=num_workers,
                 )
 
                 backbone.train()
@@ -306,60 +299,52 @@ def run_experiment_1(cfg: Dict, device: torch.device, results_dir: Path):
                         logits = clf(feat)
                         loss = criterion(logits, y)
 
-                        # ---------------- Replay ----------------
                         if (isinstance(buffer, EPQBuffer) and len(buffer.codes) >= 32) or (
                             isinstance(buffer, JPEGBuffer) and len(buffer.buffer) >= 32
                         ):
                             rep_data = buffer.sample(32)
-                            if isinstance(buffer, EPQBuffer):
-                                rep_feat = translator(rep_data)
-                            else:  # JPEG → images
-                                rep_feat = backbone(rep_data)
+                            rep_feat = translator(rep_data) if isinstance(buffer, EPQBuffer) else backbone(rep_data)
                             logits_rep = clf(rep_feat)
                             loss += criterion(
                                 logits_rep,
                                 torch.randint(0, clf.W.size(0), (32,), device=device),
                             )
 
-                        # update
                         opt.zero_grad()
                         loss.backward()
                         opt.step()
 
-                        # ---------------- Store in buffer ----------------
                         with torch.no_grad():
                             if isinstance(buffer, EPQBuffer):
                                 buffer.push(feat.detach())
-                            else:  # JPEG → store original images (denormalised)
+                            else:
                                 imgs_dn = _denormalise(x.detach())
                                 for img_single in imgs_dn:
                                     buffer.push(img_single.cpu())
                         global_step += 1
 
-                # ---------------- Validation on seen classes ----------------
                 backbone.eval()
                 val_idx = [i for i, (_, y) in enumerate(data["test"]) if y in _classes_upto(task_map, t_idx)]
                 val_loader = DataLoader(
                     Subset(data["test"], val_idx),
                     batch_size=128,
                     shuffle=False,
-                    num_workers=cfg["num_workers"],
+                    num_workers=num_workers,
                 )
                 correct = total = 0
                 with torch.no_grad():
                     for x, y in val_loader:
                         x, y = x.to(device), y.to(device)
-                        logits = clf(backbone(x))
-                        pred = logits.argmax(-1)
+                        pred = clf(backbone(x)).argmax(-1)
                         correct += (pred == y).sum().item()
                         total += y.size(0)
-                aa = 100 * correct / total
+                aa = 100 * correct / total if total else 0.0
                 acc_history.append(aa)
                 print(
-                    f"  Task {t_idx:02d}  AA={aa:5.2f}%  BufferBits={getattr(buffer,'cur_bits',0):>7}  BufferBytes={getattr(buffer,'cur_bytes',0):>7}"
+                    f"  Task {t_idx:02d}  AA={aa:5.2f}%  BufferBits={getattr(buffer,'cur_bits',0):>7}  "
+                    f"BufferBytes={getattr(buffer,'cur_bytes',0):>7}"
                 )
 
-            # ---------------- Persist results ----------------
             result = {
                 "variant": variant,
                 "memory_kb": mem_kb,
@@ -369,10 +354,9 @@ def run_experiment_1(cfg: Dict, device: torch.device, results_dir: Path):
                 "privacy_epsilon": estimate_dp_epsilon(getattr(buffer, "cur_bits", 8 * getattr(buffer, "cur_bytes", 0))),
             }
             out_file = results_dir / f"exp1_{variant}_{mem_kb}kB.json"
+            out_file.parent.mkdir(parents=True, exist_ok=True)
             out_file.write_text(json.dumps(result, indent=2))
             print(json.dumps(result, indent=2))
 
 
-__all__ = [
-    "run_experiment_1",
-]
+__all__ = ["run_experiment_1"]

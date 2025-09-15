@@ -1,8 +1,8 @@
 general:
   seeds: [13]
   num_workers: 4
-  results_dir: .research/iteration1
-  figures_dir: .research/iteration1/images
+  results_dir: .research/iteration2
+  figures_dir: .research/iteration2/images
 
 experiment_1:
   enabled: true

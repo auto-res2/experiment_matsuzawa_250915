@@ -16,6 +16,9 @@ def _annotate(ax):
 
 
 def plot_exp1_bar(df: pd.DataFrame, fig_dir: Path):
+    if df.empty:
+        print("[Eval] No data available for plot – skipping figure generation.")
+        return
     plt.figure(figsize=(6, 3))
     ax = sns.barplot(data=df, x="variant", y="AA", hue="memory_kb", palette="Set2")
     _annotate(ax)
@@ -34,7 +37,6 @@ def generate_figures(results_dir: Path, figures_dir: Path):
     if not files:
         print("No result JSON found – nothing to plot.")
         return
-
     records = [json.loads(f.read_text()) for f in files]
     df = pd.DataFrame.from_records(records)
     plot_exp1_bar(df[df.variant.isin(["R3", "R3_NoVR", "ER_JPEG"])], figures_dir)
